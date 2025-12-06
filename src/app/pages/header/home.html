@@ -1,0 +1,28 @@
+<!-- NAVBAR -->
+<header class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+  <a href="/" class="text-2xl font-bold text-blue-700">MiApp</a>
+  <nav class="space-x-6">
+    <a href="#" class="text-gray-700 hover:text-blue-700 transition">Inicio</a>
+    <a href="#" class="text-gray-700 hover:text-blue-700 transition">Proyectos</a>
+    <a href="#" class="text-gray-700 hover:text-blue-700 transition">Perfil</a>
+    <a href="#" class="text-gray-700 hover:text-blue-700 transition">Contacto</a>
+  </nav>
+  
+</header>
+
+<!-- HERO / Bienvenida según rol -->
+<section class="hero-slide my-6 mx-6">
+  <h2 class="text-3xl font-bold text-center">
+    <span *ngIf="authService.userRole() === 'user'">¡Bienvenido, Usuario 👋</span>
+    <span *ngIf="authService.userRole() === 'programmer'">¡Bienvenido, Programador 💻</span>
+    <span *ngIf="authService.userRole() === 'admin'">¡Bienvenido, Administrador 👑</span>
+  </h2>
+</section>
+
+
+
+
+<!-- FOOTER -->
+<footer class="bg-white mt-auto shadow-inner py-4 text-center text-gray-500">
+  © 2025 MiApp. Todos los derechos reservados.
+</footer>
