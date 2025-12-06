@@ -1,0 +1,65 @@
+<!-- PANEL ADMINISTRADOR: Gestión de Programadores -->
+<section class="bg-white p-6 shadow-md rounded-md mx-6 space-y-6">
+
+  <h3 class="text-2xl font-semibold mb-4">Gestión de Usuarios (Programadores)</h3>
+
+    <button class="btn btn-primary mb-4" (click)="registerProgrammer()">Registrar Programador</button>
+  <div class="overflow-x-auto">
+    <table class="table w-full border border-gray-200">
+      <thead>
+        <tr class="bg-gray-100">
+          <th>Foto</th>
+          <th>Nombre</th>
+          <th>Especialidad</th>
+          <th>Descripción</th>
+          <th>Contacto</th>
+          <th>Redes</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="hover:bg-gray-50">
+          <td>
+            <img src="https://via.placeholder.com/40" alt="Foto de Juan Pérez" class="rounded-full w-10 h-10">
+          </td>
+          <td>Juan Pérez</td>
+          <td>Frontend</td>
+          <td>Especialista en Angular y React</td>
+          <td>
+            <a href="mailto:correo@ejemplo.com" class="text-blue-700 underline">correo@ejemplo.com</a>
+          </td>
+          <td>
+            <a href="#" class="text-blue-700 underline">LinkedIn</a>, 
+            <a href="#" class="text-blue-700 underline">GitHub</a>
+          </td>
+          <td class="space-x-2">
+            <button class="btn btn-success btn-sm">Editar</button>
+            
+            <button class="btn btn-error btn-sm">Eliminar</button>
+          </td>
+        </tr>
+
+        <tr class="hover:bg-gray-50">
+          <td>
+            <img src="https://via.placeholder.com/40" alt="Foto de Ana López" class="rounded-full w-10 h-10">
+          </td>
+          <td>Ana López</td>
+          <td>Backend</td>
+          <td>Especialista en Node.js y Bases de Datos</td>
+          <td>
+            <a href="mailto:ana@ejemplo.com" class="text-blue-700 underline">ana@ejemplo.com</a>
+          </td>
+          <td>
+            <a href="#" class="text-blue-700 underline">LinkedIn</a>, 
+            <a href="#" class="text-blue-700 underline">GitHub</a>
+          </td>
+          <td class="space-x-2">
+            <button class="btn btn-success btn-sm">Editar</button>
+            <button class="btn btn-error btn-sm">Eliminar</button>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</section>

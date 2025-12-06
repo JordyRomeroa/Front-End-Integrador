@@ -4,8 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
-import { FormUtils } from '../../shared/form-utils';
-import { AuthService } from '../../../services/auth-service';
+import { FormUtils } from '../../../../shared/form-utils';
+import { AuthService } from '../../../../../services/auth-service';
 
 @Component({
   selector: 'app-register-page',

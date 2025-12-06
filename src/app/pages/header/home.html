@@ -7,19 +7,28 @@
     <a href="#" class="text-gray-700 hover:text-blue-700 transition">Perfil</a>
     <a href="#" class="text-gray-700 hover:text-blue-700 transition">Contacto</a>
   </nav>
-  
+
+  <!-- Botón cerrar sesión -->
+  <button *ngIf="authService.isAuthenticated()"
+          (click)="logout()"
+          class="ml-4 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">
+    Cerrar sesión
+  </button>
 </header>
 
 <!-- HERO / Bienvenida según rol -->
-<section class="hero-slide my-6 mx-6">
-  <h2 class="text-3xl font-bold text-center">
+<section class="hero-slide my-6 mx-6 text-center">
+  <h2 class="text-3xl font-bold">
     <span *ngIf="authService.userRole() === 'user'">¡Bienvenido, Usuario 👋</span>
     <span *ngIf="authService.userRole() === 'programmer'">¡Bienvenido, Programador 💻</span>
     <span *ngIf="authService.userRole() === 'admin'">¡Bienvenido, Administrador 👑</span>
   </h2>
+
+  <!-- Panel del programador -->
+  <app-programmer *ngIf="authService.userRole() === 'programmer'"></app-programmer>
+  <app-admin *ngIf="authService.userRole() === 'admin'"></app-admin>
+  <app-user *ngIf="authService.userRole() === 'user'"></app-user>
 </section>
-
-
 
 
 <!-- FOOTER -->

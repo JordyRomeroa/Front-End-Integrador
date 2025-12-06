@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword, 
   GoogleAuthProvider, 
   signInWithEmailAndPassword, 
-  signInWithRedirect, 
+  signInWithPopup, 
   signOut, 
   user, 
   User 
@@ -26,18 +26,25 @@ export class AuthService {
   currentUser = signal<User | null>(null);
   userRole = signal<Role | null>(null);
   user$ = user(this.auth);
+  roleLoaded = signal(false);
 
-  constructor() {
-    // Suscribirse al usuario Firebase
-    this.user$.subscribe((user) => {
+ constructor() {
+  // Suscribirse al usuario Firebase en tiempo real
+  this.user$.subscribe({
+    next: (user) => {
       this.currentUser.set(user);
       console.log('AuthService - Usuario Firebase:', user);
 
       if (user) {
-        this.loadUserRole(user.uid!);
+        this.loadUserRole(user.uid);
+      } else {
+        this.userRole.set(null);
+        this.roleLoaded.set(false);
       }
-    });
-  }
+    },
+    error: (err) => console.error('Error en user$:', err)
+  });
+}
 
   getUserRole(): Role | null {
     return this.userRole();
@@ -53,10 +60,10 @@ export class AuthService {
     return from(signInWithEmailAndPassword(this.auth, email, password));
   }
 
-  /** Login con Google */
+  /** Login con Google usando popup (evita errores de redirect) */
   loginWithGoogle(): Observable<any> {
     const provider = new GoogleAuthProvider();
-    return from(signInWithRedirect(this.auth, provider));
+    return from(signInWithPopup(this.auth, provider));
   }
 
   /** Logout */
@@ -69,40 +76,35 @@ export class AuthService {
     return this.currentUser() !== null;
   }
 
-  roleLoaded = signal(false);
+  /** Cargar rol desde Firestore */
+  async loadUserRole(uid: string) {
+    try {
+      const docRef = doc(this.firestore, `usuarios/${uid}`);
+      const docSnap = await getDoc(docRef);
 
-  // auth-service.ts
-async loadUserRole(uid: string) {
-  try {
-    const docRef = doc(this.firestore, `usuarios/${uid}`);
-    const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("Datos del documento:", data);
+        this.userRole.set(data['role'] || 'user');
+      } else {
+        // Crear el documento con rol por defecto 'user'
+        await setDoc(docRef, { role: 'user' });
+        this.userRole.set('user');
+        console.log("Documento creado con rol por defecto: user");
+      }
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      console.log("Datos del documento:", data);
-      this.userRole.set(data['role'] || 'user');  // Si por alguna razón role es undefined, default 'user'
-    } else {
-      console.log("Documento no encontrado, creando nuevo usuario con rol 'user'");
-      // Crear el documento con rol por defecto
-      await setDoc(docRef, { role: 'user' });
+      this.roleLoaded.set(true);
+
+    } catch (error) {
+      console.error("Error al cargar rol:", error);
       this.userRole.set('user');
+      this.roleLoaded.set(true);
     }
-
-    this.roleLoaded.set(true);
-
-  } catch (error) {
-    console.error("Error al cargar rol:", error);
-    this.userRole.set('user'); // Default en caso de error
-    this.roleLoaded.set(true);
   }
-}
-
-
-
 
   /** Asignar rol (solo Admin puede usarlo) */
   async setUserRole(uid: string, role: Role) {
-    const userRef = doc(this.firestore, `users/${uid}`);
+    const userRef = doc(this.firestore, `usuarios/${uid}`);
     await setDoc(userRef, { role }, { merge: true });
     this.userRole.set(role);
   }
