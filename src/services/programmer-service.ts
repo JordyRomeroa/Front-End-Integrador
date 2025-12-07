@@ -1,24 +1,41 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { doc, getDoc } from '@angular/fire/firestore';
-import { AuthService } from './auth-service';
+import { doc, Firestore, getDoc } from '@angular/fire/firestore';
+import { getAuth } from 'firebase/auth';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AdminGuard implements CanActivate {
-  constructor(private auth: AuthService, private router: Router) {}
+
+export class ProgrammerGuard implements CanActivate {
+  constructor(private router: Router, private firestore: Firestore) {}
 
   async canActivate(): Promise<boolean> {
-    const user = this.auth.currentUser();
+    const auth = getAuth();
+    const user = auth.currentUser;
+
     if (!user) {
       this.router.navigate(['/home']);
       return false;
     }
-    const docSnap = await getDoc(doc(this.auth['firestore'], `users/${user.uid}`));
-    const role = docSnap.data()?.['role'];
-    if (role === 'admin') return true;
-    this.router.navigate(['/home']);
-    return false;
+
+    try {
+      const docSnap = await getDoc(doc(this.firestore, `usuarios/${user.uid}`));
+      if (!docSnap.exists()) {
+        console.warn("Documento de usuario no encontrado");
+        this.router.navigate(['/home']);
+        return false;
+      }
+
+      const role = docSnap.data()?.['role'];
+      if (role === 'programmer') return true;
+
+      this.router.navigate(['/home']);
+      return false;
+    } catch (err) {
+      console.error("Error al verificar guard:", err);
+      this.router.navigate(['/home']);
+      return false;
+    }
   }
 }

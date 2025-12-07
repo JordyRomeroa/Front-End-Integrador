@@ -1,0 +1,73 @@
+<!-- Modal de Registro de Programador -->
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <main class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-8 relative">
+
+    <!-- Título -->
+    <h1 class="text-4xl font-bold text-gray-800 mb-6 text-center">Registrar Nuevo Programador</h1>
+
+    <!-- Formulario -->
+    <div class="space-y-6">
+
+      <!-- Nombre -->
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Nombre completo</span>
+        </label>
+        <input type="text" class="input input-bordered w-full" placeholder="Ej: Juan Pérez" [(ngModel)]="nombre">
+      </div>
+
+      <!-- Especialidad -->
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Especialidad</span>
+        </label>
+        <input type="text" class="input input-bordered w-full" placeholder="Ej: Frontend, Backend" [(ngModel)]="especialidad">
+      </div>
+
+      <!-- Breve descripción -->
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Descripción</span>
+        </label>
+        <textarea class="textarea textarea-bordered w-full" rows="3" placeholder="Descripción breve del programador" [(ngModel)]="descripcion"></textarea>
+      </div>
+
+      <!-- Foto de perfil -->
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Foto de perfil</span>
+        </label>
+        <input type="file" class="file-input file-input-bordered w-full" (change)="onFotoSeleccionada($event)">
+      </div>
+
+      <!-- Contacto -->
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Contacto (email o teléfono)</span>
+        </label>
+        <input type="email" class="input input-bordered w-full" placeholder="correo@ejemplo.com" [(ngModel)]="contacto">
+      </div>
+
+      <!-- Redes sociales -->
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text font-semibold text-gray-700">Redes sociales</span>
+        </label>
+        <input type="text" class="input input-bordered w-full" placeholder="Ej: LinkedIn, GitHub" [(ngModel)]="redes">
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-end gap-4 mt-4">
+        <button type="button" class="btn btn-primary hover:scale-105 transition transform" (click)="registrarProgramador()">Registrar</button>
+        <button type="button" class="btn btn-outline btn-secondary hover:scale-105 transition transform" (click)="cancelar()">Cancelar</button>
+      </div>
+
+    </div>
+
+    <!-- Botón de cerrar (opcional) -->
+    <button (click)="cancelar()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+      ✕
+    </button>
+
+  </main>
+</div>

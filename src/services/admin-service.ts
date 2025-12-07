@@ -1,12 +1,17 @@
 import { CanActivate, Router } from "@angular/router";
-import { AuthService } from "./auth-service";
-import { doc, getDoc } from "firebase/firestore";
 import { Injectable } from "@angular/core";
+import { Firestore, doc, getDoc } from "@angular/fire/firestore";
+import { getAuth } from "firebase/auth";
+import { AuthService } from "./auth-service";
 
 @Injectable({
   providedIn: 'root'
 })
-export class ProgrammerGuard implements CanActivate {
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AdminGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) {}
 
   async canActivate(): Promise<boolean> {
@@ -15,10 +20,11 @@ export class ProgrammerGuard implements CanActivate {
       this.router.navigate(['/home']);
       return false;
     }
-    const docSnap = await getDoc(doc(this.auth['firestore'], `users/${user.uid}`));
+    const docSnap = await getDoc(doc(this.auth['firestore'], `usuarios/${user.uid}`));
     const role = docSnap.data()?.['role'];
-    if (role === 'programmer') return true;
+    if (role === 'admin') return true;
     this.router.navigate(['/home']);
     return false;
   }
+
 }

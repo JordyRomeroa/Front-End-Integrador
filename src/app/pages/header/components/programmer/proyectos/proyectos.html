@@ -1,0 +1,78 @@
+<section class="projects px-6 py-12 bg-gray-900 min-h-screen">
+  <h2 class="text-3xl font-bold text-white mb-8 text-center">Portafolios de Colaboradores</h2>
+
+  <!-- Filtros por usuario -->
+  <div *ngIf="repos.length > 0" class="flex flex-wrap justify-center gap-4 mb-8">
+  <!-- Botón Todos siempre -->
+  <button 
+    class="px-4 py-2 rounded transition 
+           hover:bg-yellow-500 hover:text-black
+           {{ selectedUser === '' ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white' }}"
+    (click)="showAll()">
+    Todos
+  </button>
+
+  <!-- Botones colaboradores -->
+  <button 
+    *ngFor="let user of collaborators"
+    class="px-4 py-2 rounded transition 
+           hover:bg-yellow-500 hover:text-black
+           {{ selectedUser === user ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-white' }}"
+    (click)="selectUser(user)">
+    {{ user }}
+  </button>
+</div>
+
+
+
+  <!-- Grid de proyectos -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div *ngFor="let project of filteredRepos"
+         class="card bg-gray-800/80 backdrop-blur-md p-6 rounded-xl shadow-lg text-white hover:scale-105 transition-transform duration-300 ease-out">
+
+      <!-- Avatar y Nombre -->
+      <div class="flex items-center mb-4">
+        <img [src]="project.owner.avatar_url" alt="Avatar" class="w-10 h-10 rounded-full mr-3 border-2 border-yellow-400">
+        <span class="font-semibold text-lg">{{ project.owner.login }}</span>
+      </div>
+
+      <!-- Nombre del proyecto -->
+      <h3 class="text-xl font-bold mb-2">
+        <a [href]="project.html_url" target="_blank" class="hover:underline">{{ project.name }}</a>
+      </h3>
+
+      <!-- Descripción -->
+      <p class="text-gray-300 mb-3">{{ project.description || 'Sin descripción disponible' }}</p>
+
+      <!-- Tipo de participación -->
+      <div class="flex items-center gap-2 text-gray-200 mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M13 7H7v6h6V7z"/>
+        </svg>
+        <span>{{ project.role || 'No especificado' }}</span>
+      </div>
+
+      <!-- Tecnologías -->
+      <div class="flex flex-wrap gap-2 mb-2">
+        <span *ngFor="let tech of project.techs" class="bg-yellow-500 text-black px-2 py-1 rounded text-sm font-semibold">{{ tech }}</span>
+      </div>
+
+      <!-- Enlaces -->
+      <div class="flex gap-3 mt-3">
+        <a *ngIf="project.repoLink" [href]="project.repoLink" target="_blank"
+           class="flex items-center gap-1 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">
+          Repo
+        </a>
+        <a *ngIf="project.deployLink" [href]="project.deployLink" target="_blank"
+           class="flex items-center gap-1 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">
+          Demo
+        </a>
+      </div>
+
+      <!-- Tipo de proyecto -->
+      <div class="mt-3 text-sm text-gray-400 italic">
+        {{ project.category || 'Académico / Laboral' }}
+      </div>
+    </div>
+  </div>
+</section>

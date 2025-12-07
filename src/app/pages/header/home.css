@@ -1,3 +1,151 @@
-:host {
+/* === MENÚ PRINCIPAL === */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px; /* ancho del sidebar */
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  transition: all 0.3s ease;
+  z-index: 50;
+}
+
+.navbar.scrolled {
+  background: rgba(0,0,0,0.8);
+  box-shadow: 2px 0 20px rgba(0,0,0,0.5);
+}
+
+/* LOGO */
+.navbar a.text-2xl {
+  color: white;
+  font-weight: bold;
+  margin-bottom: 2rem;
   display: block;
+}
+
+/* LINKS */
+.nav-link {
+  display: block;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255, 0, 0, 0.3);
+  padding-left: 1.5rem;
+}
+
+/* Submenús */
+.submenu-item {
+  display: block;
+  padding: 0.5rem 1.5rem;
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.submenu-item:hover {
+  background-color: rgba(255, 0, 0, 0.5);
+  padding-left: 2rem;
+}
+
+/* Hover con flecha */
+.nav-link::after {
+  content: "→";
+  position: absolute;
+  right: 1rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover::after {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+/* USER INITIALS */
+.user-initials {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8B0000, #330000);
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px #ff0000;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  margin-top: auto; /* al final del sidebar */
+}
+
+.user-initials:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px #ff0000, 0 0 16px #ff4500;
+}
+
+/* BOTÓN DE CERRAR SESIÓN */
+.navbar button {
+  background: #8B0000;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.navbar button:hover {
+  background: #ff0000;
+  transform: scale(1.05);
+}
+
+/* FONDO ANIMADO ROJO-NEGRO */
+@keyframes gradient-red-black {
+  0% { background-position: 0% 50%; background-color: #1a1a1a; }
+  25% { background-position: 50% 50%; background-color: #8B0000; }
+  50% { background-position: 100% 50%; background-color: #330000; }
+  75% { background-position: 50% 50%; background-color: #1a1a1a; }
+  100% { background-position: 0% 50%; background-color: #8B0000; }
+}
+
+.animate-gradient-red-black {
+  background: linear-gradient(270deg, #1a1a1a, #8B0000, #330000, #1a1a1a);
+  background-size: 600% 600%;
+  animation: gradient-red-black 25s ease infinite;
+}
+
+/* HERO / CONTENIDO PRINCIPAL */
+.hero-slide {
+  margin-left: 240px; /* para no tapar el sidebar */
+  padding: 3rem 2rem;
+  min-height: 100vh;
+  color: white;
+  text-align: center;
+}
+
+.hero-slide h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+
+.hero-slide p {
+  font-size: 1.25rem;
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+  line-height: 1.6;
 }

@@ -28,84 +28,118 @@ export class AuthService {
   user$ = user(this.auth);
   roleLoaded = signal(false);
 
- constructor() {
-  // Suscribirse al usuario Firebase en tiempo real
-  this.user$.subscribe({
-    next: (user) => {
-      this.currentUser.set(user);
-      console.log('AuthService - Usuario Firebase:', user);
+  constructor() {
 
-      if (user) {
-        this.loadUserRole(user.uid);
-      } else {
-        this.userRole.set(null);
-        this.roleLoaded.set(false);
-      }
-    },
-    error: (err) => console.error('Error en user$:', err)
-  });
-}
+    // ====== LEER LOCAL STORAGE AL ARRANCAR ======
+    const storedUser = localStorage.getItem("authUser");
+    const storedRole = localStorage.getItem("authRole") as Role | null;
 
+    if (storedUser) {
+      this.currentUser.set(JSON.parse(storedUser));
+    }
+    if (storedRole) {
+      this.userRole.set(storedRole);
+      this.roleLoaded.set(true);
+    }
+
+    // ====== Suscripción al estado Firebase ======
+    this.user$.subscribe({
+      next: (user) => {
+        this.currentUser.set(user);
+
+        if (user) {
+          localStorage.setItem("authUser", JSON.stringify(user));
+          this.loadUserRole(user.uid);
+        } else {
+          this.clearStorage();
+        }
+      },
+      error: (err) => console.error("Error en user$:", err)
+    });
+  }
+
+  // =======================
+  // GETTERS
+  // =======================
   getUserRole(): Role | null {
     return this.userRole();
   }
 
-  /** Registro con email/password */
+  isAuthenticated(): boolean {
+    return this.currentUser() !== null;
+  }
+
+  // =======================
+  // LOGIN & REGISTER
+  // =======================
   register(email: string, password: string): Observable<any> {
     return from(createUserWithEmailAndPassword(this.auth, email, password));
   }
 
-  /** Login con email/password */
   login(email: string, password: string): Observable<any> {
     return from(signInWithEmailAndPassword(this.auth, email, password));
   }
 
-  /** Login con Google usando popup (evita errores de redirect) */
   loginWithGoogle(): Observable<any> {
     const provider = new GoogleAuthProvider();
     return from(signInWithPopup(this.auth, provider));
   }
 
-  /** Logout */
   logout(): Observable<void> {
+    this.clearStorage();
     return from(signOut(this.auth));
   }
 
-  /** Verificar si el usuario está autenticado */
-  isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+  // Limpia localStorage y señales
+  private clearStorage() {
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("authRole");
+    this.currentUser.set(null);
+    this.userRole.set(null);
+    this.roleLoaded.set(false);
   }
 
-  /** Cargar rol desde Firestore */
+  // =======================
+  // CARGAR ROL
+  // =======================
   async loadUserRole(uid: string) {
     try {
       const docRef = doc(this.firestore, `usuarios/${uid}`);
       const docSnap = await getDoc(docRef);
 
+      let role: Role = 'user';
+
       if (docSnap.exists()) {
-        const data = docSnap.data();
-        console.log("Datos del documento:", data);
-        this.userRole.set(data['role'] || 'user');
+        role = docSnap.data()['role'] || 'user';
       } else {
-        // Crear el documento con rol por defecto 'user'
         await setDoc(docRef, { role: 'user' });
-        this.userRole.set('user');
-        console.log("Documento creado con rol por defecto: user");
       }
 
+      this.userRole.set(role);
+      localStorage.setItem("authRole", role);
       this.roleLoaded.set(true);
 
-    } catch (error) {
-      console.error("Error al cargar rol:", error);
+    } catch (err) {
+      console.error("Error al cargar rol:", err);
       this.userRole.set('user');
+      localStorage.setItem("authRole", 'user');
       this.roleLoaded.set(true);
     }
   }
 
-  /** Asignar rol (solo Admin puede usarlo) */
+  // =======================
+  // ASIGNAR ROL (ADMIN)
+  // =======================
   async setUserRole(uid: string, role: Role) {
     const userRef = doc(this.firestore, `usuarios/${uid}`);
     await setDoc(userRef, { role }, { merge: true });
-    this.userRole.set(role);
+
+    // Si el admin se cambia a sí mismo
+    const currentUid = this.currentUser()?.uid;
+
+    if (uid === currentUid) {
+      this.userRole.set(role);
+      localStorage.setItem("authRole", role);
+    }
   }
 }

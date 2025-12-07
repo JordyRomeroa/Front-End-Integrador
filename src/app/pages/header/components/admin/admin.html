@@ -1,9 +1,11 @@
-<!-- PANEL ADMINISTRADOR: Gestión de Programadores -->
 <section class="bg-white p-6 shadow-md rounded-md mx-6 space-y-6">
 
   <h3 class="text-2xl font-semibold mb-4">Gestión de Usuarios (Programadores)</h3>
 
-    <button class="btn btn-primary mb-4" (click)="registerProgrammer()">Registrar Programador</button>
+  <!-- Botón para ir al registro -->
+  <button class="btn btn-primary mb-4" (click)="registerProgrammer()">Registrar Programador</button>
+
+  <!-- Tabla de programadores -->
   <div class="overflow-x-auto">
     <table class="table w-full border border-gray-200">
       <thead>
@@ -18,48 +20,34 @@
         </tr>
       </thead>
       <tbody>
-        <tr class="hover:bg-gray-50">
+        <tr *ngFor="let programmer of programadores" class="hover:bg-gray-50">
           <td>
-            <img src="https://via.placeholder.com/40" alt="Foto de Juan Pérez" class="rounded-full w-10 h-10">
+            <img [src]="programmer.foto || 'https://via.placeholder.com/40'" 
+                 [alt]="'Foto de ' + programmer.nombre" 
+                 class="rounded-full w-10 h-10">
           </td>
-          <td>Juan Pérez</td>
-          <td>Frontend</td>
-          <td>Especialista en Angular y React</td>
+          <td>{{programmer.nombre}}</td>
+          <td>{{programmer.especialidad}}</td>
+          <td>{{programmer.descripcion}}</td>
           <td>
-            <a href="mailto:correo@ejemplo.com" class="text-blue-700 underline">correo@ejemplo.com</a>
+            <a [href]="'mailto:' + programmer.contacto" class="text-blue-700 underline">
+              {{programmer.contacto}}
+            </a>
           </td>
           <td>
-            <a href="#" class="text-blue-700 underline">LinkedIn</a>, 
-            <a href="#" class="text-blue-700 underline">GitHub</a>
+            <ng-container *ngFor="let red of programmer.redes.split(',')">
+              <a [href]="red" class="text-blue-700 underline">{{red}}</a><span *ngIf="!isLast(programmer.redes, red)">, </span>
+            </ng-container>
           </td>
           <td class="space-x-2">
-            <button class="btn btn-success btn-sm">Editar</button>
-            
-            <button class="btn btn-error btn-sm">Eliminar</button>
+            <button class="btn btn-success btn-sm" (click)="editarProgramador(programmer)">Editar</button>
+            <button class="btn btn-error btn-sm" (click)="eliminarProgramador(programmer)">Eliminar</button>
           </td>
         </tr>
-
-        <tr class="hover:bg-gray-50">
-          <td>
-            <img src="https://via.placeholder.com/40" alt="Foto de Ana López" class="rounded-full w-10 h-10">
-          </td>
-          <td>Ana López</td>
-          <td>Backend</td>
-          <td>Especialista en Node.js y Bases de Datos</td>
-          <td>
-            <a href="mailto:ana@ejemplo.com" class="text-blue-700 underline">ana@ejemplo.com</a>
-          </td>
-          <td>
-            <a href="#" class="text-blue-700 underline">LinkedIn</a>, 
-            <a href="#" class="text-blue-700 underline">GitHub</a>
-          </td>
-          <td class="space-x-2">
-            <button class="btn btn-success btn-sm">Editar</button>
-            <button class="btn btn-error btn-sm">Eliminar</button>
-          </td>
-        </tr>
-
       </tbody>
     </table>
   </div>
+
 </section>
+
+<router-outlet></router-outlet>
