@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { AdminGuard } from '../services/admin-service';
-import { ProgrammerGuard } from '../services/programmer-service';
+import { AdminGuard } from './core/admin-guard';
+import { ProgrammerGuard } from './core/programmer-guard';
 
 
 export const routes: Routes = [
@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login').then(m => m.Login)
   },
   {
+path:'register',
+loadComponent:() => import('./pages/header/components/register-user/register').then(m => m.RegisterPage)
+  },
+  {
     path: 'home',
     loadComponent: () => import('./pages/header/home').then(m => m.Home),
     children: [
@@ -24,7 +28,7 @@ export const routes: Routes = [
       },
       { 
         path: 'proyectos',
-        loadComponent: () => import('./pages/header/components/programmer/proyectos/proyectos').then(m => m.Proyectos)
+        loadComponent: () => import('./pages/header/components/user/proyectos/proyectos').then(m => m.Proyectos)
       },
       { 
         path: 'admin',
@@ -40,7 +44,13 @@ export const routes: Routes = [
       { 
         path: 'programmer', 
         loadComponent: () => import('./pages/header/components/programmer/programmer').then(m => m.Programmer), 
-        canActivate: [ProgrammerGuard] 
+        canActivate: [ProgrammerGuard] ,
+        children: [
+          { 
+            path: 'management', 
+            loadComponent: () => import('./pages/header/components/programmer/management/management').then(m => m.Management)
+          }
+        ]
       },
       { 
         path: 'user', 

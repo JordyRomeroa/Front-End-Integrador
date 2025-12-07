@@ -1,6 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, effect, signal } from '@angular/core';
-import { Router, ActivatedRoute, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
+import { Firestore, collection, getDocs } from '@angular/fire/firestore';
+import { CommonModule } from '@angular/common';
+import { getAuth, User, createUserWithEmailAndPassword } from 'firebase/auth';
+import { ProgramadorData, ProgramadorService } from '../../../../../services/programmer-service';
 
 interface Programador {
   id: string;
@@ -10,97 +14,122 @@ interface Programador {
   contacto: string;
   redes: string;
   foto?: string;
+  role: string;
 }
 
 @Component({
   selector: 'app-admin',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CommonModule],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Admin { 
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
+  private firestore = inject(Firestore);
+  private programadorService = inject(ProgramadorService);
 
-  // Signal para rol actual
   role = signal<string | null>(null);
-
-  // Lista de programadores (simulada)
-  programadores = signal<Programador[]>([
-    {
-      id: '1',
-      nombre: 'Juan Pérez',
-      especialidad: 'Frontend',
-      descripcion: 'Especialista en Angular y React',
-      contacto: 'correo@ejemplo.com',
-      redes: 'https://linkedin.com,https://github.com',
-      foto: 'https://via.placeholder.com/40'
-    },
-    {
-      id: '2',
-      nombre: 'Ana López',
-      especialidad: 'Backend',
-      descripcion: 'Especialista en Node.js y Bases de Datos',
-      contacto: 'ana@ejemplo.com',
-      redes: 'https://linkedin.com,https://github.com',
-      foto: 'https://via.placeholder.com/40'
-    }
-  ]);
+  programadores = signal<Programador[]>([]);
 
   constructor() {
     console.log("========== ADMIN COMPONENT INICIADO ==========");
 
-    // Cargar rol desde AuthService
     effect(() => {
-      const r = this.authService.userRole(); // debe devolver 'admin', 'programmer' o 'user'
+      const r = this.authService.userRole();
       this.role.set(r);
       console.log("Rol actualizado:", r);
 
-      // Si no hay rol o no es admin, redirigir
       if (!r || r !== 'admin') {
         console.warn("⚠ No es admin, redirigiendo...");
         this.router.navigate(['/login']);
+      } else {
+        this.cargarProgramadores();
       }
     });
   }
 
-  /** Logout centralizado */
+  /** Cargar programadores desde Firestore */
+  async cargarProgramadores() {
+    try {
+      const querySnapshot = await getDocs(collection(this.firestore, 'usuarios'));
+      const lista: Programador[] = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          nombre: doc.data()['nombre'] || '',
+          especialidad: doc.data()['especialidad'] || '',
+          descripcion: doc.data()['descripcion'] || '',
+          contacto: doc.data()['contacto'] || '',
+          redes: doc.data()['redes'] || '',
+          foto: doc.data()['foto'] || 'https://via.placeholder.com/40',
+          role: doc.data()['role'] || 'usuario',
+        }))
+        .filter(user => user.role === 'programmer');
+
+      this.programadores.set(lista);
+      console.log("Programadores cargados:", lista);
+    } catch (err) {
+      console.error("Error al cargar programadores:", err);
+    }
+  }
+
   logout() {
-    console.log("========== CERRANDO SESIÓN ==========");
     this.authService.logout().subscribe({
-      next: () => {
-        console.log("✔ Sesión cerrada");
-        this.router.navigate(['/login']);
-      },
-      error: (err) => console.error("❌ Error al cerrar sesión:", err)
+      next: () => this.router.navigate(['/login']),
+      error: (err) => console.error(err)
     });
   }
 
-  /** Navegar a registro de programadores */
+  /** Navegar a la página de registro de programador */
   registerProgrammer() {
-    if (this.role() !== 'admin') {
-      alert("⛔ BLOQUEADO: no eres admin");
-      return;
-    }
     this.router.navigate(['/home/admin/register-programmer']);
   }
 
-  /** Editar programador: navega a register con datos precargados */
-  editarProgramador(programmer: Programador) {
-    console.log("Editar programador:", programmer);
-    // Guardamos datos en localStorage temporalmente para precargar en el form
+  /** Editar programador usando ProgramadorService */
+  async editarProgramador(programmer: Programador) {
     localStorage.setItem('editProgrammer', JSON.stringify(programmer));
     this.router.navigate(['/home/admin/register-programmer']);
   }
 
-  /** Eliminar programador */
+  /** Eliminar programador localmente */
   eliminarProgramador(programmer: Programador) {
-    console.log("Eliminar programador:", programmer);
     if (confirm(`¿Seguro que deseas eliminar a ${programmer.nombre}?`)) {
       this.programadores.set(this.programadores().filter(p => p.id !== programmer.id));
-      alert(`Programador ${programmer.nombre} eliminado.`);
+      console.log("Programador eliminado localmente:", programmer);
+    }
+  }
+
+  isLast(redes: string, red: string) {
+    const arr = redes.split(',');
+    return arr.indexOf(red) === arr.length - 1;
+  }
+
+  obtenerRedes(redes: string) {
+    return redes ? redes.split(',').map(r => r.trim()).filter(r => r) : [];
+  }
+
+  async crearProgramadorAuth(data: ProgramadorData) {
+    if (!this.authService.currentUser()) {
+      alert("Debes iniciar sesión como admin.");
+      return;
+    }
+
+    try {
+      // Crear la cuenta en Firebase Authentication
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(auth, data.contacto, data.password || '123456');
+      const newUser = userCredential.user;
+
+      // Registrar en Firestore con el servicio
+      await this.programadorService.registrarProgramador(data, this.authService.currentUser()!);
+
+      alert("Programador creado correctamente sin cerrar tu sesión de admin.");
+      this.cargarProgramadores();
+
+    } catch (err: any) {
+      console.error("Error al crear programador:", err);
+      alert("Error al crear programador. Revisa la consola.");
     }
   }
 }

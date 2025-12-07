@@ -1,41 +1,63 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
-import { doc, Firestore, getDoc } from '@angular/fire/firestore';
-import { getAuth } from 'firebase/auth';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs } from '@angular/fire/firestore';
+import { getAuth, User } from 'firebase/auth';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface ProgramadorData {
+  nombre: string;
+  especialidad: string;
+  descripcion?: string;
+  contacto: string;
+  password?: string; // opcional si no queremos crear la cuenta Auth aquí
+  redes?: string[];
+  foto?: string;
+}
 
-export class ProgrammerGuard implements CanActivate {
-  constructor(private router: Router, private firestore: Firestore) {}
+@Injectable({ providedIn: 'root' })
+export class ProgramadorService {
+  private firestore = inject(Firestore);
+  private auth = getAuth();
 
-  async canActivate(): Promise<boolean> {
-    const auth = getAuth();
-    const user = auth.currentUser;
+  /**
+   * Crea un documento de programador en Firestore
+   * @param data Datos del programador
+   * @param adminUser Usuario admin que lo está creando
+   */
+   async registrarProgramador(data: ProgramadorData, adminUser: User, uid?: string) {
+    const usuariosCol = collection(this.firestore, "usuarios");
 
-    if (!user) {
-      this.router.navigate(['/home']);
-      return false;
-    }
+    // Si no se pasa UID, genera uno automático
+    const nuevoDocRef = uid ? doc(usuariosCol, uid) : doc(usuariosCol);
 
-    try {
-      const docSnap = await getDoc(doc(this.firestore, `usuarios/${user.uid}`));
-      if (!docSnap.exists()) {
-        console.warn("Documento de usuario no encontrado");
-        this.router.navigate(['/home']);
-        return false;
-      }
+    const docData = {
+      uid: uid || nuevoDocRef.id,
+      nombre: data.nombre,
+      especialidad: data.especialidad,
+      descripcion: data.descripcion || '',
+      contacto: data.contacto,
+      redes: (data.redes || []).filter(r => r.trim() !== '').join(','),
+      role: "programmer",
+      createdBy: adminUser.uid,
+      createdAt: serverTimestamp(),
+      foto: data.foto || 'https://via.placeholder.com/40'
+    };
 
-      const role = docSnap.data()?.['role'];
-      if (role === 'programmer') return true;
-
-      this.router.navigate(['/home']);
-      return false;
-    } catch (err) {
-      console.error("Error al verificar guard:", err);
-      this.router.navigate(['/home']);
-      return false;
-    }
+    await setDoc(nuevoDocRef, docData);
+    return docData;
   }
+
+  async obtenerProgramadores(): Promise<{ uid: string; nombre: string }[]> {
+    const usuariosCol = collection(this.firestore, "usuarios");
+    const snapshot = await getDocs(usuariosCol);
+
+    return snapshot.docs
+      .filter(doc => doc.data()['role'] === 'programmer')
+      .map(doc => ({
+        uid: doc.id,
+        nombre: doc.data()['nombre'] || 'Sin nombre'
+      }));
+  }
+  guardarProgramador(data: ProgramadorData, adminUser: User, uid?: string) {
+    return this.registrarProgramador(data, adminUser, uid);
+  }
+
 }

@@ -2,7 +2,7 @@ import { CanActivate, Router } from "@angular/router";
 import { Injectable } from "@angular/core";
 import { Firestore, doc, getDoc } from "@angular/fire/firestore";
 import { getAuth } from "firebase/auth";
-import { AuthService } from "./auth-service";
+import { AuthService } from "../../services/auth-service";
 
 @Injectable({
   providedIn: 'root'

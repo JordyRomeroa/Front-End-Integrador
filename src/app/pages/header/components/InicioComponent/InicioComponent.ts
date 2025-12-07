@@ -2,13 +2,15 @@ import { ChangeDetectionStrategy, Component, OnInit, ChangeDetectorRef } from '@
 import { forkJoin } from 'rxjs';
 import { GitHubService, Repo } from '../../../../../services/github-service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterLink, RouterModule, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-inicio-component',
   templateUrl: './InicioComponent.html',
   styleUrls: ['./InicioComponent.css'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,FormsModule,RouterModule,RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InicioComponent implements OnInit {

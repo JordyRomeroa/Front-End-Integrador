@@ -5,7 +5,6 @@ import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { Programmer } from './components/programmer/programmer';
 import { Admin } from "./components/admin/admin";
 import { User } from './components/user/user';
-import { ProyectoService } from '../../../services/proyecto-service';
 
 @Component({
   selector: 'app-home',
@@ -18,7 +17,7 @@ export class Home {
   role: Role | null = null;
   currentRoute: string;
 
-  constructor(public authService: AuthService, private router: Router,public proyectoService: ProyectoService) {
+  constructor(public authService: AuthService, private router: Router) {
     this.currentRoute = this.router.url;
 
     // Efecto para actualizar el rol cuando cambie

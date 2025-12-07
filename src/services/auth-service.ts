@@ -9,7 +9,7 @@ import {
   user, 
   User 
 } from "@angular/fire/auth";
-import { Firestore, doc, getDoc, setDoc } from "@angular/fire/firestore";
+import { Firestore, collection, doc, getDoc, getDocs, query, setDoc, where } from "@angular/fire/firestore";
 import { from, Observable } from "rxjs";
 import { Router } from "@angular/router";
 
@@ -142,4 +142,17 @@ export class AuthService {
       localStorage.setItem("authRole", role);
     }
   }
+ async getProgramadores(): Promise<{ uid: string; email: string }[]> {
+  const q = query(
+    collection(this.firestore, 'usuarios'),
+    where('role', '==', 'programmer')
+  );
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    uid: doc.id,
+    email: doc.id  // mostramos el uid porque no hay email
+  }));
+}
+
 }

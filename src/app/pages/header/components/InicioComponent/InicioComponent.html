@@ -72,7 +72,10 @@
   <p class="text-gray-300 mb-6 animate-slideUp">
     Contáctanos hoy y descubre cómo podemos ayudarte a impulsar tus proyectos.
   </p>
-  <a href="/contacto" class="bg-yellow-400 text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-yellow-500 transition-colors animate-pulse">
-    ¡Contáctanos Ahora!
-  </a>
+  <a [routerLink]="'/home/user'" 
+   class="bg-yellow-400 text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-yellow-500 transition-colors animate-pulse">
+  ¡Solicitar Asesoría!
+</a>
+
 </section>
+<router-outlet></router-outlet>

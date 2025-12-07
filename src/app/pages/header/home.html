@@ -32,13 +32,13 @@
         Programador ▼
       </button>
       <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-        <a routerLink="/proyectos" class="submenu-item">Mis proyectos</a>
+        <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
         <a routerLink="/home/programmer/solicitudes" class="submenu-item">Solicitudes</a>
       </div>
     </div>
 
     <!-- USER NORMAL -->
-    <a *ngIf="authService.userRole() === 'user'" routerLink="/home/user" class="nav-link">Asesoría</a>
+    
 
   </nav>
 
