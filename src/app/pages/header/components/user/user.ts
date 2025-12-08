@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, effect, signal, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { AuthService, Role } from '../../../../../services/auth-service';
 import { Router } from '@angular/router';
 import { Asesoria, AsesoriaService } from '../../../../../services/advice';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ProgramadorService } from '../../../../../services/programmer-service';
+import { ProgramadorService, ProgramadorData } from '../../../../../services/programmer-service';
+import { Subscription } from 'rxjs';
+
+// Extendemos ProgramadorData temporalmente para incluir uid
+type ProgramadorConId = ProgramadorData & { uid: string };
 
 @Component({
   selector: 'app-user',
@@ -13,55 +17,57 @@ import { ProgramadorService } from '../../../../../services/programmer-service';
   styleUrls: ['./user.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class User { 
-  role: Role | null = null;
-  mensaje: string = '';
-  programadores = signal<{ uid: string; nombre: string }[]>([]);
-  programadorId = '';
-  private progService = inject(ProgramadorService);
+export class User implements OnInit, OnDestroy {
+  // Señal para el rol, así la vista reacciona
+  role = signal<Role | null>(null);
 
-  constructor(
-    public authService: AuthService, 
-    private router: Router,
-    private asesoriaService: AsesoriaService
-  ) {
-    effect(() => {
-      if (this.authService.roleLoaded() && this.authService.getUserRole() === 'user') {
-        this.role = 'user';
-        this.cargarProgramadores();
-      }
-    });
+  mensaje: string = '';
+  programadores = signal<ProgramadorConId[]>([]);
+  programadorId = '';
+
+  private progService = inject(ProgramadorService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private asesoriaService = inject(AsesoriaService);
+  private sub?: Subscription;
+
+  // ✅ Effect movido a un field initializer
+  private initEffect = effect(() => {
+    if (this.authService.roleLoaded() && this.authService.getUserRole() === 'user') {
+      this.role.set('user');
+      this.suscribirseProgramadores();
+    }
+  });
+
+  ngOnInit() {
+    // Aquí ya no necesitamos llamar a effect()
   }
 
   logout() {
     this.authService.logout().subscribe({
       next: () => {
         console.log('Sesión cerrada');
-        this.authService.currentUser.set(null);
-        this.authService.userRole.set(null);
-        this.authService.roleLoaded.set(false);
         this.router.navigate(['/login']);
       },
       error: (err) => console.error('Error al cerrar sesión:', err),
     });
   }
 
-  async cargarProgramadores() {
-    try {
-      const progList = await this.progService.obtenerProgramadores();
-      console.log('Resultado de obtenerProgramadores():', progList);
+  suscribirseProgramadores() {
+    this.sub?.unsubscribe();
 
-      this.programadores.set(progList);
+    this.sub = this.progService.programadores$.subscribe(lista => {
+  console.log('Programadores recibidos:', lista);
+  const listaConUid: ProgramadorConId[] = lista.map(p => ({ ...p, uid: (p as any).uid }));
+  this.programadores.set(listaConUid);
 
-      if (this.programadores().length) {
-        this.programadorId = this.programadores()[0].uid;
-        console.log('Programador seleccionado por defecto:', this.programadores()[0]);
-      } else {
-        console.warn('No se encontraron programadores.');
-      }
-    } catch (err) {
-      console.error('Error al cargar programadores:', err);
-    }
+  if (listaConUid.length && !this.programadorId) {
+    this.programadorId = listaConUid[0].uid;
+  }
+});
+
+
+    this.progService.refrescarTabla().catch(console.error);
   }
 
   async enviarAsesoria() {
@@ -90,5 +96,9 @@ export class User {
       console.error(error);
       alert('Error al enviar la asesoría.');
     }
+  }
+
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
   }
 }

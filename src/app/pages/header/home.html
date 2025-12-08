@@ -1,77 +1,86 @@
 <!-- Fondo animado rojo y negro -->
 <div class="fixed inset-0 -z-10 animate-gradient-red-black"></div>
 
-<!-- SIDEBAR -->
-<aside class="navbar">
+<!-- Loader profesional -->
+<div *ngIf="loading()" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
+  <!-- Spinner animado -->
+  <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
+  
+  <!-- Texto de carga -->
+  <p class="text-white text-xl font-semibold tracking-wide animate-pulse">
+    Cargando tu experiencia...
+  </p>
+</div>
 
-  <!-- LOGO -->
-  <a routerLink="/home/inicio" class="text-2xl font-bold text-white">MiApp</a>
+<!-- Contenido principal -->
+<div *ngIf="!loading()">
 
-  <!-- MENÚ -->
-  <nav class="mt-8 flex flex-col space-y-2">
+  <!-- SIDEBAR -->
+  <aside class="navbar">
 
-    <!-- Inicio y Proyectos (todos) -->
-    <a routerLink="/home/inicio" routerLinkActive="active" class="nav-link">Inicio</a>
-    <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
+    <!-- LOGO -->
+    <a routerLink="/home/inicio" class="text-2xl font-bold text-white">MiApp</a>
 
-    <!-- ADMIN -->
-    <div *ngIf="authService.userRole() === 'admin'" class="relative group">
-      <button class="nav-link flex items-center justify-between">
-        Panel de control ▼
-      </button>
-      <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-<a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">
-  Registrar Programador
-</a>
+    <!-- MENÚ -->
+    <nav class="mt-8 flex flex-col space-y-2">
+      <a routerLink="/home/inicio" routerLinkActive="active" class="nav-link">Inicio</a>
+      <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
+
+      <!-- ADMIN -->
+      <div *ngIf="role === 'admin'" class="relative group">
+        <button class="nav-link flex items-center justify-between">
+          Panel de control ▼
+        </button>
+        <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+          <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">
+            Registrar Programador
+          </a>
+        </div>
       </div>
-    </div>
 
-    <!-- PROGRAMMER -->
-    <div *ngIf="authService.userRole() === 'programmer'" class="relative group">
-      <button class="nav-link flex items-center justify-between">
-        Programador ▼
-      </button>
-      <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-        <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
-        <a routerLink="/home/programmer/solicitudes" class="submenu-item">Solicitudes</a>
+      <!-- PROGRAMMER -->
+      <div *ngIf="role === 'programmer'" class="relative group">
+        <button class="nav-link flex items-center justify-between">
+          Programador ▼
+        </button>
+        <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+          <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
+          <a routerLink="/home/programmer/solicitudes" class="submenu-item">Solicitudes</a>
+        </div>
       </div>
+
+      <!-- USER NORMAL -->
+      <div *ngIf="role === 'user'">
+        <span class="nav-link">Explorar contenido</span>
+      </div>
+    </nav>
+
+    <!-- USER SECTION -->
+    <div class="mt-auto flex flex-col items-center space-y-3">
+      <div class="user-initials">
+        {{ getInitials(authService.currentUser()?.email ?? '') }}
+      </div>
+
+      <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
+        Cerrar sesión
+      </button>
     </div>
 
-    <!-- USER NORMAL -->
-    
+  </aside>
 
-  </nav>
+  <!-- HERO / CONTENIDO PRINCIPAL -->
+  <main class="hero-slide p-6">
+    <h2 class="text-4xl md:text-5xl font-bold text-white animate-fadeIn mb-6">
+      <span *ngIf="role === 'user'">¡Bienvenido!</span>
+      <span *ngIf="role === 'programmer'">¡Bienvenido!</span>
+      <span *ngIf="role === 'admin'">¡Bienvenido!</span>
+    </h2>
 
-  <!-- USER SECTION -->
-  <div class="mt-auto flex flex-col items-center space-y-3">
-    <div class="user-initials">
-      {{ getInitials(authService.currentUser()?.email ?? '') }}
-    </div>
+    <router-outlet></router-outlet>
+  </main>
 
-    <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-      Cerrar sesión
-    </button>
-  </div>
-
-</aside>
-
-<!-- HERO / CONTENIDO PRINCIPAL -->
-<main class="hero-slide p-6">
-
- 
-
-  <h2 class="text-4xl md:text-5xl font-bold text-white animate-fadeIn mb-6">
-    <span *ngIf="authService.userRole() === 'user'">¡Bienvenido!</span>
-    <span *ngIf="authService.userRole() === 'programmer'">¡Bienvenido!</span>
-    <span *ngIf="authService.userRole() === 'admin'">¡Bienvenido!</span>
-  </h2>
-
-  <!-- AQUÍ SE RENDERIZAN LAS RUTAS HIJAS -->
-  <router-outlet></router-outlet>
-
-</main>
-
-<!-- FOOTER -->
-<footer class="bg-white/80 backdrop-blur-md mt-auto shadow-inner py-4 text-center text-gray-500 animate-fadeIn">
-  © 2025 MiApp. Todos los derechos reservados.
-</footer>
+  <!-- FOOTER -->
+  <footer class="bg-white/80 backdrop-blur-md mt-auto shadow-inner py-4 text-center text-gray-500 animate-fadeIn">
+    © 2025 MiApp. Todos los derechos reservados.
+  </footer>
+</div>

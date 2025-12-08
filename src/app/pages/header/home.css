@@ -3,7 +3,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 240px; /* ancho del sidebar */
+  width: 240px;
   height: 100vh;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(10px);
@@ -40,7 +40,7 @@
 }
 
 .nav-link:hover {
-  background: rgba(255, 0, 0, 0.3);
+  background: rgba(220, 60, 60, 0.3); /* rojo menos intenso */
   padding-left: 1.5rem;
 }
 
@@ -56,7 +56,7 @@
 }
 
 .submenu-item:hover {
-  background-color: rgba(255, 0, 0, 0.5);
+  background-color: rgba(220, 60, 60, 0.5); /* rojo más suave */
   padding-left: 2rem;
 }
 
@@ -79,27 +79,27 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8B0000, #330000);
+  background: linear-gradient(135deg, #c03939, #4d1a1a); /* rojo suavizado */
   color: white;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   text-transform: uppercase;
-  box-shadow: 0 0 8px #ff0000;
+  box-shadow: 0 0 8px #e06666; /* menos brillante */
   font-size: 1.1rem;
   transition: all 0.3s ease;
-  margin-top: auto; /* al final del sidebar */
+  margin-top: auto;
 }
 
 .user-initials:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 12px #ff0000, 0 0 16px #ff4500;
+  box-shadow: 0 0 12px #e06666, 0 0 16px #f28c8c;
 }
 
 /* BOTÓN DE CERRAR SESIÓN */
 .navbar button {
-  background: #8B0000;
+  background: #c03939; /* rojo menos intenso */
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -109,28 +109,28 @@
 }
 
 .navbar button:hover {
-  background: #ff0000;
+  background: #e06666; /* hover suave */
   transform: scale(1.05);
 }
 
-/* FONDO ANIMADO ROJO-NEGRO */
+/* FONDO ANIMADO ROJO-NEGRO SUAVE */
 @keyframes gradient-red-black {
   0% { background-position: 0% 50%; background-color: #1a1a1a; }
-  25% { background-position: 50% 50%; background-color: #8B0000; }
-  50% { background-position: 100% 50%; background-color: #330000; }
+  25% { background-position: 50% 50%; background-color: #c03939; }
+  50% { background-position: 100% 50%; background-color: #4d1a1a; }
   75% { background-position: 50% 50%; background-color: #1a1a1a; }
-  100% { background-position: 0% 50%; background-color: #8B0000; }
+  100% { background-position: 0% 50%; background-color: #c03939; }
 }
 
 .animate-gradient-red-black {
-  background: linear-gradient(270deg, #1a1a1a, #8B0000, #330000, #1a1a1a);
+  background: linear-gradient(270deg, #1a1a1a, #c03939, #4d1a1a, #1a1a1a);
   background-size: 600% 600%;
   animation: gradient-red-black 25s ease infinite;
 }
 
 /* HERO / CONTENIDO PRINCIPAL */
 .hero-slide {
-  margin-left: 240px; /* para no tapar el sidebar */
+  margin-left: 240px;
   padding: 3rem 2rem;
   min-height: 100vh;
   color: white;

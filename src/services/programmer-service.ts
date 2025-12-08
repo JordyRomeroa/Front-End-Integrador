@@ -1,13 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs } from '@angular/fire/firestore';
 import { getAuth, User } from 'firebase/auth';
+import { BehaviorSubject } from 'rxjs';
 
 export interface ProgramadorData {
+  uid?: string; // <--- Agregamos uid opcional para identificar programadores
   nombre: string;
   especialidad: string;
   descripcion?: string;
   contacto: string;
-  password?: string; // opcional si no queremos crear la cuenta Auth aquí
+  password?: string;
   redes?: string[];
   foto?: string;
 }
@@ -17,15 +19,18 @@ export class ProgramadorService {
   private firestore = inject(Firestore);
   private auth = getAuth();
 
-  /**
-   * Crea un documento de programador en Firestore
-   * @param data Datos del programador
-   * @param adminUser Usuario admin que lo está creando
-   */
-   async registrarProgramador(data: ProgramadorData, adminUser: User, uid?: string) {
-    const usuariosCol = collection(this.firestore, "usuarios");
+  // Observable interno para emitir cambios en la lista de programadores
+  private programadoresSubject = new BehaviorSubject<ProgramadorData[]>([]);
+  programadores$ = this.programadoresSubject.asObservable();
 
-    // Si no se pasa UID, genera uno automático
+  constructor() {
+    // Inicializamos la lista al crear el servicio
+    this.refrescarTabla(); 
+  }
+
+  /** Crea un programador en Firestore */
+  async registrarProgramador(data: ProgramadorData, adminUser: User, uid?: string) {
+    const usuariosCol = collection(this.firestore, "usuarios");
     const nuevoDocRef = uid ? doc(usuariosCol, uid) : doc(usuariosCol);
 
     const docData = {
@@ -42,10 +47,15 @@ export class ProgramadorService {
     };
 
     await setDoc(nuevoDocRef, docData);
+
+    // Actualizar la tabla automáticamente
+    await this.refrescarTabla();
+
     return docData;
   }
 
-  async obtenerProgramadores(): Promise<{ uid: string; nombre: string }[]> {
+  /** Obtiene todos los programadores de Firestore */
+  async obtenerProgramadores(): Promise<ProgramadorData[]> {
     const usuariosCol = collection(this.firestore, "usuarios");
     const snapshot = await getDocs(usuariosCol);
 
@@ -53,11 +63,23 @@ export class ProgramadorService {
       .filter(doc => doc.data()['role'] === 'programmer')
       .map(doc => ({
         uid: doc.id,
-        nombre: doc.data()['nombre'] || 'Sin nombre'
+        nombre: doc.data()['nombre'] || 'Sin nombre',
+        especialidad: doc.data()['especialidad'] || '',
+        descripcion: doc.data()['descripcion'] || '',
+        contacto: doc.data()['contacto'] || '',
+        redes: (doc.data()['redes'] || '').split(','),
+        foto: doc.data()['foto'] || 'https://via.placeholder.com/40'
       }));
   }
+
+  /** Refresca la tabla y emite cambios de inmediato */
+  async refrescarTabla() {
+    const lista = await this.obtenerProgramadores();
+    this.programadoresSubject.next(lista);
+  }
+
+  /** Alias por compatibilidad */
   guardarProgramador(data: ProgramadorData, adminUser: User, uid?: string) {
     return this.registrarProgramador(data, adminUser, uid);
   }
-
 }

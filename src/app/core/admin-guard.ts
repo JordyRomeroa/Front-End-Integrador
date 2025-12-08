@@ -1,30 +1,44 @@
 import { CanActivate, Router } from "@angular/router";
 import { Injectable } from "@angular/core";
-import { Firestore, doc, getDoc } from "@angular/fire/firestore";
-import { getAuth } from "firebase/auth";
 import { AuthService } from "../../services/auth-service";
 
 @Injectable({
   providedIn: 'root'
 })
-
-@Injectable({
-  providedIn: 'root'
-})
 export class AdminGuard implements CanActivate {
-  constructor(private auth: AuthService, private router: Router) {}
+
+  constructor(
+    private auth: AuthService,
+    private router: Router
+  ) {}
 
   async canActivate(): Promise<boolean> {
-    const user = this.auth.currentUser();
+
+    console.log("🛡️ [AdminGuard] Verificando acceso...");
+
+    // Esperamos al usuario autenticado real
+    const user = await this.auth.waitForFirebaseUser();
+
     if (!user) {
-      this.router.navigate(['/home']);
+      console.log("❌ No hay usuario. Redirigiendo a login...");
+      this.router.navigate(['/login']);
       return false;
     }
-    const docSnap = await getDoc(doc(this.auth['firestore'], `usuarios/${user.uid}`));
-    const role = docSnap.data()?.['role'];
-    if (role === 'admin') return true;
+
+    // Esperamos a que el rol esté completamente cargado
+    await this.auth.waitForRoleLoaded();
+
+    const role = this.auth.getUserRole();
+    console.log("🛡️ Rol detectado:", role);
+
+    // PERMITIR SOLO ADMIN
+    if (role === 'admin') {
+      console.log("🟩 Acceso autorizado como ADMIN");
+      return true;
+    }
+
+    console.log("⛔ Acceso DENEGADO. No es admin.");
     this.router.navigate(['/home']);
     return false;
   }
-
 }

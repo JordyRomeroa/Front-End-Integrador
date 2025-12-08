@@ -35,23 +35,31 @@ export class RegisterPage {
 
   formUtils = FormUtils;
 
-  constructor() {
-    this.registerForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
-    }, {
-      validators: this.passwordMatchValidator
-    });
 
-    // Effect para navegar cuando el registro sea exitoso
-    effect(() => {
-      if (this.registerResource.hasValue() && this.registerResource.value()) {
-        console.log('Registro exitoso, navegando a /simpsons');
-        this.router.navigate(['/home']);
-      }
-    });
-  }
+  constructor() {
+  this.registerForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    confirmPassword: ['', [Validators.required]]
+  }, {
+    validators: this.passwordMatchValidator
+  });
+
+  // Effect para navegar cuando el registro sea exitoso
+  effect(() => {
+    if (this.registerResource.hasValue() && this.registerResource.value()) {
+      console.log('Registro exitoso, navegando a /home');
+      this.router.navigate(['/home']);
+    }
+  });
+
+  // --- NUEVO: debug de AuthService ---
+  effect(() => {
+    console.log('DEBUG: currentUser ->', this.authService.currentUser());
+    console.log('DEBUG: userRole ->', this.authService.userRole());
+    console.log('DEBUG: roleLoaded ->', this.authService.roleLoaded());
+  });
+}
 
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password');

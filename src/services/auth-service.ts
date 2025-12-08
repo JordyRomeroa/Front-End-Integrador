@@ -9,7 +9,16 @@ import {
   user, 
   User 
 } from "@angular/fire/auth";
-import { Firestore, collection, doc, getDoc, getDocs, query, setDoc, where } from "@angular/fire/firestore";
+import { 
+  Firestore, 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  setDoc, 
+  where 
+} from "@angular/fire/firestore";
 import { from, Observable } from "rxjs";
 import { Router } from "@angular/router";
 
@@ -19,14 +28,22 @@ export type Role = 'admin' | 'programmer' | 'user';
   providedIn: 'root'
 })
 export class AuthService {
+
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   private router: Router = inject(Router);
 
-  currentUser = signal<User | null>(null);
+  // ====== SEÑALES ======
+  firebaseUser = signal<User | null | undefined>(undefined); // Firebase real
+  currentUser = signal<User | null>(null);                   // Local user
   userRole = signal<Role | null>(null);
-  user$ = user(this.auth);
   roleLoaded = signal(false);
+
+  // Observable oficial de Firebase auth
+  user$ = user(this.auth);
+
+  // alias para Home
+  user = this.currentUser;
 
   constructor() {
 
@@ -37,30 +54,40 @@ export class AuthService {
     if (storedUser) {
       this.currentUser.set(JSON.parse(storedUser));
     }
+
     if (storedRole) {
       this.userRole.set(storedRole);
       this.roleLoaded.set(true);
     }
 
-    // ====== Suscripción al estado Firebase ======
-    this.user$.subscribe({
-      next: (user) => {
-        this.currentUser.set(user);
+    // ====== ESCUCHAR CAMBIOS DE FIREBASE (reactivo) ======
+    this.user$.subscribe(async (usr) => {
 
-        if (user) {
-          localStorage.setItem("authUser", JSON.stringify(user));
-          this.loadUserRole(user.uid);
-        } else {
-          this.clearStorage();
+      console.log("🔥 Firebase user$ emitió:", usr);
+
+      // usr puede ser undefined durante inicialización → lo guardamos
+      this.firebaseUser.set(usr);
+
+      if (usr) {
+        // usuario logueado
+        this.currentUser.set(usr);
+        localStorage.setItem("authUser", JSON.stringify(usr));
+
+        // cargar rol solo una vez
+        if (!this.roleLoaded()) {
+          await this.loadUserRole(usr.uid);
         }
-      },
-      error: (err) => console.error("Error en user$:", err)
+
+      } else {
+        // no logueado
+        this.clearStorage();
+      }
     });
   }
 
-  // =======================
+  // ===========================================
   // GETTERS
-  // =======================
+  // ===========================================
   getUserRole(): Role | null {
     return this.userRole();
   }
@@ -69,9 +96,9 @@ export class AuthService {
     return this.currentUser() !== null;
   }
 
-  // =======================
-  // LOGIN & REGISTER
-  // =======================
+  // ===========================================
+  // LOGIN Y REGISTRO
+  // ===========================================
   register(email: string, password: string): Observable<any> {
     return from(createUserWithEmailAndPassword(this.auth, email, password));
   }
@@ -90,7 +117,9 @@ export class AuthService {
     return from(signOut(this.auth));
   }
 
-  // Limpia localStorage y señales
+  // ===========================================
+  // MÉTODOS INTERNOS
+  // ===========================================
   private clearStorage() {
     localStorage.removeItem("authUser");
     localStorage.removeItem("authRole");
@@ -99,9 +128,9 @@ export class AuthService {
     this.roleLoaded.set(false);
   }
 
-  // =======================
-  // CARGAR ROL
-  // =======================
+  // ===========================================
+  // CARGAR ROL DEL USUARIO
+  // ===========================================
   async loadUserRole(uid: string) {
     try {
       const docRef = doc(this.firestore, `usuarios/${uid}`);
@@ -112,6 +141,7 @@ export class AuthService {
       if (docSnap.exists()) {
         role = docSnap.data()['role'] || 'user';
       } else {
+        // si no existe, crearlo
         await setDoc(docRef, { role: 'user' });
       }
 
@@ -120,39 +150,66 @@ export class AuthService {
       this.roleLoaded.set(true);
 
     } catch (err) {
-      console.error("Error al cargar rol:", err);
+      console.error("❌ Error al cargar rol:", err);
       this.userRole.set('user');
       localStorage.setItem("authRole", 'user');
       this.roleLoaded.set(true);
     }
   }
 
-  // =======================
+  // ===========================================
   // ASIGNAR ROL (ADMIN)
-  // =======================
+  // ===========================================
   async setUserRole(uid: string, role: Role) {
-    const userRef = doc(this.firestore, `usuarios/${uid}`);
-    await setDoc(userRef, { role }, { merge: true });
+    const ref = doc(this.firestore, `usuarios/${uid}`);
+    await setDoc(ref, { role }, { merge: true });
 
-    // Si el admin se cambia a sí mismo
-    const currentUid = this.currentUser()?.uid;
-
-    if (uid === currentUid) {
+    if (uid === this.currentUser()?.uid) {
       this.userRole.set(role);
       localStorage.setItem("authRole", role);
     }
   }
- async getProgramadores(): Promise<{ uid: string; email: string }[]> {
-  const q = query(
-    collection(this.firestore, 'usuarios'),
-    where('role', '==', 'programmer')
-  );
-  const snapshot = await getDocs(q);
 
-  return snapshot.docs.map(doc => ({
-    uid: doc.id,
-    email: doc.id  // mostramos el uid porque no hay email
-  }));
+  // ===========================================
+  // OBTENER PROGRAMADORES
+  // ===========================================
+  async getProgramadores(): Promise<{ uid: string; email: string }[]> {
+    const q = query(
+      collection(this.firestore, 'usuarios'),
+      where('role', '==', 'programmer')
+    );
+
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(doc => ({
+      uid: doc.id,
+      email: doc.data()['contacto'] || doc.id
+    }));
+  }
+ waitForFirebaseUser(): Promise<User | null> {
+  return new Promise(resolve => {
+    const check = setInterval(() => {
+      const u = this.firebaseUser();
+
+      // Esperamos a que Firebase deje de estar en undefined
+      if (u !== undefined) {
+        clearInterval(check);
+        resolve(u);  // u puede ser null (no logueado)
+      }
+    }, 20);
+  });
+}
+
+
+waitForRoleLoaded(): Promise<void> {
+  return new Promise(resolve => {
+    const t = setInterval(() => {
+      if (this.roleLoaded()) {
+        clearInterval(t);
+        resolve();
+      }
+    }, 50);
+  });
 }
 
 }

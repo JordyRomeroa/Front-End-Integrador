@@ -37,6 +37,7 @@ loadComponent:() => import('./pages/header/components/register-user/register').t
         children: [
           { 
             path: 'register-programmer', 
+            canActivate: [AdminGuard], 
             loadComponent: () => import('./pages/header/components/admin/register-programmer/register').then(m => m.RegisterProgrammer)
           }
         ]

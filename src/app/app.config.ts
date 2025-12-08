@@ -7,7 +7,7 @@ import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { provideHttpClient } from '@angular/common/http';
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyDHuuKDhY8D7PtV5OfFC88anLOQBfbrGn4",
   authDomain: "proyecto-final-5ed91.firebaseapp.com",
   projectId: "proyecto-final-5ed91",

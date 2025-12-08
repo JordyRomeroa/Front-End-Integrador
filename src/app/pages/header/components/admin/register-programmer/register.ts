@@ -1,25 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component,EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  indexedDBLocalPersistence 
-} from 'firebase/auth';
+import { Auth, setPersistence, createUserWithEmailAndPassword, getAuth, inMemoryPersistence } from 'firebase/auth';
 import { ProgramadorData, ProgramadorService } from '../../../../../../services/programmer-service';
-import { getApp } from 'firebase/app';
 import { AuthService } from '../../../../../../services/auth-service';
+import { getSecondaryApp } from '../../../../../../services/firebase-secondary';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './register.html',
-  styleUrls: ['./register.css'],
+  styleUrls: ['./register.css']
 })
 export class RegisterProgrammer {
-
+ @Output() cerrar = new EventEmitter<void>();
   nombre = '';
   especialidad = '';
   descripcion = '';
@@ -28,66 +24,41 @@ export class RegisterProgrammer {
   redes: string[] = [''];
   foto: File | null = null;
 
-  // Instancia secundaria reutilizable para no afectar al admin
-  public static secondaryAuth: ReturnType<typeof getAuth> | null = null;
-
   constructor(
     private router: Router,
     private programadorService: ProgramadorService,
-    private authService: AuthService  // <-- usamos AuthService para la sesión del admin
+    private authService: AuthService
   ) {}
 
-  /** Manejar archivo de foto */
-  onFotoSeleccionada(event: any) {
-    this.foto = event.target.files[0] ?? null;
+  private async createTemporaryAuth(): Promise<Auth> {
+    const secondaryApp = getSecondaryApp();
+    const auth2 = getAuth(secondaryApp);
+    await setPersistence(auth2, inMemoryPersistence);
+    return auth2;
   }
 
-  /** Agregar un input de red social */
-  agregarRed() {
-    this.redes.push('');
-  }
-
-  /** Eliminar un input de red social */
-  eliminarRed(index: number) {
-    this.redes.splice(index, 1);
-  }
-
-  /** Obtener instancia secundaria de Auth */
-  public getSecondaryAuth() {
-    if (!RegisterProgrammer.secondaryAuth) {
-      const app = getApp();
-      const auth2 = getAuth(app);
-      auth2.useDeviceLanguage();
-      auth2.setPersistence(indexedDBLocalPersistence)
-        .catch(err => console.error("Error setting persistence for secondary auth:", err));
-      RegisterProgrammer.secondaryAuth = auth2;
-    }
-    return RegisterProgrammer.secondaryAuth;
-  }
-
-  /** Registrar programador sin afectar al admin */
+  /** Registrar programador */
   async registrarProgramador() {
-    const adminUser = this.authService.currentUser(); // obtenemos la sesión del admin
+
+    const adminUser = this.authService.currentUser();
     if (!adminUser) {
-      alert("Debes iniciar sesión como admin.");
+      alert("Debes iniciar sesión como administrador.");
       return;
     }
 
     if (!this.nombre || !this.especialidad || !this.contacto || !this.password) {
-      alert("Completa los campos obligatorios: nombre, especialidad, correo y contraseña");
+      alert("Completa todos los campos obligatorios");
       return;
     }
 
     try {
-      const auth2 = this.getSecondaryAuth();
+      const auth2 = await this.createTemporaryAuth();
 
-      // Crear la cuenta del programador en la instancia secundaria
-      await createUserWithEmailAndPassword(
-        auth2,
-        this.contacto,
-        this.password
-      );
+      // Crear CUENTA del programador sin afectar al admin
+      const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
+      const uid = cred.user.uid;
 
+      // Guardar datos del programador
       const nuevoProgramador: ProgramadorData = {
         nombre: this.nombre,
         especialidad: this.especialidad,
@@ -96,23 +67,39 @@ export class RegisterProgrammer {
         redes: this.redes,
       };
 
-      // Guardar programador en Firestore con referencia al admin
-      await this.programadorService.registrarProgramador(nuevoProgramador, adminUser);
+      // Registrar y refrescar la tabla automáticamente
+      await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
 
-      // Cerrar sesión secundaria inmediatamente para no afectar al admin
+      // Cerrar sesión del usuario recién creado
       await auth2.signOut();
 
-      alert("Programador registrado con éxito!");
-      this.router.navigate(['/home/admin']); // vuelve al panel admin
+      alert("Programador registrado correctamente");
 
-    } catch (error) {
-      console.error("Error registrando programador:", error);
-      alert("Error al registrar programador: " + (error as any).message);
+      // Reset formulario
+      this.nombre = '';
+      this.especialidad = '';
+      this.descripcion = '';
+      this.contacto = '';
+      this.password = '';
+      this.redes = [''];
+      this.foto = null;
+
+      // No es necesario navegar, la tabla se actualizará automáticamente
+      // Si quieres cerrar el registro, puedes usar un modal o ocultar el formulario
+
+    } catch (error: any) {
+      console.error(error);
+      alert("Error registrando programador: " + error.message);
     }
   }
+cancelar() {
+    this.cerrar.emit(); // <-- emitimos el evento al padre
+  }
 
-  /** Cancelar registro y volver al panel admin */
-  cancelar() {
-    this.router.navigate(['/home/admin']);
+  agregarRed() { this.redes.push(''); }
+  eliminarRed(i: number) { this.redes.splice(i, 1); }
+
+  onFotoSeleccionada(event: any) {
+    this.foto = event.target.files[0] ?? null;
   }
 }

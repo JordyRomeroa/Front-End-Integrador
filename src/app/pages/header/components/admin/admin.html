@@ -1,52 +1,63 @@
-<section class="bg-white p-6 shadow-md rounded-md mx-6 space-y-6">
+<section class="bg-gradient-to-br from-red-100/20 to-red-50/10 p-6 rounded-xl shadow-lg mx-6 space-y-6 backdrop-blur-sm">
+  <h3 class="text-2xl font-bold mb-4 text-gray-900 drop-shadow-sm">Gestión de Usuarios</h3>
 
-  <h3 class="text-2xl font-semibold mb-4">Gestión de Usuarios</h3>
-
-  <button class="btn btn-primary mb-4" (click)="registerProgrammer()">Registrar Programador</button>
+  <button class="btn bg-blue-500 text-white hover:bg-blue-600 transform transition-transform hover:scale-105 shadow-md" (click)="registerProgrammer()">
+    Registrar Programador
+  </button>
 
   <div class="overflow-x-auto">
-    <table class="table w-full border border-gray-200 text-black">
-      <thead>
-        <tr class="bg-gray-100">
+    <table class="table w-full border border-gray-200 text-gray-800 bg-white/80 rounded-lg shadow-inner">
+      <thead class="bg-gray-200/50 text-gray-900">
+        <tr>
           <th>Foto</th>
           <th>Nombre</th>
           <th>Especialidad</th>
           <th>Descripción</th>
           <th>Contacto</th>
           <th>Redes</th>
-          <th>Rol</th> <!-- NUEVO -->
+          <th>Rol</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let programmer of programadores()" class="hover:bg-gray-50">
+        <tr *ngFor="let programmer of programadores()" class="hover:bg-gray-100/50 transition-colors duration-200">
           <td>
-            <img [src]="programmer.foto || 'https://via.placeholder.com/40'" 
-                 [alt]="'Foto de ' + programmer.nombre" 
-                 class="rounded-full w-10 h-10">
+            <img [src]="programmer.foto || 'https://via.placeholder.com/40'" class="rounded-full w-10 h-10 transition-transform hover:scale-110 shadow-md">
           </td>
-          <td>{{programmer.nombre}}</td>
-          <td>{{programmer.especialidad}}</td>
-          <td>{{programmer.descripcion}}</td>
+          <td class="font-medium">{{ programmer.nombre }}</td>
+          <td>{{ programmer.especialidad }}</td>
+          <td>{{ programmer.descripcion }}</td>
           <td>
-            <a [href]="'mailto:' + programmer.contacto" class="text-blue-700 underline">{{programmer.contacto}}</a>
+            <a *ngIf="programmer.contacto" [href]="'mailto:' + programmer.contacto" class="text-blue-700 underline hover:text-blue-900">
+              {{ programmer.contacto }}
+            </a>
           </td>
           <td>
-            <ng-container *ngFor="let red of obtenerRedes(programmer.redes)">
-              <a [href]="red" target="_blank" class="text-blue-700 underline">{{red}}</a>
-              <span *ngIf="!isLast(programmer.redes, red)">, </span>
+            <ng-container *ngFor="let red of obtenerRedes(programmer.redes); let i = index">
+              <a [href]="red" target="_blank" class="text-blue-700 underline hover:text-blue-900">{{ red }}</a>
+              <span *ngIf="i < (programmer.redes?.length || 0) - 1">, </span>
             </ng-container>
           </td>
-          <td>{{programmer.role}}</td> <!-- NUEVO -->
+          <td class="text-gray-800 font-semibold">programmer</td>
           <td class="space-x-2">
-            <button class="btn btn-success btn-sm" (click)="editarProgramador(programmer)">Editar</button>
-            <button class="btn btn-error btn-sm" (click)="eliminarProgramador(programmer)">Eliminar</button>
+            <button class="btn btn-success btn-sm transform transition-transform hover:scale-105 shadow-sm" (click)="editarProgramador(programmer)">Editar</button>
+            <button class="btn btn-error btn-sm transform transition-transform hover:scale-105 shadow-sm" (click)="eliminarProgramador(programmer)">Eliminar</button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
-
 </section>
+
+<!-- Modal de registro -->
+<div *ngIf="showRegisterModal()" class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
+  <div class="bg-white/90 rounded-xl shadow-2xl p-8 max-w-lg w-full transform transition-transform scale-90 animate-fadeIn relative" (click)="$event.stopPropagation()">
+    <!-- Botón de cierre -->
+    <button class="absolute top-4 right-4 btn btn-ghost text-gray-700 hover:text-gray-900 text-lg font-bold" (click)="cerrarRegistro()">✕</button>
+
+    <!-- Componente de registro -->
+    <app-register (cerrar)="cerrarRegistro()"></app-register>
+  </div>
+</div>
 
 <router-outlet></router-outlet>
