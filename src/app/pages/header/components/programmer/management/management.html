@@ -1,1 +1,53 @@
-<p>management works!</p>,
+<div class="p-4">
+
+  <!-- Botón para crear nuevo proyecto -->
+  <button class="btn btn-blue mb-4" (click)="crearProyecto()">+ Nuevo Proyecto</button>
+
+  <!-- Mensaje si no hay proyectos -->
+  <div *ngIf="!cargando() && proyectos().length === 0" class="text-gray-500">
+    No tienes proyectos aún. Usa el botón "Nuevo Proyecto" para crear uno.
+  </div>
+
+  <!-- Lista de proyectos -->
+  <div *ngIf="proyectos().length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div *ngFor="let proyecto of proyectos()" class="border p-4 rounded shadow">
+      <h3 class="font-bold text-lg">{{ proyecto.nombre }}</h3>
+      <p class="text-gray-700">{{ proyecto.descripcion }}</p>
+      <p class="text-sm text-gray-500">Tipo: {{ proyecto.tipo }}</p>
+      <p class="text-sm text-gray-500">Tecnologías: {{ proyecto.tecnologias.join(', ') }}</p>
+
+      <div class="mt-2 flex gap-2">
+        <button class="btn btn-green" (click)="editarProyecto(proyecto)">Editar</button>
+        <button class="btn btn-red" (click)="eliminarProyecto(proyecto)">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal para crear/editar proyecto -->
+<div *ngIf="showModal()" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+  <div class="bg-white p-6 rounded shadow-lg w-full max-w-lg text-black relative">
+    <button class="absolute top-2 right-2 btn btn-ghost" (click)="showModal.set(false)">✕</button>
+
+    <h3 class="text-xl font-bold mb-4">
+      {{ proyectoSelected() ? 'Editar Proyecto' : 'Nuevo Proyecto' }}
+    </h3>
+
+    <input [(ngModel)]="proyectoForm.nombre" placeholder="Nombre" class="input mb-2 w-full"/>
+    <textarea [(ngModel)]="proyectoForm.descripcion" placeholder="Descripción" class="input mb-2 w-full"></textarea>
+
+    <select [(ngModel)]="proyectoForm.tipo" class="input mb-2 w-full">
+      <option value="" disabled>Selecciona el tipo</option>
+      <option value="Frontend">Frontend</option>
+      <option value="Backend">Backend</option>
+      <option value="Fullstack">Fullstack</option>
+    </select>
+
+    <input [(ngModel)]="tecnologiasInput" placeholder="Tecnologías (separadas por coma)" class="input mb-2 w-full"/>
+    <input [(ngModel)]="proyectoForm.repo" placeholder="Repo URL" class="input mb-2 w-full"/>
+    <input [(ngModel)]="proyectoForm.deploy" placeholder="Deploy URL" class="input mb-2 w-full"/>
+
+    <button class="btn btn-blue mt-2" (click)="guardarProyecto()">Guardar</button>
+  </div>
+</div>

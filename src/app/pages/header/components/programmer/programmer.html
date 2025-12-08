@@ -1,32 +1,10 @@
 <main class="flex-1 flex flex-col items-center justify-start p-8 space-y-8 w-full">
 
   <!-- Título -->
-  <h1 class="text-3xl font-bold text-gray-800 mb-4">Mi Portafolio</h1>
-
-  <!-- Tarjetas de proyectos -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-    <div *ngFor="let proyecto of proyectos()" class="card bg-base-100 shadow-xl p-6 flex flex-col items-start">
-      <h3 class="card-title">{{ proyecto.nombre }}</h3>
-      <p class="text-gray-600 mb-1">{{ proyecto.descripcion }}</p>
-      <p class="text-gray-600 mb-1"><strong>Tipo:</strong> {{ proyecto.tipo }}</p>
-      <p class="text-gray-600 mb-1"><strong>Tecnologías:</strong> {{ proyecto.tecnologias.join(', ') }}</p>
-      <p class="text-blue-700 underline mb-1">
-        <strong>Repositorio:</strong> <a [href]="proyecto.repo" target="_blank">{{ proyecto.repo }}</a>
-      </p>
-      <p class="text-blue-700 underline">
-        <strong>Despliegue:</strong> <a [href]="proyecto.deploy" target="_blank">{{ proyecto.deploy }}</a>
-      </p>
-      <div class="card-actions mt-2 space-x-2">
-        <button class="btn btn-success">Editar</button>
-        <button class="btn btn-error">Eliminar</button>
-      </div>
-    </div>
-  </div>
+  <h1 class="text-3xl font-bold text-gray-800 mb-4">Mis Asesorías</h1>
 
   <!-- Asesorías Recibidas -->
   <section class="w-full max-w-6xl">
-    <h2 class="text-2xl font-semibold mb-4">Asesorías Recibidas</h2>
-
     <div *ngIf="asesorias().length === 0" class="text-gray-500">No tienes asesorías pendientes.</div>
 
     <div *ngFor="let asesoria of asesorias()" class="card bg-base-100 shadow-md p-4 mb-4">
@@ -43,5 +21,5 @@
     </div>
 
   </section>
-
+<router-outlet></router-outlet>
 </main>

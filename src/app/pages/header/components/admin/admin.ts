@@ -46,28 +46,38 @@ export class Admin {
     });
   }
 
-  // Abrir modal
-  registerProgrammer() {
-    this.showRegisterModal.set(true);
-  }
+  // Abrir modal para registrar un programador NUEVO
+registerProgrammer() {
+  this.programmerSelected.set(null);  // <-- Limpiamos cualquier programador seleccionado
+  this.showRegisterModal.set(true);
+}
 
   // Cerrar modal
   cerrarRegistro() {
     this.showRegisterModal.set(false);
   }
 
-  editarProgramador(programmer: ProgramadorData) {
-    localStorage.setItem('editProgrammer', JSON.stringify(programmer));
-    this.showRegisterModal.set(true);
-  }
+ // Señal para el programador a editar
+programmerSelected = signal<ProgramadorData | null>(null);
 
-  eliminarProgramador(programmer: ProgramadorData) {
-    if (confirm(`¿Seguro que deseas eliminar a ${programmer.nombre}?`)) {
-      this.programadores.set(
-        this.programadores().filter(p => p.uid !== programmer.uid)
-      );
+editarProgramador(programmer: ProgramadorData) {
+  this.programmerSelected.set(programmer); // Guardamos el programador a editar
+  this.showRegisterModal.set(true); // Abrimos el modal
+}
+
+async eliminarProgramador(programmer: ProgramadorData) {
+  if (!programmer.uid) return;
+
+  if (confirm(`¿Seguro que deseas eliminar a ${programmer.nombre}?`)) {
+    try {
+      await this.programadorService.eliminarProgramador(programmer.uid);
+      alert(`${programmer.nombre} eliminado correctamente.`);
+    } catch (error) {
+      console.error(error);
+      alert('Error eliminando el programador.');
     }
   }
+}
 
   isLast(redes?: string[], red?: string) {
     if (!redes || !red) return false;

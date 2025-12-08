@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component,EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth, setPersistence, createUserWithEmailAndPassword, getAuth, inMemoryPersistence } from 'firebase/auth';
@@ -14,8 +14,11 @@ import { getSecondaryApp } from '../../../../../../services/firebase-secondary';
   templateUrl: './register.html',
   styleUrls: ['./register.css']
 })
-export class RegisterProgrammer {
- @Output() cerrar = new EventEmitter<void>();
+export class RegisterProgrammer implements OnChanges {
+  @Output() cerrar = new EventEmitter<void>();
+  @Input() programmer: ProgramadorData | null = null; // Programador a editar
+
+  // Campos del formulario
   nombre = '';
   especialidad = '';
   descripcion = '';
@@ -30,6 +33,22 @@ export class RegisterProgrammer {
     private authService: AuthService
   ) {}
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['programmer'] && this.programmer) {
+      // Llenar formulario con datos del programador
+      this.nombre = this.programmer.nombre || '';
+      this.especialidad = this.programmer.especialidad || '';
+      this.descripcion = this.programmer.descripcion || '';
+      this.contacto = this.programmer.contacto || '';
+      this.redes = this.programmer.redes?.length ? [...this.programmer.redes] : [''];
+      this.foto = null; // Foto no se rellena automáticamente
+      this.password = ''; // No mostrar password existente
+    } else if (!this.programmer) {
+      // Nuevo registro, reset campos
+      this.resetFormulario();
+    }
+  }
+
   private async createTemporaryAuth(): Promise<Auth> {
     const secondaryApp = getSecondaryApp();
     const auth2 = getAuth(secondaryApp);
@@ -37,63 +56,61 @@ export class RegisterProgrammer {
     return auth2;
   }
 
-  /** Registrar programador */
+  /** Crear o actualizar programador */
   async registrarProgramador() {
-
     const adminUser = this.authService.currentUser();
     if (!adminUser) {
       alert("Debes iniciar sesión como administrador.");
       return;
     }
 
-    if (!this.nombre || !this.especialidad || !this.contacto || !this.password) {
+    if (!this.nombre || !this.especialidad || !this.contacto || (!this.programmer && !this.password)) {
       alert("Completa todos los campos obligatorios");
       return;
     }
 
     try {
-      const auth2 = await this.createTemporaryAuth();
+      let uid = this.programmer?.uid;
 
-      // Crear CUENTA del programador sin afectar al admin
-      const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
-      const uid = cred.user.uid;
+      // Si es nuevo programador, crear usuario en Auth
+      if (!uid) {
+        const auth2 = await this.createTemporaryAuth();
+        const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
+        uid = cred.user.uid;
+        await auth2.signOut();
+      }
 
-      // Guardar datos del programador
+      // Guardar o actualizar datos en Firestore
       const nuevoProgramador: ProgramadorData = {
+        uid,
         nombre: this.nombre,
         especialidad: this.especialidad,
         descripcion: this.descripcion,
         contacto: this.contacto,
         redes: this.redes,
+        foto: this.programmer?.foto // Mantener foto existente si no hay nueva
       };
 
-      // Registrar y refrescar la tabla automáticamente
+      // Si se seleccionó nueva foto, actualizarla
+      if (this.foto) {
+        // Aquí podrías subir la foto a Firebase Storage y obtener URL
+        // nuevoProgramador.foto = urlSubida;
+      }
+
       await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
 
-      // Cerrar sesión del usuario recién creado
-      await auth2.signOut();
+      alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 
-      alert("Programador registrado correctamente");
-
-      // Reset formulario
-      this.nombre = '';
-      this.especialidad = '';
-      this.descripcion = '';
-      this.contacto = '';
-      this.password = '';
-      this.redes = [''];
-      this.foto = null;
-
-      // No es necesario navegar, la tabla se actualizará automáticamente
-      // Si quieres cerrar el registro, puedes usar un modal o ocultar el formulario
-
+      this.cerrar.emit(); // Cerrar modal
+      this.resetFormulario();
     } catch (error: any) {
       console.error(error);
       alert("Error registrando programador: " + error.message);
     }
   }
-cancelar() {
-    this.cerrar.emit(); // <-- emitimos el evento al padre
+
+  cancelar() {
+    this.cerrar.emit();
   }
 
   agregarRed() { this.redes.push(''); }
@@ -101,5 +118,15 @@ cancelar() {
 
   onFotoSeleccionada(event: any) {
     this.foto = event.target.files[0] ?? null;
+  }
+
+  private resetFormulario() {
+    this.nombre = '';
+    this.especialidad = '';
+    this.descripcion = '';
+    this.contacto = '';
+    this.password = '';
+    this.redes = [''];
+    this.foto = null;
   }
 }

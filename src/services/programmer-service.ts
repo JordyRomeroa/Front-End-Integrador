@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs,deleteDoc } from '@angular/fire/firestore';
 import { getAuth, User } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 
@@ -82,4 +82,14 @@ export class ProgramadorService {
   guardarProgramador(data: ProgramadorData, adminUser: User, uid?: string) {
     return this.registrarProgramador(data, adminUser, uid);
   }
+   async eliminarProgramador(uid: string) {
+    if (!uid) throw new Error('UID no proporcionado');
+
+    const docRef = doc(this.firestore, `usuarios/${uid}`);
+    await deleteDoc(docRef);
+
+    // Refresca la tabla para emitir los cambios
+    await this.refrescarTabla();
+  }
+  
 }

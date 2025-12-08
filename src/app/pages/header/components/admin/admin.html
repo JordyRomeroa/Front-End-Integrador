@@ -50,13 +50,19 @@
 </section>
 
 <!-- Modal de registro -->
+<!-- Modal de registro -->
 <div *ngIf="showRegisterModal()" class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
   <div class="bg-white/90 rounded-xl shadow-2xl p-8 max-w-lg w-full transform transition-transform scale-90 animate-fadeIn relative" (click)="$event.stopPropagation()">
     <!-- Botón de cierre -->
     <button class="absolute top-4 right-4 btn btn-ghost text-gray-700 hover:text-gray-900 text-lg font-bold" (click)="cerrarRegistro()">✕</button>
 
     <!-- Componente de registro -->
-    <app-register (cerrar)="cerrarRegistro()"></app-register>
+    <app-register 
+      [programmer]="programmerSelected()" 
+      (cerrar)="cerrarRegistro()">
+    </app-register>
+  
+
   </div>
 </div>
 

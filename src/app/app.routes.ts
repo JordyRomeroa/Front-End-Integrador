@@ -42,17 +42,17 @@ loadComponent:() => import('./pages/header/components/register-user/register').t
           }
         ]
       },
-      { 
-        path: 'programmer', 
-        loadComponent: () => import('./pages/header/components/programmer/programmer').then(m => m.Programmer), 
-        canActivate: [ProgrammerGuard] ,
-        children: [
-          { 
-            path: 'management', 
-            loadComponent: () => import('./pages/header/components/programmer/management/management').then(m => m.Management)
-          }
-        ]
-      },
+      {
+  path: 'programmer', 
+  loadComponent: () => import('./pages/header/components/programmer/programmer').then(m => m.Programmer), 
+  canActivate: [ProgrammerGuard]
+},
+{
+  path: 'programmer/management', 
+  loadComponent: () => import('./pages/header/components/programmer/management/management').then(m => m.Management), 
+  canActivate: [ProgrammerGuard]
+}
+,
       { 
         path: 'user', 
         loadComponent: () => import('./pages/header/components/user/user').then(m => m.User) 

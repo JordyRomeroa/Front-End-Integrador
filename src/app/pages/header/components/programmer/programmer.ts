@@ -1,6 +1,6 @@
 import { Component, effect, signal, inject } from '@angular/core';
 import { NgIf, NgFor, CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { AuthService, Role } from '../../../../../services/auth-service';
 import { collection, getDocs, query, where, Firestore } from '@angular/fire/firestore';
 import { AsesoriaService } from '../../../../../services/advice';
@@ -21,7 +21,7 @@ interface Proyecto {
   templateUrl: './programmer.html',
   styleUrls: ['./programmer.css'],
   standalone: true,
-  imports: [NgIf, NgFor,CommonModule],
+  imports: [NgIf, NgFor,CommonModule,RouterOutlet],
 })
 export class Programmer {
   role: Role | null = null;

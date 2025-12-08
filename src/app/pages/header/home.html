@@ -1,7 +1,5 @@
-<!-- Fondo animado rojo y negro -->
 <div class="fixed inset-0 -z-10 animate-gradient-red-black"></div>
 
-<!-- Loader profesional -->
 <div *ngIf="loading()" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
   <!-- Spinner animado -->
   <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -19,7 +17,7 @@
   <aside class="navbar">
 
     <!-- LOGO -->
-    <a routerLink="/home/inicio" class="text-2xl font-bold text-white">MiApp</a>
+    <a routerLink="/home/inicio" class="text-2xl font-bold text-white">Portafolio</a>
 
     <!-- MENÚ -->
     <nav class="mt-8 flex flex-col space-y-2">
@@ -45,7 +43,7 @@
         </button>
         <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
           <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
-          <a routerLink="/home/programmer/solicitudes" class="submenu-item">Solicitudes</a>
+          <a routerLink="/home/programmer" class="submenu-item">Solicitudes</a>
         </div>
       </div>
 
