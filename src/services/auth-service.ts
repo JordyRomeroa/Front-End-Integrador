@@ -6,9 +6,12 @@ import {
   signInWithEmailAndPassword, 
   signInWithPopup, 
   signOut, 
+  updatePassword, 
   user, 
-  User 
+  User ,
+  
 } from "@angular/fire/auth";
+
 import { 
   Firestore, 
   collection, 
@@ -17,7 +20,8 @@ import {
   getDocs, 
   query, 
   setDoc, 
-  where 
+  where ,
+  
 } from "@angular/fire/firestore";
 import { from, Observable } from "rxjs";
 import { Router } from "@angular/router";
@@ -103,14 +107,63 @@ export class AuthService {
     return from(createUserWithEmailAndPassword(this.auth, email, password));
   }
 
-  login(email: string, password: string): Observable<any> {
-    return from(signInWithEmailAndPassword(this.auth, email, password));
-  }
+// dentro de AuthService
+mustChangePassword = signal(false);
 
-  loginWithGoogle(): Observable<any> {
-    const provider = new GoogleAuthProvider();
-    return from(signInWithPopup(this.auth, provider));
-  }
+login(email: string, password: string): Observable<any> {
+  return from(
+    signInWithEmailAndPassword(this.auth, email, password).then(async (cred) => {
+      const uid = cred.user.uid;
+      const docRef = doc(this.firestore, `usuarios/${uid}`);
+      const docSnap = await getDoc(docRef);
+
+      const mustChange = docSnap.exists() ? !!docSnap.data()['mustChangePassword'] : false;
+      this.mustChangePassword.set(mustChange);
+
+      // 🔹 Devuelve un objeto simple
+      return {
+        uid: cred.user.uid,
+        email: cred.user.email,
+        displayName: cred.user.displayName,
+        mustChangePassword: mustChange
+      };
+    })
+  );
+
+
+
+
+
+}
+async changePassword(newPassword: string): Promise<void> {
+  const user = this.auth.currentUser;
+  if (!user) throw new Error('Usuario no logueado');
+
+  await updatePassword(user, newPassword);  // ⚡ correcto
+
+  // Quitar flag mustChangePassword en Firestore
+  const docRef = doc(this.firestore, `usuarios/${user.uid}`);
+  await setDoc(docRef, { mustChangePassword: false }, { merge: true });
+}
+
+
+  async loginWithGoogle(): Promise<any> {
+  const cred = await signInWithPopup(this.auth, new GoogleAuthProvider());
+  const uid = cred.user.uid;
+  const docRef = doc(this.firestore, `usuarios/${uid}`);
+  const docSnap = await getDoc(docRef);
+
+  const mustChange = docSnap.exists() ? !!docSnap.data()['mustChangePassword'] : false;
+  this.mustChangePassword.set(mustChange);
+
+  return {
+    uid: cred.user.uid,
+    email: cred.user.email,
+    displayName: cred.user.displayName,
+    mustChangePassword: mustChange
+  };
+}
+
 
   logout(): Observable<void> {
     this.clearStorage();

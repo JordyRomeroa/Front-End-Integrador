@@ -3,9 +3,10 @@ import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth, setPersistence, createUserWithEmailAndPassword, getAuth, inMemoryPersistence } from 'firebase/auth';
-import { ProgramadorData, ProgramadorService } from '../../../../../../services/programmer-service';
+import { ProgramadorService } from '../../../../../../services/programmer-service';
 import { AuthService } from '../../../../../../services/auth-service';
 import { getSecondaryApp } from '../../../../../../services/firebase-secondary';
+import { ProgramadorData } from '../../../../interface/programador';
 
 @Component({
   selector: 'app-register',
@@ -26,7 +27,7 @@ export class RegisterProgrammer implements OnChanges {
   password = '';
   redes: string[] = [''];
   foto: File | null = null;
-
+  
   constructor(
     private router: Router,
     private programadorService: ProgramadorService,
@@ -88,7 +89,8 @@ export class RegisterProgrammer implements OnChanges {
         descripcion: this.descripcion,
         contacto: this.contacto,
         redes: this.redes,
-        foto: this.programmer?.foto // Mantener foto existente si no hay nueva
+        foto: this.programmer?.foto ,
+        mustChangePassword: true// Mantener foto existente si no hay nueva
       };
 
       // Si se seleccionó nueva foto, actualizarla

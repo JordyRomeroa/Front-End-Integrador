@@ -7,4 +7,5 @@ export interface ProgramadorData {
   password?: string;
   redes?: string[];
   foto?: string;
+   mustChangePassword?: boolean;
 }

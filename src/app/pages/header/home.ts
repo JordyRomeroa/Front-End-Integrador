@@ -9,19 +9,14 @@ import { User } from './components/user/user';
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   standalone: true,
-  imports: [ RouterOutlet, RouterModule,User]
+  imports: [ RouterOutlet, RouterModule]
 })
 export class Home {
 
   role: Role | null = null;
   currentRoute: string;
   loading = signal(true);
-ngOnInit() {
 
-  setTimeout(() => {
-    this.loading.set(false);
-  }, 500); 
-}
   constructor(
     public authService: AuthService,
     private router: Router

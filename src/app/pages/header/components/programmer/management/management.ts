@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, signal, effect } from '@ang
 import { Proyecto } from '../../../../interface/proyecto';
 import { ProyectoService } from '../../../../../../services/proyecto-service';
 import { AuthService } from '../../../../../../services/auth-service';
-import { ProgramadorService, ProgramadorData } from '../../../../../../services/programmer-service';
+import { ProgramadorService } from '../../../../../../services/programmer-service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ProgramadorData } from '../../../../interface/programador';
 
 @Component({
   selector: 'app-management',

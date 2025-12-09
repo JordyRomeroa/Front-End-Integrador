@@ -35,6 +35,7 @@ export class ProgramadorService {
       role: "programmer",
       createdBy: adminUser.uid,
       createdAt: serverTimestamp(),
+      mustChangePassword: true,
       foto: data.foto || 'https://via.placeholder.com/40'
     };
 

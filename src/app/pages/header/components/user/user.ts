@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { Asesoria, AsesoriaService } from '../../../../../services/advice';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ProgramadorService, ProgramadorData } from '../../../../../services/programmer-service';
+import { ProgramadorService } from '../../../../../services/programmer-service';
 import { Subscription } from 'rxjs';
+import { ProgramadorData } from '../../../interface/programador';
 
 type ProgramadorConId = ProgramadorData & { uid: string };
 
@@ -106,4 +107,5 @@ isUser = signal(false);
   ngOnDestroy() {
     this.sub?.unsubscribe();
   }
+  
 }

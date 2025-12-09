@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
-import { ProgramadorService, ProgramadorData } from '../../../../../services/programmer-service';
+import { ProgramadorService,  } from '../../../../../services/programmer-service';
 import { CommonModule } from '@angular/common';
 import { RegisterProgrammer } from './register-programmer/register';
+import { ProgramadorData } from '../../../interface/programador';
 
 @Component({
   selector: 'app-admin',

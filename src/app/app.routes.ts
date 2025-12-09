@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AdminGuard } from './core/admin-guard';
 import { ProgrammerGuard } from './core/programmer-guard';
+import { MustChangePasswordGuard } from './core/MustChangePasswordGuard';
 
 
 export const routes: Routes = [
@@ -14,6 +15,12 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./pages/login/login').then(m => m.Login)
   },
+  {
+  path: 'must-change-password',
+  loadComponent: () => import('./pages/login/mustChangePassword/mustChangePassword').then(m => m.MustChangePassword),
+  canActivate: [MustChangePasswordGuard]
+}
+,
   {
 path:'register',
 loadComponent:() => import('./pages/header/components/register-user/register').then(m => m.RegisterPage)
@@ -46,12 +53,12 @@ loadComponent:() => import('./pages/header/components/register-user/register').t
       {
   path: 'programmer', 
   loadComponent: () => import('./pages/header/components/programmer/programmer').then(m => m.Programmer), 
-  canActivate: [ProgrammerGuard]
+  canActivate: [ProgrammerGuard, MustChangePasswordGuard]
 },
 {
   path: 'programmer/management', 
   loadComponent: () => import('./pages/header/components/programmer/management/management').then(m => m.Management), 
-  canActivate: [ProgrammerGuard]
+  canActivate: [ProgrammerGuard, MustChangePasswordGuard]
 },
      
     ]

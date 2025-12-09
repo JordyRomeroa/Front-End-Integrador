@@ -19,6 +19,7 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+mostrarNuevoPassword = signal(false);
 
   loginForm: FormGroup;
 
@@ -37,18 +38,29 @@ export class Login {
   formUtils = FormUtils;
 
   constructor() {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
+   this.loginForm = this.fb.group({
+  email: ['', [Validators.required, Validators.email]],
+  password: ['', [Validators.required, Validators.minLength(6)]],
+  newPassword: [''] // este solo se usa si mustChangePassword = true
+});
+effect(() => {
+  const result = this.loginResource.value();
+  console.log('🔥 loginResource.value():', result); // ahora debe mostrar mustChangePassword
+  if (!result) return;
 
-    // Effect para navegar cuando el login sea exitoso
-    effect(() => {
-      if (this.loginResource.hasValue() && this.loginResource.value()) {
-        console.log('Login exitoso');
-        this.router.navigate(['/home']);
-      }
-    });
+  console.log('⚡ mustChangePassword flag:', result.mustChangePassword);
+
+  if (result.mustChangePassword) {
+    console.log('➡️ Debe cambiar contraseña: redirigiendo a /must-change-password');
+    this.router.navigate(['/must-change-password']);
+  } else {
+    console.log('✅ Login exitoso: redirigiendo a /home');
+    this.router.navigate(['/home']);
+  }
+});
+
+
+
   }
 
   onSubmit() {
