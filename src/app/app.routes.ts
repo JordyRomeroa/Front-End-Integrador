@@ -5,10 +5,11 @@ import { ProgrammerGuard } from './core/programmer-guard';
 
 export const routes: Routes = [
   {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  },
+  path: '',
+  redirectTo: 'home/inicio',
+  pathMatch: 'full'
+},
+
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login').then(m => m.Login)

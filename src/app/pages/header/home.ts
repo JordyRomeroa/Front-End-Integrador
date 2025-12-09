@@ -15,7 +15,12 @@ export class Home {
   role: Role | null = null;
   currentRoute: string;
   loading = signal(true);
+ngOnInit() {
 
+  setTimeout(() => {
+    this.loading.set(false);
+  }, 500); 
+}
   constructor(
     public authService: AuthService,
     private router: Router
