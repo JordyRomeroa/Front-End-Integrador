@@ -24,40 +24,44 @@ export class Home {
 
     this.currentRoute = this.router.url;
 
-    effect(() => {
+  effect(() => {
+  const firebaseUser = this.authService.currentUser();
+  const loaded = this.authService.roleLoaded();
 
-      const firebaseUser = this.authService.currentUser();
-      const loaded = this.authService.roleLoaded();
+  console.log("🟦 [HOME EFFECT] Ejecutando efecto...");
+  console.log("   🔹 Usuario Firebase:", firebaseUser);
+  console.log("   🔹 Rol cargado (loaded):", loaded);
 
-      console.log("🟦 [HOME EFFECT] Ejecutando efecto...");
-      console.log("   🔹 Usuario Firebase:", firebaseUser);
-      console.log("   🔹 Rol cargado (loaded):", loaded);
+  // 🔹 Firebase todavía inicializando → esperar
+  if (firebaseUser === undefined) {
+    console.log("⏳ Esperando a Firebase Auth...");
+    return;
+  }
 
-      // ❌ NO redirigir si Firebase aún no actualiza
-      if (!firebaseUser) {
-        console.log("⏳ Esperando a Firebase Auth...");
-        return;
-      }
+  // 🔹 Usuario no logueado → mostrar home público
+  if (firebaseUser === null) {
+    console.log("⚠ Usuario no logueado, mostrando home público");
+    this.role = null;       // no hay rol
+    this.loading.set(false); // dejar de mostrar spinner
+    return;
+  }
 
-      console.log("✔ Usuario autenticado:", firebaseUser.email);
+  console.log("✔ Usuario autenticado:", firebaseUser.email);
 
-      // Esperar rol cargado
-      if (!loaded) {
-        console.log("⏳ Esperando carga de rol...");
-        return;
-      }
+  // 🔹 Esperar rol cargado
+  if (!loaded) {
+    console.log("⏳ Esperando carga de rol...");
+    return;
+  }
 
-      // Ya está todo
-      console.log("🟩 Rol CARGADO:", this.authService.getUserRole());
-      console.log("🟩 Home listo para mostrarse.");
+  // 🔹 Todo listo
+  console.log("🟩 Rol CARGADO:", this.authService.getUserRole());
+  console.log("🟩 Home listo para mostrarse.");
 
-      this.loading.set(false);
-      this.role = this.authService.getUserRole();
-    });
+  this.role = this.authService.getUserRole();
+  this.loading.set(false);
+});
 
-    this.router.events.subscribe(() => {
-      this.currentRoute = this.router.url;
-    });
   }
 openAsesoria() {
   const user = this.authService.currentUser();

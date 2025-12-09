@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { of } from 'rxjs';
+import { catchError, from, of } from 'rxjs';
 
 import { FormUtils } from '../../shared/form-utils';
 import { AuthService } from '../../../services/auth-service';
@@ -26,14 +26,19 @@ mostrarNuevoPassword = signal(false);
   // Signal para disparar el login
   private loginTrigger = signal<{ email: string; password: string } | null>(null);
 
-  // rxResource para manejar el proceso de login (Angular 20+)
   loginResource = rxResource({
-    params: () => this.loginTrigger(),
-    stream: ({ params }) => {
-      if (!params) return of(null);
-      return this.authService.login(params.email, params.password);
-    }
-  });
+  params: () => this.loginTrigger(),
+  stream: ({ params }) => {
+    if (!params) return of(null);
+    return from(this.authService.login(params.email, params.password)).pipe(
+      catchError(err => {
+        console.error('Login fallido:', err);
+        return of({ error: err }); // Retorna objeto para que effect lo detecte
+      })
+    );
+  }
+});
+
 
   formUtils = FormUtils;
 
@@ -45,10 +50,13 @@ mostrarNuevoPassword = signal(false);
 });
 effect(() => {
   const result = this.loginResource.value();
-  console.log('🔥 loginResource.value():', result); // ahora debe mostrar mustChangePassword
   if (!result) return;
 
-  console.log('⚡ mustChangePassword flag:', result.mustChangePassword);
+  if ((result as any).error) {
+    console.log('❌ Error de login:', (result as any).error);
+    alert('Error al iniciar sesión: ' + ((result as any).error.message || 'desconocido'));
+    return;
+  }
 
   if (result.mustChangePassword) {
     console.log('➡️ Debe cambiar contraseña: redirigiendo a /must-change-password');
@@ -58,6 +66,7 @@ effect(() => {
     this.router.navigate(['/home']);
   }
 });
+
 
 
 

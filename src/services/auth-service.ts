@@ -163,6 +163,16 @@ async changePassword(newPassword: string): Promise<void> {
     mustChangePassword: mustChange
   };
 }
+async refreshCurrentUser() {
+  const user = this.auth.currentUser;
+  if (!user) return null;
+
+  await user.reload(); // ⚡ recarga datos de Firebase
+  this.currentUser.set(user); // ⚡ actualiza señal local
+  await this.loadUserRole(user.uid);
+  return user;
+}
+
 
 
   logout(): Observable<void> {

@@ -31,12 +31,15 @@
 
       @if (role === 'programmer') {
         <div class="relative group">
-          <button class="nav-link flex items-center justify-between">Programador ▼</button>
-          <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-            <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
-            <a routerLink="/home/programmer" class="submenu-item">Solicitudes</a>
-          </div>
-        </div>
+  <button class="nav-link flex items-center justify-between">
+    Programador ▼
+  </button>
+  <div class="absolute left-0 top-full hidden group-hover:flex flex-col bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+    <a routerLink="/home/programmer/management" class="submenu-item px-4 py-2 hover:bg-red-900">Mis proyectos</a>
+    <a routerLink="/home/programmer" class="submenu-item px-4 py-2 hover:bg-red-900">Solicitudes</a>
+  </div>
+</div>
+
       }
 
       @if (role === 'user') {

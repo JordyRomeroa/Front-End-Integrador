@@ -93,10 +93,8 @@ export class RegisterProgrammer implements OnChanges {
         mustChangePassword: true// Mantener foto existente si no hay nueva
       };
 
-      // Si se seleccionó nueva foto, actualizarla
       if (this.foto) {
-        // Aquí podrías subir la foto a Firebase Storage y obtener URL
-        // nuevoProgramador.foto = urlSubida;
+       
       }
 
       await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
