@@ -2,24 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs,deleteDoc } from '@angular/fire/firestore';
 import { getAuth, User } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
+import { ProgramadorData } from '../app/pages/interface/programador';
 
-export interface ProgramadorData {
-  uid?: string; // <--- Agregamos uid opcional para identificar programadores
-  nombre: string;
-  especialidad: string;
-  descripcion?: string;
-  contacto: string;
-  password?: string;
-  redes?: string[];
-  foto?: string;
-}
+
 
 @Injectable({ providedIn: 'root' })
 export class ProgramadorService {
   private firestore = inject(Firestore);
   private auth = getAuth();
 
-  // Observable interno para emitir cambios en la lista de programadores
+  //lista de programadores
   private programadoresSubject = new BehaviorSubject<ProgramadorData[]>([]);
   programadores$ = this.programadoresSubject.asObservable();
 

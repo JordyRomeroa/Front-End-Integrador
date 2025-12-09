@@ -69,33 +69,39 @@ isUser = signal(false);
     this.progService.refrescarTabla().catch(console.error);
   }
 
-  async enviarAsesoria() {
-    if (!this.mensaje || !this.programadorId) {
-      alert('Debe ingresar un mensaje y seleccionar un programador.');
-      return;
-    }
+ async enviarAsesoria() {
+  const currentUser = this.authService.currentUser();
 
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) return;
-
-    const nuevaAsesoria: Asesoria = {
-      mensaje: this.mensaje,
-      estado: 'pendiente',
-      mensajeRespuesta: '',
-      programadorId: this.programadorId,
-      usuarioId: currentUser.uid
-    };
-
-    try {
-      const id = await this.asesoriaService.crearAsesoria(nuevaAsesoria);
-      alert(`Asesoría enviada con ID: ${id}`);
-      this.mensaje = '';
-      this.programadorId = this.programadores().length ? this.programadores()[0].uid : '';
-    } catch (error) {
-      console.error(error);
-      alert('Error al enviar la asesoría.');
-    }
+  if (!currentUser) {
+    // Redirige al login antes de permitir enviar la asesoría
+    alert('Debes iniciar sesión para solicitar una asesoría.');
+    this.router.navigate(['/login']);
+    return;
   }
+
+  if (!this.mensaje || !this.programadorId) {
+    alert('Debe ingresar un mensaje y seleccionar un programador.');
+    return;
+  }
+
+  const nuevaAsesoria: Asesoria = {
+    mensaje: this.mensaje,
+    estado: 'pendiente',
+    mensajeRespuesta: '',
+    programadorId: this.programadorId,
+    usuarioId: currentUser.uid
+  };
+
+  try {
+    const id = await this.asesoriaService.crearAsesoria(nuevaAsesoria);
+    alert(`Asesoría enviada con ID: ${id}`);
+    this.mensaje = '';
+    this.programadorId = this.programadores().length ? this.programadores()[0].uid : '';
+  } catch (error) {
+    console.error(error);
+    alert('Error al enviar la asesoría.');
+  }
+}
 
   ngOnDestroy() {
     this.sub?.unsubscribe();

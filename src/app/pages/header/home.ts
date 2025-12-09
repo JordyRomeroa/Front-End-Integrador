@@ -2,13 +2,14 @@ import { Component, effect, signal } from '@angular/core';
 import { AuthService, Role } from '../../../services/auth-service';
 import { NgIf } from '@angular/common';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { User } from './components/user/user';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   standalone: true,
-  imports: [ RouterOutlet, RouterModule]
+  imports: [ RouterOutlet, RouterModule,User]
 })
 export class Home {
 
@@ -63,6 +64,17 @@ ngOnInit() {
       this.currentRoute = this.router.url;
     });
   }
+openAsesoria() {
+  const user = this.authService.currentUser();
+
+  if (!user) {
+    this.router.navigate(['/login']);
+    return;
+  }
+
+  // Si quieres mostrar un modal o navegar al formulario:
+  this.router.navigate(['/home/user']);
+}
 
   getInitials(email?: string | null): string {
     if (!email) return '';

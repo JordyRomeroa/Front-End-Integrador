@@ -2,10 +2,7 @@
 
 @if (loading()) {
   <div class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
-    <!-- Spinner animado -->
     <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
-    
-    <!-- Texto de carga -->
     <p class="text-white text-xl font-semibold tracking-wide animate-pulse">
       Cargando tu experiencia...
     </p>
@@ -15,21 +12,15 @@
 
   <!-- SIDEBAR -->
   <aside class="navbar">
-
-    <!-- LOGO -->
     <a routerLink="/home/inicio" class="text-2xl font-bold text-white">Portafolio</a>
 
-    <!-- MENÚ -->
     <nav class="mt-8 flex flex-col space-y-2">
       <a routerLink="/home/inicio" routerLinkActive="active" class="nav-link">Inicio</a>
       <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
 
-      <!-- ADMIN -->
       @if (role === 'admin') {
         <div class="relative group">
-          <button class="nav-link flex items-center justify-between">
-            Panel de control ▼
-          </button>
+          <button class="nav-link flex items-center justify-between">Panel de control ▼</button>
           <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
             <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">
               Registrar Programador
@@ -38,12 +29,9 @@
         </div>
       }
 
-      <!-- PROGRAMMER -->
       @if (role === 'programmer') {
         <div class="relative group">
-          <button class="nav-link flex items-center justify-between">
-            Programador ▼
-          </button>
+          <button class="nav-link flex items-center justify-between">Programador ▼</button>
           <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
             <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
             <a routerLink="/home/programmer" class="submenu-item">Solicitudes</a>
@@ -51,30 +39,23 @@
         </div>
       }
 
-      <!-- USER NORMAL -->
       @if (role === 'user') {
         <span class="nav-link">Explorar contenido</span>
       }
     </nav>
 
-   <!-- USER SECTION -->
-<div class="mt-auto flex flex-col items-center space-y-3">
-  @if (authService.currentUser()) {
-    <div class="user-initials">
-      {{ getInitials(authService.currentUser()?.email ?? '') }}
+    <div class="mt-auto flex flex-col items-center space-y-3">
+      @if (authService.currentUser()) {
+        <div class="user-initials">{{ getInitials(authService.currentUser()?.email ?? '') }}</div>
+        <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
+          Cerrar sesión
+        </button>
+      } @else {
+        <button routerLink="/login" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
+          Iniciar sesión
+        </button>
+      }
     </div>
-
-    <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-      Cerrar sesión
-    </button>
-  } @else {
-    <button routerLink="/login" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-      Iniciar sesión
-    </button>
-  }
-</div>
-
-
   </aside>
 
   <!-- HERO / CONTENIDO PRINCIPAL -->
@@ -85,7 +66,38 @@
       }
     </h2>
 
+
+
+
     <router-outlet></router-outlet>
+<!-- CTA – SOLICITAR ASESORÍA -->
+<div class="relative overflow-hidden mt-12 p-8 rounded-2xl bg-gradient-to-br from-yellow-400 via-yellow-300 to-yellow-500 shadow-2xl animate-fadeIn">
+
+  <!-- Decoración circulos -->
+  <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/30 rounded-full blur-2xl"></div>
+  <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-white/20 rounded-full blur-3xl"></div>
+
+  <!-- Contenido -->
+  <div class="relative z-10 text-black">
+    <h3 class="text-3xl font-extrabold drop-shadow-lg">
+      ¿Necesitas asesoría personalizada?
+    </h3>
+
+    <p class="mt-2 text-lg opacity-90">
+      Conecta con expertos que pueden ayudarte a impulsar tu proyecto.
+    </p>
+
+    <button
+      (click)="openAsesoria()"
+      class="mt-6 px-8 py-3 bg-black text-yellow-300 font-bold rounded-xl shadow-xl
+             hover:bg-gray-900 hover:scale-105 hover:shadow-2xl transition-all duration-300 flex items-center gap-2">
+
+      <span class="animate-pulse text-xl">💬</span>
+      Solicitar Asesoría
+    </button>
+  </div>
+</div>
+  
   </main>
 
   <!-- FOOTER -->
