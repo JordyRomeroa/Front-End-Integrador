@@ -5,21 +5,24 @@
 
   <!-- Asesorías Recibidas -->
   <section class="w-full max-w-6xl">
-    <div *ngIf="asesorias().length === 0" class="text-gray-500">No tienes asesorías pendientes.</div>
-
-    <div *ngFor="let asesoria of asesorias()" class="card bg-base-100 shadow-md p-4 mb-4">
-      <div class="card-body">
-        <p><strong>Usuario:</strong> {{ asesoria.usuarioId }}</p>
-        <p><strong>Fecha y Hora:</strong> {{ asesoria.createdAt?.toDate() | date:'dd/MM/yyyy HH:mm' }}</p>
-        <p><strong>Comentario:</strong> {{ asesoria.mensaje }}</p>
-        <p><strong>Estado:</strong> {{ asesoria.estado }}</p>
-        <div class="card-actions mt-2 space-x-2">
-          <button class="btn btn-success" (click)="cambiarEstado(asesoria.id, 'aceptada')">Aceptar</button>
-          <button class="btn btn-error" (click)="cambiarEstado(asesoria.id, 'rechazada')">Rechazar</button>
+    @if (asesorias().length > 0) {
+      @for (asesoria of asesorias(); track asesoria.id) {
+        <div class="card bg-base-100 shadow-md p-4 mb-4">
+          <div class="card-body">
+            <p><strong>Usuario:</strong> {{ asesoria.usuarioId }}</p>
+            <p><strong>Fecha y Hora:</strong> {{ asesoria.createdAt?.toDate() | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>Comentario:</strong> {{ asesoria.mensaje }}</p>
+            <p><strong>Estado:</strong> {{ asesoria.estado }}</p>
+            <div class="card-actions mt-2 space-x-2">
+              <button class="btn btn-success" (click)="cambiarEstado(asesoria.id, 'aceptada')">Aceptar</button>
+              <button class="btn btn-error" (click)="cambiarEstado(asesoria.id, 'rechazada')">Rechazar</button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-
+      }
+    } @else {
+      <div class="text-gray-500">No tienes asesorías pendientes.</div>
+    }
   </section>
-<router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </main>

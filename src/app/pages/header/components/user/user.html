@@ -1,30 +1,30 @@
 <!-- Solo se muestra si el rol es 'user' -->
-<div *ngIf="role() === 'user'" class="bg-white/20 p-6 rounded-lg shadow-lg text-white">
-  <h3 class="text-2xl font-bold mb-4">Solicitar Asesoría</h3>
+@if (role() === 'user') {
+  <div class="bg-white/20 p-6 rounded-lg shadow-lg text-white">
+    <h3 class="text-2xl font-bold mb-4">Solicitar Asesoría</h3>
 
-  <!-- Select de programadores -->
-  <!-- Select de programadores -->
-<label class="block mb-2">Programador:</label>
-<select [(ngModel)]="programadorId" class="w-full mb-4 p-2 rounded text-black" *ngIf="programadores().length">
-  <option *ngFor="let prog of programadores()" [value]="prog.uid">
-    {{ prog.nombre }}
-  </option>
-</select>
+    <label class="block mb-2">Programador:</label>
+    @if (programadores().length > 0) {
+      <select [(ngModel)]="programadorId" class="w-full mb-4 p-2 rounded text-black">
+        @for (prog of programadores(); track prog.uid) {
+          <option [value]="prog.uid">
+            {{ prog.nombre }}
+          </option>
+        }
+      </select>
+    } @else {
+      <p class="text-yellow-400">
+        No hay programadores disponibles.
+      </p>
+    }
 
+    <!-- Área de mensaje -->
+    <label class="block mb-2">Mensaje:</label>
+    <textarea [(ngModel)]="mensaje" placeholder="Escribe tu mensaje" class="w-full mb-4 p-2 rounded text-black"></textarea>
 
-  <!-- Mensaje si no hay programadores -->
-  <p *ngIf="programadores().length === 0" class="text-yellow-400">
-    No hay programadores disponibles.
-  </p>
-
-
-
-  <!-- Área de mensaje -->
-  <label class="block mb-2">Mensaje:</label>
-  <textarea [(ngModel)]="mensaje" placeholder="Escribe tu mensaje" class="w-full mb-4 p-2 rounded text-black"></textarea>
-
-  <!-- Botón de enviar asesoría -->
-  <button (click)="enviarAsesoria()" class="bg-red-900 px-4 py-2 rounded hover:bg-red-700 transition">
-    Enviar
-  </button>
-</div>
+    <!-- Botón de enviar asesoría -->
+    <button (click)="enviarAsesoria()" class="bg-red-900 px-4 py-2 rounded hover:bg-red-700 transition">
+      Enviar
+    </button>
+  </div>
+}

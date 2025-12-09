@@ -8,7 +8,7 @@ import { Router, RouterModule, RouterOutlet } from '@angular/router';
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   standalone: true,
-  imports: [NgIf, RouterOutlet, RouterModule]
+  imports: [ RouterOutlet, RouterModule]
 })
 export class Home {
 

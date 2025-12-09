@@ -21,7 +21,7 @@ interface Proyecto {
   templateUrl: './programmer.html',
   styleUrls: ['./programmer.css'],
   standalone: true,
-  imports: [NgIf, NgFor,CommonModule,RouterOutlet],
+  imports: [CommonModule,RouterOutlet],
 })
 export class Programmer {
   role: Role | null = null;

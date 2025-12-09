@@ -7,7 +7,6 @@ import { CommonModule } from '@angular/common';
 import { ProgramadorService, ProgramadorData } from '../../../../../services/programmer-service';
 import { Subscription } from 'rxjs';
 
-// Extendemos ProgramadorData temporalmente para incluir uid
 type ProgramadorConId = ProgramadorData & { uid: string };
 
 @Component({
@@ -20,6 +19,10 @@ type ProgramadorConId = ProgramadorData & { uid: string };
 export class User implements OnInit, OnDestroy {
   // Señal para el rol, así la vista reacciona
   role = signal<Role | null>(null);
+// user.component.ts
+isUser = signal(false);
+
+
 
   mensaje: string = '';
   programadores = signal<ProgramadorConId[]>([]);
@@ -31,13 +34,9 @@ export class User implements OnInit, OnDestroy {
   private asesoriaService = inject(AsesoriaService);
   private sub?: Subscription;
 
-  // ✅ Effect movido a un field initializer
   private initEffect = effect(() => {
-    if (this.authService.roleLoaded() && this.authService.getUserRole() === 'user') {
-      this.role.set('user');
-      this.suscribirseProgramadores();
-    }
-  });
+  this.isUser.set(this.role() === 'user');
+});
 
   ngOnInit() {
     // Aquí ya no necesitamos llamar a effect()

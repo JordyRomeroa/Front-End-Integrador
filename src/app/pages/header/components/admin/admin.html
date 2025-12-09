@@ -20,50 +20,55 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let programmer of programadores()" class="hover:bg-gray-100/50 transition-colors duration-200">
-          <td>
-            <img [src]="programmer.foto || 'https://via.placeholder.com/40'" class="rounded-full w-10 h-10 transition-transform hover:scale-110 shadow-md">
-          </td>
-          <td class="font-medium">{{ programmer.nombre }}</td>
-          <td>{{ programmer.especialidad }}</td>
-          <td>{{ programmer.descripcion }}</td>
-          <td>
-            <a *ngIf="programmer.contacto" [href]="'mailto:' + programmer.contacto" class="text-blue-700 underline hover:text-blue-900">
-              {{ programmer.contacto }}
-            </a>
-          </td>
-          <td>
-            <ng-container *ngFor="let red of obtenerRedes(programmer.redes); let i = index">
-              <a [href]="red" target="_blank" class="text-blue-700 underline hover:text-blue-900">{{ red }}</a>
-              <span *ngIf="i < (programmer.redes?.length || 0) - 1">, </span>
-            </ng-container>
-          </td>
-          <td class="text-gray-800 font-semibold">programmer</td>
-          <td class="space-x-2">
-            <button class="btn btn-success btn-sm transform transition-transform hover:scale-105 shadow-sm" (click)="editarProgramador(programmer)">Editar</button>
-            <button class="btn btn-error btn-sm transform transition-transform hover:scale-105 shadow-sm" (click)="eliminarProgramador(programmer)">Eliminar</button>
-          </td>
-        </tr>
+        @for (programmer of programadores(); track programmer) {
+          <tr class="hover:bg-gray-100/50 transition-colors duration-200">
+            <td>
+              <img [src]="programmer.foto || 'https://via.placeholder.com/40'" class="rounded-full w-10 h-10 transition-transform hover:scale-110 shadow-md">
+            </td>
+            <td class="font-medium">{{ programmer.nombre }}</td>
+            <td>{{ programmer.especialidad }}</td>
+            <td>{{ programmer.descripcion }}</td>
+            <td>
+              @if (programmer.contacto) {
+                <a [href]="'mailto:' + programmer.contacto" class="text-blue-700 underline hover:text-blue-900">
+                  {{ programmer.contacto }}
+                </a>
+              }
+            </td>
+            <td>
+              @for (red of obtenerRedes(programmer.redes); track red; let i = $index) {
+                <a [href]="red" target="_blank" class="text-blue-700 underline hover:text-blue-900">{{ red }}</a>
+                @if (i < (programmer.redes?.length || 0) - 1) {
+                  <span>, </span>
+                }
+              }
+            </td>
+            <td class="text-gray-800 font-semibold">programmer</td>
+            <td class="space-x-2">
+              <button class="btn btn-success btn-sm transform transition-transform hover:scale-105 shadow-sm" (click)="editarProgramador(programmer)">Editar</button>
+              <button class="btn btn-error btn-sm transform transition-transform hover:scale-105 shadow-sm" (click)="eliminarProgramador(programmer)">Eliminar</button>
+            </td>
+          </tr>
+        }
       </tbody>
     </table>
   </div>
 </section>
 
 <!-- Modal de registro -->
-<!-- Modal de registro -->
-<div *ngIf="showRegisterModal()" class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
-  <div class="bg-white/90 rounded-xl shadow-2xl p-8 max-w-lg w-full transform transition-transform scale-90 animate-fadeIn relative" (click)="$event.stopPropagation()">
-    <!-- Botón de cierre -->
-    <button class="absolute top-4 right-4 btn btn-ghost text-gray-700 hover:text-gray-900 text-lg font-bold" (click)="cerrarRegistro()">✕</button>
+@if (showRegisterModal()) {
+  <div class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md z-50">
+    <div class="bg-white/90 rounded-xl shadow-2xl p-8 max-w-lg w-full transform transition-transform scale-90 animate-fadeIn relative" (click)="$event.stopPropagation()">
+      <!-- Botón de cierre -->
+      <button class="absolute top-4 right-4 btn btn-ghost text-gray-700 hover:text-gray-900 text-lg font-bold" (click)="cerrarRegistro()">✕</button>
 
-    <!-- Componente de registro -->
-    <app-register 
-      [programmer]="programmerSelected()" 
-      (cerrar)="cerrarRegistro()">
-    </app-register>
-  
-
+      <!-- Componente de registro -->
+      <app-register 
+        [programmer]="programmerSelected()" 
+        (cerrar)="cerrarRegistro()">
+      </app-register>
+    </div>
   </div>
-</div>
+}
 
 <router-outlet></router-outlet>

@@ -1,17 +1,17 @@
 <div class="fixed inset-0 -z-10 animate-gradient-red-black"></div>
 
-<div *ngIf="loading()" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
-  <!-- Spinner animado -->
-  <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
-  
-  <!-- Texto de carga -->
-  <p class="text-white text-xl font-semibold tracking-wide animate-pulse">
-    Cargando tu experiencia...
-  </p>
-</div>
-
-<!-- Contenido principal -->
-<div *ngIf="!loading()">
+@if (loading()) {
+  <div class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
+    <!-- Spinner animado -->
+    <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
+    
+    <!-- Texto de carga -->
+    <p class="text-white text-xl font-semibold tracking-wide animate-pulse">
+      Cargando tu experiencia...
+    </p>
+  </div>
+} @else {
+  <!-- Contenido principal -->
 
   <!-- SIDEBAR -->
   <aside class="navbar">
@@ -25,32 +25,36 @@
       <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
 
       <!-- ADMIN -->
-      <div *ngIf="role === 'admin'" class="relative group">
-        <button class="nav-link flex items-center justify-between">
-          Panel de control ▼
-        </button>
-        <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-          <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">
-            Registrar Programador
-          </a>
+      @if (role === 'admin') {
+        <div class="relative group">
+          <button class="nav-link flex items-center justify-between">
+            Panel de control ▼
+          </button>
+          <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+            <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">
+              Registrar Programador
+            </a>
+          </div>
         </div>
-      </div>
+      }
 
       <!-- PROGRAMMER -->
-      <div *ngIf="role === 'programmer'" class="relative group">
-        <button class="nav-link flex items-center justify-between">
-          Programador ▼
-        </button>
-        <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-          <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
-          <a routerLink="/home/programmer" class="submenu-item">Solicitudes</a>
+      @if (role === 'programmer') {
+        <div class="relative group">
+          <button class="nav-link flex items-center justify-between">
+            Programador ▼
+          </button>
+          <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+            <a routerLink="/home/programmer/management" class="submenu-item">Mis proyectos</a>
+            <a routerLink="/home/programmer" class="submenu-item">Solicitudes</a>
+          </div>
         </div>
-      </div>
+      }
 
       <!-- USER NORMAL -->
-      <div *ngIf="role === 'user'">
+      @if (role === 'user') {
         <span class="nav-link">Explorar contenido</span>
-      </div>
+      }
     </nav>
 
     <!-- USER SECTION -->
@@ -69,9 +73,9 @@
   <!-- HERO / CONTENIDO PRINCIPAL -->
   <main class="hero-slide p-6">
     <h2 class="text-4xl md:text-5xl font-bold text-white animate-fadeIn mb-6">
-      <span *ngIf="role === 'user'">¡Bienvenido!</span>
-      <span *ngIf="role === 'programmer'">¡Bienvenido!</span>
-      <span *ngIf="role === 'admin'">¡Bienvenido!</span>
+      @if (role === 'user' || role === 'programmer' || role === 'admin') {
+        ¡Bienvenido!
+      }
     </h2>
 
     <router-outlet></router-outlet>
@@ -81,4 +85,4 @@
   <footer class="bg-white/80 backdrop-blur-md mt-auto shadow-inner py-4 text-center text-gray-500 animate-fadeIn">
     © 2025 MiApp. Todos los derechos reservados.
   </footer>
-</div>
+}

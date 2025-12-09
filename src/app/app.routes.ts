@@ -51,8 +51,7 @@ loadComponent:() => import('./pages/header/components/register-user/register').t
   path: 'programmer/management', 
   loadComponent: () => import('./pages/header/components/programmer/management/management').then(m => m.Management), 
   canActivate: [ProgrammerGuard]
-}
-,
+},
       { 
         path: 'user', 
         loadComponent: () => import('./pages/header/components/user/user').then(m => m.User) 

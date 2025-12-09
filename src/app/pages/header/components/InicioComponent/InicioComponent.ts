@@ -10,7 +10,7 @@ import { RouterLink, RouterModule, RouterOutlet } from '@angular/router';
   templateUrl: './InicioComponent.html',
   styleUrls: ['./InicioComponent.css'],
   standalone: true,
-  imports: [CommonModule,FormsModule,RouterModule,RouterOutlet],
+  imports: [CommonModule,FormsModule,RouterModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InicioComponent implements OnInit {
