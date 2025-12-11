@@ -1,0 +1,92 @@
+<!-- Fondo Aurora --> 
+<div class="aurora-bg flex-1 p-6 min-h-screen flex flex-col items-center">
+
+  <!-- Loading overlay -->
+  @if (loading) {
+    <div class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
+      <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-black text-xl font-semibold tracking-wide animate-pulse">
+        Actualizando perfil...
+      </p>
+    </div>
+  }
+
+  <!-- Contenedor formulario -->
+  <div class="w-full max-w-2xl bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-xl mt-8 text-black">
+    <h2 class="text-3xl font-bold mb-6 text-center">Editar Perfil</h2>
+
+    <form (ngSubmit)="actualizarPerfil()" class="flex flex-col gap-4">
+
+      <!-- Nombre -->
+      <div class="flex flex-col">
+        <label class="font-semibold">Nombre</label>
+        <input type="text" [(ngModel)]="nombre" name="nombre" required
+          class="mt-1 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900 text-black">
+      </div>
+
+      <!-- Especialidad -->
+      <div class="flex flex-col">
+        <label class="font-semibold">Especialidad</label>
+        <input type="text" [(ngModel)]="especialidad" name="especialidad" required
+          class="mt-1 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900 text-black">
+      </div>
+
+      <!-- Descripción -->
+      <div class="flex flex-col">
+        <label class="font-semibold">Descripción</label>
+        <textarea [(ngModel)]="descripcion" name="descripcion"
+          class="mt-1 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900 text-black" rows="3"></textarea>
+      </div>
+
+      <!-- Contacto -->
+      <div class="flex flex-col">
+        <label class="font-semibold">Contacto (email)</label>
+        <input type="email" [(ngModel)]="contacto" name="contacto" required
+          class="mt-1 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900 text-black">
+      </div>
+
+      <!-- Redes -->
+      <div class="flex flex-col">
+        <label class="font-semibold">Redes</label>
+        @for (red of redes; track i; let i = $index) {
+          <div class="flex gap-2 mt-1">
+            <input type="text" [(ngModel)]="redes[i]" [name]="'red' + i" placeholder="Enlace de red"
+              class="flex-1 p-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900 text-black">
+            <button type="button" (click)="eliminarRed(i)" class="bg-red-600 text-white px-3 rounded hover:bg-red-700">
+              X
+            </button>
+          </div>
+        }
+        <button type="button" (click)="agregarRed()" class="mt-2 text-sm text-blue-700 hover:underline">
+          + Agregar red
+        </button>
+      </div>
+
+      <!-- Foto -->
+      <div class="flex flex-col">
+        <label class="font-semibold">Foto de perfil</label>
+        <input type="file" (change)="onFotoSeleccionada($event)" accept="image/*" class="mt-1 p-1 rounded border border-gray-300">
+        
+        @if (fotoPreview) {
+          <div class="mt-2">
+            <p class="text-black text-sm">Foto actual / Vista previa:</p>
+            <img [src]="fotoPreview" alt="Foto" class="w-24 h-24 object-cover rounded-full mt-1">
+          </div>
+        }
+        
+        @if (!fotoPreview) {
+          <div class="mt-2">
+            <p class="text-black text-sm">Sin foto de perfil</p>
+            <img src="https://via.placeholder.com/150" alt="Foto" class="w-24 h-24 object-cover rounded-full mt-1">
+          </div>
+        }
+      </div>
+
+      <!-- Botón actualizar -->
+      <button type="submit"
+        class="mt-4 bg-red-900 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-700 transition-all">
+        Guardar cambios
+      </button>
+    </form>
+  </div>
+</div>

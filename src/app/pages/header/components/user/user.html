@@ -1,6 +1,6 @@
 <!-- Solo se muestra si el rol es 'user' -->
 @if (role() === 'user') {
-  <div class="bg-white/20 p-6 rounded-lg shadow-lg text-white">
+  <div class="bg-white/20 p-6 rounded-lg shadow-lg text-black">
     <h3 class="text-2xl font-bold mb-4">Solicitar Asesoría</h3>
 
     <label class="block mb-2">Programador:</label>
@@ -22,9 +22,24 @@
     <label class="block mb-2">Mensaje:</label>
     <textarea [(ngModel)]="mensaje" placeholder="Escribe tu mensaje" class="w-full mb-4 p-2 rounded text-black"></textarea>
 
+    <label class="block mb-2">Fecha de asesoría:</label>
+    <input type="datetime-local" [(ngModel)]="fecha" class="input input-bordered w-full mb-4" />
+
     <!-- Botón de enviar asesoría -->
     <button (click)="enviarAsesoria()" class="bg-red-900 px-4 py-2 rounded hover:bg-red-700 transition">
       Enviar
     </button>
   </div>
+
+  <!-- Cuadro de diálogo -->
+  @if (dialogVisible()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <p class="text-gray-800 mb-4">{{ dialogMessage() }}</p>
+        <button (click)="closeDialog()" class="bg-red-900 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  }
 }

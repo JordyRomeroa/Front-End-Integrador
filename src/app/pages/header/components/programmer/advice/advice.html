@@ -1,0 +1,59 @@
+<section class="w-full max-w-6xl mx-auto relative">
+
+  <!-- Notificación Usuario -->
+  @if (notificacionUsuario()) {
+    <div class="fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-lg animate-fadeInDown z-50">
+      {{ notificacionUsuario() }}
+    </div>
+  }
+
+  <!-- Notificación Admin -->
+  @if (notificacionAdmin()) {
+    <div class="fixed top-4 right-4 bg-blue-500 text-white p-4 rounded shadow-lg animate-fadeInDown z-50">
+      {{ notificacionAdmin() }}
+    </div>
+  }
+
+  @if (asesorias().length > 0) {
+    @for (asesoria of asesorias(); track asesoria.id) {
+      <!-- Cambiamos la clase según el estado -->
+      <div class="card shadow-md p-4 mb-4"
+           [class.bg-gray-100]="asesoria.estado !== 'pendiente'"
+           [class.text-gray-500]="asesoria.estado !== 'pendiente'">
+        <div class="card-body">
+          <p><strong>Usuario:</strong> {{ asesoria.nombreUsuario }}</p>
+          <p><strong>Fecha y Hora de envio :</strong> {{ asesoria.createdAt?.toDate() | date:'dd/MM/yyyy HH:mm' }}</p>
+          <p><strong>Comentario:</strong> {{ asesoria.mensaje }}</p>
+          <p><strong>Estado:</strong> {{ asesoria.estado }}</p>
+          <p><strong>Fecha de citacion :</strong> {{ asesoria.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
+
+          <!-- Solo mostramos los botones si la asesoría está pendiente -->
+          @if (asesoria.estado === 'pendiente') {
+            <div class="card-actions mt-2 space-x-2">
+              <button class="btn btn-success" (click)="cambiarEstado(asesoria.id, 'aceptada')">Aceptar</button>
+              <button class="btn btn-error" (click)="showRechazo[asesoria.id] = !showRechazo[asesoria.id]">
+                Rechazar
+              </button>
+            </div>
+
+            <!-- Campo motivo de rechazo -->
+            @if (showRechazo[asesoria.id]) {
+              <div class="mt-2">
+                <textarea
+                  [(ngModel)]="motivosRechazo[asesoria.id]"
+                  placeholder="Ingrese el motivo de rechazo..."
+                  class="w-full border p-2 rounded"
+                ></textarea>
+                <button class="btn btn-warning mt-2" (click)="cambiarEstado(asesoria.id, 'rechazada')">
+                  Confirmar Rechazo
+                </button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="text-gray-500">No tienes asesorías pendientes.</div>
+  }
+</section>

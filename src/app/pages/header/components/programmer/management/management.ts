@@ -29,6 +29,7 @@ export class Management {
     nombre: '',
     descripcion: '',
     tipo: '',
+    categoria: '',
     tecnologias: [],
     repo: '',
     deploy: '',
@@ -36,7 +37,7 @@ export class Management {
   };
 
   tecnologiasInput: string = '';
-  cargando = signal(true); // señal para indicar carga
+  cargando = signal(true);
 
   constructor() {
     effect(() => {
@@ -46,14 +47,17 @@ export class Management {
         return;
       }
 
-      // Suscribimos proyectos del usuario (solo los que puede leer)
-      this.proyectoService.cargarProyectos(user.uid)
+      // 🟣 Cargar solo proyectos del programador
+      this.proyectoService.cargarProyectosProgramador(user.uid)
         .then(() => {
-          this.proyectoService.proyectos$.subscribe(lista => this.proyectos.set(lista));
+          // 🟣 Escuchar solo proyectos del programador
+          this.proyectoService.proyectosProgramador$.subscribe(lista => {
+            this.proyectos.set(lista);
+          });
         })
         .finally(() => this.cargando.set(false));
 
-      // Suscribimos datos del programador actual
+      // 🔵 Cargar info del programador actual
       this.programadorService.programadores$.subscribe(lista => {
         this.programador = lista.find(p => p.uid === user.uid) || null;
       });
@@ -68,11 +72,13 @@ export class Management {
       nombre: '',
       descripcion: '',
       tipo: '',
+      categoria: '',
       tecnologias: [],
       repo: '',
       deploy: '',
-      assignedTo: user.uid // asignamos automáticamente al usuario actual
+      assignedTo: user.uid
     };
+
     this.tecnologiasInput = '';
     this.proyectoSelected.set(null);
     this.showModal.set(true);
@@ -89,13 +95,11 @@ export class Management {
     const user = this.authService.currentUser();
     if (!user) return;
 
-    // Convertimos string a array
     this.proyectoForm.tecnologias = this.tecnologiasInput
       .split(',')
       .map(t => t.trim())
       .filter(t => t);
 
-    // Siempre asignamos al usuario actual (para cumplir reglas Firestore)
     this.proyectoForm.assignedTo = user.uid;
 
     try {
@@ -105,6 +109,7 @@ export class Management {
       } else {
         await this.proyectoService.crearProyecto(this.proyectoForm);
       }
+
       this.showModal.set(false);
     } catch (error) {
       console.error('Error guardando proyecto:', error);

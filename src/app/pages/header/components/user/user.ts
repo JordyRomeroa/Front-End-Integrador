@@ -18,13 +18,13 @@ type ProgramadorConId = ProgramadorData & { uid: string };
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class User implements OnInit, OnDestroy {
-  // Señal para el rol, así la vista reacciona
+
+  // Rol del usuario actual
   role = signal<Role | null>(null);
-// user.component.ts
-isUser = signal(false);
-
-
-
+  isUser = signal(false);
+  dialogVisible = signal(false);
+  dialogMessage = signal('');
+  fecha: string = '';
   mensaje: string = '';
   programadores = signal<ProgramadorConId[]>([]);
   programadorId = '';
@@ -35,12 +35,26 @@ isUser = signal(false);
   private asesoriaService = inject(AsesoriaService);
   private sub?: Subscription;
 
-  private initEffect = effect(() => {
-  this.isUser.set(this.role() === 'user');
-});
+  constructor() {
+    // Mantener la señal isUser actualizada según el rol
+    effect(() => {
+      this.isUser.set(this.role() === 'user');
+    });
+  }
 
   ngOnInit() {
-    // Aquí ya no necesitamos llamar a effect()
+    // Cargar rol del usuario actual
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const userRole = this.authService.getUserRole();
+    this.role.set(userRole ?? null);
+
+    // Suscribirse a los programadores
+    this.suscribirseProgramadores();
   }
 
   logout() {
@@ -57,55 +71,68 @@ isUser = signal(false);
     this.sub?.unsubscribe();
 
     this.sub = this.progService.programadores$.subscribe(lista => {
-  console.log('Programadores recibidos:', lista);
-  const listaConUid: ProgramadorConId[] = lista.map(p => ({ ...p, uid: (p as any).uid }));
-  this.programadores.set(listaConUid);
+      console.log('Programadores recibidos:', lista);
+      const listaConUid: ProgramadorConId[] = lista.map(p => ({ ...p, uid: (p as any).uid }));
+      this.programadores.set(listaConUid);
 
-  if (listaConUid.length && !this.programadorId) {
-    this.programadorId = listaConUid[0].uid;
-  }
-});
-
+      if (listaConUid.length && !this.programadorId) {
+        this.programadorId = listaConUid[0].uid;
+      }
+    });
 
     this.progService.refrescarTabla().catch(console.error);
   }
-
  async enviarAsesoria() {
-  const currentUser = this.authService.currentUser();
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) return this.showDialog('Debes iniciar sesión para solicitar una asesoría.');
 
-  if (!currentUser) {
-    // Redirige al login antes de permitir enviar la asesoría
-    alert('Debes iniciar sesión para solicitar una asesoría.');
-    this.router.navigate(['/login']);
-    return;
+    if (!this.mensaje || !this.programadorId || !this.fecha) 
+      return this.showDialog('Debe ingresar un mensaje, seleccionar un programador y una fecha.');
+
+    const fechaSeleccionada = new Date(this.fecha);
+    const diaSemana = fechaSeleccionada.getDay();
+    if (diaSemana === 0 || diaSemana === 6)
+      return this.showDialog('La asesoría no puede ser en fin de semana.');
+
+    const hora = fechaSeleccionada.getHours();
+    if (hora < 7 || hora >= 17)
+      return this.showDialog('La asesoría debe ser entre las 07:00 y las 17:00.');
+
+    const nuevaAsesoria: Asesoria = {
+      mensaje: this.mensaje,
+      estado: 'pendiente',
+      mensajeRespuesta: '',
+      programadorId: this.programadorId,
+      usuarioId: currentUser.uid,
+      nombreUsuario: currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuario',
+      fecha: this.fecha
+    };
+
+    try {
+      const id = await this.asesoriaService.crearAsesoria(nuevaAsesoria);
+      this.showDialog(`Asesoría enviada con ID: ${id}`);
+      this.mensaje = '';
+      this.programadorId = this.programadores().length ? this.programadores()[0].uid : '';
+      this.fecha = '';
+    } catch (error) {
+      console.error(error);
+      this.showDialog('Error al enviar la asesoría.');
+    }
   }
 
-  if (!this.mensaje || !this.programadorId) {
-    alert('Debe ingresar un mensaje y seleccionar un programador.');
-    return;
+  showDialog(msg: string) {
+    this.dialogMessage.set(msg);
+    this.dialogVisible.set(true);
   }
 
-  const nuevaAsesoria: Asesoria = {
-    mensaje: this.mensaje,
-    estado: 'pendiente',
-    mensajeRespuesta: '',
-    programadorId: this.programadorId,
-    usuarioId: currentUser.uid
-  };
-
-  try {
-    const id = await this.asesoriaService.crearAsesoria(nuevaAsesoria);
-    alert(`Asesoría enviada con ID: ${id}`);
-    this.mensaje = '';
-    this.programadorId = this.programadores().length ? this.programadores()[0].uid : '';
-  } catch (error) {
-    console.error(error);
-    alert('Error al enviar la asesoría.');
+  closeDialog() {
+    this.dialogVisible.set(false);
+    this.dialogMessage.set('');
   }
-}
+
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
   }
-  
+
 }

@@ -4,13 +4,15 @@ import { GitHubService, Repo } from '../../../../../services/github-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterModule, RouterOutlet } from '@angular/router';
+import { Team } from '../admin/team/team';
+import { AboutUs } from "../admin/AboutUs/AboutUs";
 
 @Component({
   selector: 'app-inicio-component',
   templateUrl: './InicioComponent.html',
   styleUrls: ['./InicioComponent.css'],
   standalone: true,
-  imports: [CommonModule,FormsModule,RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, Team, AboutUs],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InicioComponent implements OnInit {

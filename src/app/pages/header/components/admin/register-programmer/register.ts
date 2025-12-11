@@ -7,6 +7,7 @@ import { ProgramadorService } from '../../../../../../services/programmer-servic
 import { AuthService } from '../../../../../../services/auth-service';
 import { getSecondaryApp } from '../../../../../../services/firebase-secondary';
 import { ProgramadorData } from '../../../../interface/programador';
+import axios from 'axios';
 
 @Component({
   selector: 'app-register',
@@ -27,7 +28,7 @@ export class RegisterProgrammer implements OnChanges {
   password = '';
   redes: string[] = [''];
   foto: File | null = null;
-  
+
   constructor(
     private router: Router,
     private programadorService: ProgramadorService,
@@ -36,16 +37,14 @@ export class RegisterProgrammer implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['programmer'] && this.programmer) {
-      // Llenar formulario con datos del programador
       this.nombre = this.programmer.nombre || '';
       this.especialidad = this.programmer.especialidad || '';
       this.descripcion = this.programmer.descripcion || '';
       this.contacto = this.programmer.contacto || '';
       this.redes = this.programmer.redes?.length ? [...this.programmer.redes] : [''];
-      this.foto = null; // Foto no se rellena automáticamente
-      this.password = ''; // No mostrar password existente
+      this.foto = null;
+      this.password = '';
     } else if (!this.programmer) {
-      // Nuevo registro, reset campos
       this.resetFormulario();
     }
   }
@@ -55,6 +54,24 @@ export class RegisterProgrammer implements OnChanges {
     const auth2 = getAuth(secondaryApp);
     await setPersistence(auth2, inMemoryPersistence);
     return auth2;
+  }
+
+  /** Subir imagen a Cloudinary y obtener URL */
+  private async subirImagenCloudinary(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'preset_angular'); // tu preset unsigned
+    formData.append('folder', 'programadores');
+
+    const url = `https://api.cloudinary.com/v1_1/dfsuyz4vw/image/upload`;
+
+    try {
+      const response = await axios.post(url, formData);
+      return response.data.secure_url;
+    } catch (err) {
+      console.error('Error subiendo a Cloudinary', err);
+      throw err;
+    }
   }
 
   /** Crear o actualizar programador */
@@ -73,7 +90,7 @@ export class RegisterProgrammer implements OnChanges {
     try {
       let uid = this.programmer?.uid;
 
-      // Si es nuevo programador, crear usuario en Auth
+      // Crear usuario nuevo en Auth
       if (!uid) {
         const auth2 = await this.createTemporaryAuth();
         const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
@@ -81,7 +98,12 @@ export class RegisterProgrammer implements OnChanges {
         await auth2.signOut();
       }
 
-      // Guardar o actualizar datos en Firestore
+      // Subir foto a Cloudinary si existe
+      let fotoURL = this.programmer?.foto || 'https://via.placeholder.com/150';
+      if (this.foto) {
+        fotoURL = await this.subirImagenCloudinary(this.foto);
+      }
+
       const nuevoProgramador: ProgramadorData = {
         uid,
         nombre: this.nombre,
@@ -89,19 +111,15 @@ export class RegisterProgrammer implements OnChanges {
         descripcion: this.descripcion,
         contacto: this.contacto,
         redes: this.redes,
-        foto: this.programmer?.foto ,
-        mustChangePassword: true// Mantener foto existente si no hay nueva
+        foto: fotoURL,
+        mustChangePassword: true
       };
-
-      if (this.foto) {
-       
-      }
 
       await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
 
       alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 
-      this.cerrar.emit(); // Cerrar modal
+      this.cerrar.emit();
       this.resetFormulario();
     } catch (error: any) {
       console.error(error);

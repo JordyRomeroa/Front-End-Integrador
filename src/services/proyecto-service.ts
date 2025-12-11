@@ -7,11 +7,17 @@ import { BehaviorSubject } from 'rxjs';
 export class ProyectoService {
   private firestore = inject(Firestore);
 
-  // Señal/observable para notificar cambios en proyectos
-  private proyectosSubject = new BehaviorSubject<Proyecto[]>([]);
-  proyectos$ = this.proyectosSubject.asObservable();
+  // 🟣 Proyectos del programador (vista del programador)
+  private proyectosProgramadorSubject = new BehaviorSubject<Proyecto[]>([]);
+  proyectosProgramador$ = this.proyectosProgramadorSubject.asObservable();
 
-  /** Obtener todos los proyectos asignados a un programador */
+  // 🔵 Todos los proyectos (vista admin)
+  private todosProyectosSubject = new BehaviorSubject<Proyecto[]>([]);
+  todosProyectos$ = this.todosProyectosSubject.asObservable();
+
+  // ============================================================
+  // 📌 1. OBTENER PROYECTOS DEL PROGRAMADOR
+  // ============================================================
   async obtenerProyectos(uidProgramador: string): Promise<Proyecto[]> {
     const proyectosCol = collection(this.firestore, 'proyectos');
     const q = query(proyectosCol, where('assignedTo', '==', uidProgramador));
@@ -20,21 +26,55 @@ export class ProyectoService {
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    } as Proyecto));
+    }) as Proyecto);
   }
 
-  /** Crear un proyecto nuevo */
+  // Cargar y emitir los proyectos del programador
+  async cargarProyectosProgramador(uid: string) {
+    const lista = await this.obtenerProyectos(uid);
+    this.proyectosProgramadorSubject.next(lista);
+  }
+
+  // ============================================================
+  // 📌 2. OBTENER TODOS LOS PROYECTOS
+  // ============================================================
+  async obtenerTodosLosProyectos(): Promise<Proyecto[]> {
+    const proyectosCol = collection(this.firestore, 'proyectos');
+    const snapshot = await getDocs(proyectosCol);
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }) as Proyecto);
+  }
+
+  // Cargar todos los proyectos y emitirlos
+  async cargarTodosLosProyectos() {
+    const lista = await this.obtenerTodosLosProyectos();
+    this.todosProyectosSubject.next(lista);
+  }
+
+  // ============================================================
+  // 📌 3. CREAR PROYECTO
+  // ============================================================
   async crearProyecto(proyecto: Proyecto): Promise<Proyecto> {
     const proyectosCol = collection(this.firestore, 'proyectos');
     const nuevoDoc = doc(proyectosCol);
     await setDoc(nuevoDoc, proyecto);
-    await this.cargarProyectos(proyecto.assignedTo);
+
+    // Actualiza las dos vistas
+    await this.cargarProyectosProgramador(proyecto.assignedTo);
+    await this.cargarTodosLosProyectos();
+
     return { id: nuevoDoc.id, ...proyecto };
   }
 
-  /** Actualizar un proyecto existente */
+  // ============================================================
+  // 📌 4. ACTUALIZAR PROYECTO
+  // ============================================================
   async actualizarProyecto(proyecto: Proyecto): Promise<void> {
     if (!proyecto.id) throw new Error('El proyecto debe tener un ID para actualizar');
+
     const docRef = doc(this.firestore, `proyectos/${proyecto.id}`);
     await updateDoc(docRef, {
       nombre: proyecto.nombre,
@@ -45,23 +85,19 @@ export class ProyectoService {
       deploy: proyecto.deploy,
       assignedTo: proyecto.assignedTo
     });
-    await this.cargarProyectos(proyecto.assignedTo);
+
+    // Actualizar ambas listas
+    await this.cargarProyectosProgramador(proyecto.assignedTo);
+    await this.cargarTodosLosProyectos();
   }
 
-  /** Eliminar un proyecto por su ID */
+  
   async eliminarProyecto(id: string, uidProgramador: string): Promise<void> {
     const docRef = doc(this.firestore, `proyectos/${id}`);
     await deleteDoc(docRef);
-    await this.cargarProyectos(uidProgramador);
+
+    await this.cargarProyectosProgramador(uidProgramador);
+    await this.cargarTodosLosProyectos();
   }
-
- async cargarProyectos(uid: string) {
-  const q = query(collection(this.firestore, 'proyectos'), where('assignedTo', '==', uid));
-  const snapshot = await getDocs(q);
-  const lista = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Proyecto));
-
-  // ⚡ Usa el BehaviorSubject correcto
-  this.proyectosSubject.next(lista);
-}
-
+  
 }

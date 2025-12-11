@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs,deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, serverTimestamp, getDocs,deleteDoc, getDoc } from '@angular/fire/firestore';
 import { getAuth, User } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 import { ProgramadorData } from '../app/pages/interface/programador';
-
+import { ProgramadorInfo } from '../app/pages/interface/programadorInfo';
 
 
 @Injectable({ providedIn: 'root' })
@@ -84,5 +84,54 @@ export class ProgramadorService {
     // Refresca la tabla para emitir los cambios
     await this.refrescarTabla();
   }
+  async camposEspecificosProgramadores(): Promise<ProgramadorInfo[]> {
+  try {
+    const progCol = collection(this.firestore, 'usuarios');
+    const snapshot = await getDocs(progCol);
+
+    return snapshot.docs
+      .filter(doc => doc.data()['role'] === 'programmer')   // ✔ solo programadores
+      .map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,                                      // ✔ agrega ID (muy importante)
+          nombre: data['nombre'] || 'Sin nombre',
+          especialidad: data['especialidad'] || 'Sin especialidad',
+          descripcion: data['descripcion'] || 'Sin descripción',
+          foto: data['foto'] || 'https://via.placeholder.com/150'
+        };
+      });
+
+  } catch (err) {
+    console.error('Error obteniendo programadores:', err);
+    return [];
+  }
+}
+
+async getProgramadorByUid(uid: string): Promise<ProgramadorData | null> {
+  if (!uid) return null;
+  try {
+    const docRef = doc(this.firestore, `usuarios/${uid}`);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) return null;
+
+    const data = docSnap.data();
+    return {
+      uid: docSnap.id,
+      nombre: data['nombre'] || '',
+      especialidad: data['especialidad'] || '',
+      descripcion: data['descripcion'] || '',
+      contacto: data['contacto'] || '',
+      redes: (data['redes'] || '').split(','),
+      foto: data['foto'] || 'https://via.placeholder.com/40',
+      mustChangePassword: data['mustChangePassword'] ?? true
+    };
+  } catch (err) {
+    console.error('Error obteniendo programador por UID:', err);
+    return null;
+  }
+}
+
   
 }

@@ -9,6 +9,10 @@ export interface Asesoria {
   usuarioId: string;
   createdAt?: any;
   updatedAt?: any;
+  fecha?: string;
+  correoUsuario?: string;
+  nombreUsuario?: string;
+   
 }
 
 @Injectable({

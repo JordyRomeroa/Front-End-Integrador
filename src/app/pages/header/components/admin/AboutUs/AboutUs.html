@@ -1,0 +1,63 @@
+<section class="about-us relative p-8 w-full overflow-hidden flex flex-col items-center">
+
+  <!-- Fondo aurora sutil -->
+  <div class="absolute inset-0 -z-10 pointer-events-none">
+    <div class="absolute top-0 left-1/4 w-1/2 h-1/2 bg-gradient-to-tr from-indigo-500/40 to-purple-600/30 blur-[120px] rounded-full"></div>
+    <div class="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-gradient-to-bl from-pink-500/30 to-yellow-400/30 blur-[140px] rounded-full"></div>
+  </div>
+
+  <!-- Título centrado -->
+  <h2 class="text-3xl md:text-4xl font-extrabold mb-8 text-center bg-clip-text text-transparent 
+             bg-gradient-to-r from-yellow-400 via-pink-400 to-indigo-400 animate-fadeInUp drop-shadow-lg">
+    Quienes Somos
+  </h2>
+
+  <!-- Contenedor del carrusel centrado -->
+  <div class="relative w-full flex justify-center">
+
+    <!-- Botón izquierda -->
+    <button
+      class="absolute left-0 top-1/2 -translate-y-1/2 btn btn-circle btn-sm z-10 transform transition-transform duration-300 hover:-translate-x-2 hover:scale-110"
+      (click)="scrollLeft()">
+      ‹
+    </button>
+
+    <!-- Carrusel centrado -->
+    <div
+      #carousel
+      class="flex flex-nowrap overflow-x-auto gap-6 py-4 px-6 md:px-12 scroll-smooth max-w-5xl justify-center"
+      style="scrollbar-width: none; -ms-overflow-style: none;">
+      <style>#carousel::-webkit-scrollbar { display: none; }</style>
+
+      @for (prog of bloques(); track $index)
+      {
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4 bg-gradient-to-br from-indigo-900/40 via-purple-900/30 to-black/20 
+                    p-4 rounded-2xl shadow-lg border border-white/10 shrink-0 transform transition-all duration-300 
+                    hover:scale-105 hover:shadow-2xl animate-fadeInUp">
+          
+          <!-- Foto con glow -->
+          <img [src]="prog.foto" [alt]="prog.nombre"
+               class="w-20 h-20 rounded-full object-cover border-2 border-yellow-400 shadow-[0_0_15px_rgba(255,200,50,0.5)] 
+                      transition-transform duration-300 hover:scale-110 hover:shadow-[0_0_25px_rgba(255,200,50,0.8)]">
+
+          <!-- Descripción -->
+          <div class="bg-white/20 p-3 rounded-xl shadow-md flex flex-col gap-1 text-sm max-w-[220px] text-center overflow-hidden">
+            <h3 class="font-bold text-black text-lg truncate">{{ prog.nombre }}</h3>
+            <span class="text-black/70 truncate">• {{ prog.especialidad }}</span>
+            <span class="text-black truncate">• {{ prog.descripcion }}</span>
+          </div>
+
+        </div>
+      }
+    </div>
+
+    <!-- Botón derecha -->
+    <button
+      class="absolute right-0 top-1/2 -translate-y-1/2 btn btn-circle btn-sm z-10 transform transition-transform duration-300 hover:translate-x-2 hover:scale-110"
+      (click)="scrollRight()">
+      ›
+    </button>
+
+  </div>
+
+</section>

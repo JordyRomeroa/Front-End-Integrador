@@ -1,10 +1,11 @@
 import { Component, effect, signal, inject } from '@angular/core';
 import { NgIf, NgFor, CommonModule } from '@angular/common';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService, Role } from '../../../../../services/auth-service';
 import { collection, getDocs, query, where, Firestore } from '@angular/fire/firestore';
 import { AsesoriaService } from '../../../../../services/advice';
 import { AsesoriaConId } from '../../../interface/asesoria';
+import { FormsModule } from '@angular/forms';
 
 interface Proyecto {
   id: string;
@@ -21,7 +22,7 @@ interface Proyecto {
   templateUrl: './programmer.html',
   styleUrls: ['./programmer.css'],
   standalone: true,
-  imports: [CommonModule,RouterOutlet],
+  imports: [CommonModule, FormsModule,RouterModule],
 })
 export class Programmer {
   role: Role | null = null;
@@ -94,22 +95,47 @@ export class Programmer {
       console.error('Error al cargar asesorías:', err);
     }
   }
+// Dentro de la clase Programmer
+motivosRechazo: { [asesoriaId: string]: string } = {}; // para guardar temporalmente cada motivo
+showRechazo: { [asesoriaId: string]: boolean } = {};
 
-  async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
-    try {
-      await this.asesoriaService.actualizarAsesoria(asesoriaId, { estado: nuevoEstado });
-      console.log(`Asesoría ${asesoriaId} actualizada a ${nuevoEstado}`);
+async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
+  try {
+    const mensajeRespuesta = this.motivosRechazo[asesoriaId]?.trim() || '';
 
-      // Actualizamos localmente la señal
-      const actualizadas = this.asesorias().map(a =>
-        a.id === asesoriaId ? { ...a, estado: nuevoEstado } : a
-      );
-      this.asesorias.set(actualizadas);
-
-    } catch (err) {
-      console.error('Error al actualizar estado de la asesoría:', err);
+    if (nuevoEstado === 'rechazada' && !mensajeRespuesta) {
+      alert('Debe proporcionar un motivo para rechazar la asesoría.');
+      return;
     }
+
+    const datosActualizar = { 
+      estado: nuevoEstado,
+      mensajeRespuesta
+    };
+
+    await this.asesoriaService.actualizarAsesoria(asesoriaId, datosActualizar);
+
+    // Actualizamos la señal local
+    const updatedList = this.asesorias().map(a => 
+      a.id === asesoriaId ? { ...a, ...datosActualizar } : a
+    );
+    this.asesorias.set(updatedList);
+
+    // Limpiamos el campo
+    delete this.motivosRechazo[asesoriaId];
+    // Ocultamos el textarea
+delete this.showRechazo[asesoriaId];
+
+
+  } catch (err) {
+    console.error('Error al actualizar estado de la asesoría:', err);
   }
+}
+
+
+
+
+
 
   logout() {
     this.authService.logout().subscribe({

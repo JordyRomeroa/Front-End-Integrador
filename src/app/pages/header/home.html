@@ -1,4 +1,10 @@
-<div class="fixed inset-0 -z-10 animate-gradient-red-black"></div>
+<!-- FONDO AURORA QUE YA TIENES DEFINIDO EN TU CSS -->
+
+<!-- CAPA DE FONDO INDEPENDIENTE (no afecta colores internos) -->
+<!-- AURORA UNIFICADA DETRÁS DE TODO -->
+<div class="fixed inset-0 -z-10 aurora-bg"></div>
+
+
 
 @if (loading()) {
   <div class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
@@ -8,103 +14,208 @@
     </p>
   </div>
 } @else {
-  <!-- Contenido principal -->
-
-  <!-- SIDEBAR -->
-  <aside class="navbar">
-    <a routerLink="/home/inicio" class="text-2xl font-bold text-white">Portafolio</a>
-
-    <nav class="mt-8 flex flex-col space-y-2">
-      <a routerLink="/home/inicio" routerLinkActive="active" class="nav-link">Inicio</a>
-      <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
-
-      @if (role === 'admin') {
-        <div class="relative group">
-          <button class="nav-link flex items-center justify-between">Panel de control ▼</button>
-          <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-            <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">
-              Registrar Programador
-            </a>
+  <!-- Contenedor principal responsive -->
+<div class="min-h-screen w-full flex flex-col  backdrop-blur-sm px-4 sm:px-6 md:px-8 mx-auto">
+    
+    <!-- SIDEBAR -->
+    <aside class="navbar mb-6 lg:mb-0">
+      <a routerLink="/home/inicio" class="text-2xl font-bold text-white">Portafolio</a>
+      <nav class="mt-8 flex flex-col space-y-2">
+        <a routerLink="/home/inicio" routerLinkActive="active" class="nav-link">Inicio</a>
+        <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
+       
+        @if (role === 'admin') {
+          <div class="relative group">
+            <button class="nav-link flex items-center justify-between">Panel de control ▼</button>
+            <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+              <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">Registrar Programador</a>
+            </div>
           </div>
-        </div>
-      }
+        }
 
-      @if (role === 'programmer') {
-        <div class="relative group">
-  <button class="nav-link flex items-center justify-between">
-    Programador ▼
-  </button>
-  <div class="absolute left-0 top-full hidden group-hover:flex flex-col bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-    <a routerLink="/home/programmer/management" class="submenu-item px-4 py-2 hover:bg-red-900">Mis proyectos</a>
-    <a routerLink="/home/programmer" class="submenu-item px-4 py-2 hover:bg-red-900">Solicitudes</a>
+        @if (role === 'programmer') {
+          <div class="relative group">
+            <button class="nav-link flex items-center justify-between">Dashboard ▼</button>
+            <div class="absolute left-0 top-full hidden group-hover:flex flex-col bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
+              <a routerLink="/home/programmer/management" class="submenu-item px-4 py-2 hover:bg-red-900">Mis proyectos</a>
+              <a routerLink="/home/programmer" class="submenu-item px-4 py-2 hover:bg-red-900">Solicitudes</a>
+              <a routerLink="/home/programmer/schedules" class="submenu-item px-4 py-2 hover:bg-red-900">Horarios</a>
+<a routerLink="/home/programmer/editprofile" class="submenu-item px-4 py-2 hover:bg-red-900">Editar Perfil</a>
+            </div>
+          </div>
+        }
+
+       
+      </nav>
+
+      <div class="mt-auto flex flex-col items-center space-y-3">
+        @if (authService.currentUser()) {
+          <div class="user-initials">{{ getInitials(authService.currentUser()?.email ?? '') }}</div>
+          <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
+            Cerrar sesión
+          </button>
+        } @else {
+          <button routerLink="/login" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
+            Iniciar sesión
+          </button>
+        }
+      </div>
+    </aside>
+
+    <!-- HERO / CONTENIDO PRINCIPAL -->
+    <main class="hero-slide flex-1 p-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-white animate-fadeIn mb-6">
+        @if (role === 'user' || role === 'programmer' || role === 'admin') {
+          
+        }
+      </h2>
+
+      <router-outlet></router-outlet>
+
+ <!-- Solo se muestra si el rol es 'user' -->
+@if (role === 'user' && showAsesoria) {
+  <!-- CTA – Card azul -->
+ 
+  <div class="w-full flex justify-center">
+
+  <div 
+    class="relative overflow-hidden mt-12 p-6 rounded-3xl bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 shadow-2xl animate-fadeInUp w-full md:w-2/3 lg:w-1/2 transform transition-all duration-500 hover:scale-105 flex flex-col md:flex-row items-center md:items-start gap-6"
+  >
+    <!-- Fondos difuminados decorativos -->
+    <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse-slow"></div>
+    <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse-slow"></div>
+
+    <!-- GIF a la izquierda -->
+    <div class="w-32 h-32 md:w-40 md:h-40 shrink-0">
+      <img src="asesora.png" 
+           alt="GIF Asesoría" 
+           class="w-full h-full object-cover rounded-full shadow-lg " />
+    </div>
+
+    <!-- Contenido -->
+    <div class="relative z-10 text-white flex-1">
+      <h3 class="text-3xl md:text-4xl font-extrabold drop-shadow-lg mb-2">
+        ¿Necesitas <span class="text-yellow-400">asesoría personalizada?</span>
+      </h3>
+      <p class="mt-2 text-lg md:text-xl opacity-90">
+        Conecta con expertos que pueden ayudarte a impulsar tu proyecto y alcanzar tus metas.
+      </p>
+
+      <!-- Botón de acción -->
+      <button
+        (click)="showAsesoriaModal.set(true)"
+        class="mt-6 px-8 py-3 font-bold rounded-xl shadow-2xl bg-yellow-400 text-black hover:bg-yellow-300 transition-all duration-300 flex items-center gap-3 animate-bounce hover:scale-105"
+      >
+        <span class="text-xl">💬</span>
+        Solicitar Asesoría
+      </button>
+    </div>
+
   </div>
+
 </div>
 
-      }
 
-      @if (role === 'user') {
-        <span class="nav-link">Explorar contenido</span>
-      }
-    </nav>
 
-    <div class="mt-auto flex flex-col items-center space-y-3">
-      @if (authService.currentUser()) {
-        <div class="user-initials">{{ getInitials(authService.currentUser()?.email ?? '') }}</div>
-        <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-          Cerrar sesión
-        </button>
-      } @else {
-        <button routerLink="/login" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-          Iniciar sesión
-        </button>
+
+  <!-- Modal flotante con User -->
+  @if (showAsesoriaModal()) {
+    <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-lg relative">
+        <button 
+          (click)="showAsesoriaModal.set(false)" 
+          class="absolute top-2 right-2 text-red-700 font-bold text-2xl"
+        >&times;</button>
+
+        <app-user></app-user>
+      </div>
+    </div>
+  }
+
+}
+
+    </main>
+
+    <!-- FOOTER -->
+ <!-- FOOTER PROFESIONAL -->
+<!-- FOOTER PROFESIONAL COMPLETO -->
+<footer class="footer flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 py-12 px-8 lg:px-16 bg-black text-white rounded-t-3xl shadow-inner animate-fadeIn">
+
+  <!-- Logo y Nombre -->
+  <div class="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-3">
+    <div class="w-12 h-12 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+      🚀
+    </div>
+    
+    <p class="text-white/80 text-sm mt-2 lg:mt-0">
+      Innovando la forma de gestionar tus proyectos y conectarte con expertos.
+    </p>
+  </div>
+
+  <!-- Links Rápidos -->
+  <div class="flex flex-col sm:flex-row gap-6 text-white text-sm font-medium">
+    <div class="flex flex-col gap-2">
+      <span class="font-semibold">Explorar</span>
+      <a routerLink="/home/inicio" class="hover:text-blue-400 transition duration-300">Inicio</a>
+      <a routerLink="/home/proyectos" class="hover:text-blue-400 transition duration-300">Proyectos</a>
+      <a routerLink="/home/about-us" class="hover:text-blue-400 transition duration-300">Quiénes somos</a>
+      @if (role === 'admin') {
+        <a routerLink="/home/admin" class="hover:text-blue-400 transition duration-300">Panel Admin</a>
       }
     </div>
-  </aside>
 
-  <!-- HERO / CONTENIDO PRINCIPAL -->
-  <main class="hero-slide p-6">
-    <h2 class="text-4xl md:text-5xl font-bold text-white animate-fadeIn mb-6">
-      @if (role === 'user' || role === 'programmer' || role === 'admin') {
-        ¡Bienvenido!
-      }
-    </h2>
+    <div class="flex flex-col gap-2">
+      <span class="font-semibold">Servicios</span>
+      <a href="#" class="hover:text-blue-400 transition duration-300">Asesoría personalizada</a>
+      <a href="#" class="hover:text-blue-400 transition duration-300">Gestión de proyectos</a>
+      <a href="#" class="hover:text-blue-400 transition duration-300">Consultoría</a>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <span class="font-semibold">Contacto</span>
+      <span class="text-white/70 text-sm">email@miapp.com</span>
+      <span class="text-white/70 text-sm">+593 987 654 321</span>
+      <span class="text-white/70 text-sm">Ecuador, Quito</span>
+    </div>
+  </div>
+
+  <!-- Redes Sociales -->
+ <!-- Asegúrate de tener Font Awesome cargado en tu proyecto -->
 
 
+<div class="flex flex-col gap-4 items-start lg:items-center">
+  <span class="font-semibold text-white">Síguenos</span>
+  <div class="flex gap-6 text-2xl">
 
+    <!-- Facebook -->
+    <a href="https://facebook.com" target="_blank"
+       class="text-blue-600 hover:text-blue-400 transition transform hover:scale-110">
+       <i class="fa-brands fa-facebook"></i>
+    </a>
 
-    <router-outlet></router-outlet>
-<!-- CTA – SOLICITAR ASESORÍA -->
-<div class="relative overflow-hidden mt-12 p-8 rounded-2xl bg-linear-to-br from-yellow-400 via-yellow-300 to-yellow-500 shadow-2xl animate-fadeIn">
+   
+    <!-- Instagram -->
+    <a href="https://instagram.com" target="_blank"
+       class="text-pink-500 hover:text-pink-400 transition transform hover:scale-110">
+<i class="fa-brands fa-instagram"></i>    </a>
 
-  <!-- Decoración circulos -->
-  <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/30 rounded-full blur-2xl"></div>
-  <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-white/20 rounded-full blur-3xl"></div>
+    <!-- WhatsApp -->
+    <a href="https://wa.me/1234567890" target="_blank"
+       class="text-green-500 hover:text-green-400 transition transform hover:scale-110">
+<i class="fa-brands fa-whatsapp"></i>    </a>
 
-  <!-- Contenido -->
-  <div class="relative z-10 text-black">
-    <h3 class="text-3xl font-extrabold drop-shadow-lg">
-      ¿Necesitas asesoría personalizada?
-    </h3>
-
-    <p class="mt-2 text-lg opacity-90">
-      Conecta con expertos que pueden ayudarte a impulsar tu proyecto.
-    </p>
-
-    <button
-      (click)="openAsesoria()"
-      class="mt-6 px-8 py-3 bg-black text-yellow-300 font-bold rounded-xl shadow-xl
-             hover:bg-gray-900 hover:scale-105 hover:shadow-2xl transition-all duration-300 flex items-center gap-2">
-
-      <span class="animate-pulse text-xl">💬</span>
-      Solicitar Asesoría
-    </button>
   </div>
 </div>
-  
-  </main>
 
-  <!-- FOOTER -->
-  <footer class="bg-white/80 backdrop-blur-md mt-auto shadow-inner py-4 text-center text-gray-500 animate-fadeIn">
+  <!-- Copy & Rights -->
+  <div class="text-sm text-white/70 mt-6 lg:mt-0">
     © 2025 MiApp. Todos los derechos reservados.
-  </footer>
+  </div>
+
+</footer>
+
+
+
+
+  </div>
 }

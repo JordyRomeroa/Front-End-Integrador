@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
 import { ProgramadorService,  } from '../../../../../services/programmer-service';
@@ -14,7 +14,11 @@ import { ProgramadorData } from '../../../interface/programador';
   styleUrls: ['./admin.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Admin {
+export class Admin implements OnInit {
+
+  ngOnInit() {
+    this.programadorService.refrescarTabla(); // 🔥 carga inicial
+  }
 
   private router = inject(Router);
   private authService = inject(AuthService);

@@ -194,31 +194,50 @@ async refreshCurrentUser() {
   // ===========================================
   // CARGAR ROL DEL USUARIO
   // ===========================================
-  async loadUserRole(uid: string) {
-    try {
-      const docRef = doc(this.firestore, `usuarios/${uid}`);
-      const docSnap = await getDoc(docRef);
+ async loadUserRole(uid: string) {
+  try {
+    const docRef = doc(this.firestore, `usuarios/${uid}`);
+    const docSnap = await getDoc(docRef);
 
-      let role: Role = 'user';
+    let role: Role = 'user'; // valor por defecto
 
-      if (docSnap.exists()) {
-        role = docSnap.data()['role'] || 'user';
-      } else {
-        // si no existe, crearlo
-        await setDoc(docRef, { role: 'user' });
+    if (docSnap.exists()) {
+      let roleFromDb = docSnap.data()['role'];
+
+      console.log("📂 Rol en Firestore:", roleFromDb);
+
+      // Normalizar a minúsculas y validar
+      if (typeof roleFromDb === 'string') {
+        roleFromDb = roleFromDb.trim().toLowerCase();
       }
 
-      this.userRole.set(role);
-      localStorage.setItem("authRole", role);
-      this.roleLoaded.set(true);
-
-    } catch (err) {
-      console.error("❌ Error al cargar rol:", err);
-      this.userRole.set('user');
-      localStorage.setItem("authRole", 'user');
-      this.roleLoaded.set(true);
+      if (roleFromDb === 'admin' || roleFromDb === 'programmer' || roleFromDb === 'user') {
+        role = roleFromDb as Role;
+      } else {
+        console.warn("⚠ Rol inválido en Firestore, se usará 'user'");
+        await setDoc(docRef, { role: 'user' }, { merge: true });
+      }
+    } else {
+      console.log("📂 Documento de usuario no existe, creando con rol 'user'");
+      await setDoc(docRef, { role: 'user' });
     }
+
+    this.userRole.set(role);
+    this.roleLoaded.set(true);
+    localStorage.setItem("authRole", role);
+
+    console.log("🔥 Rol cargado correctamente:", role);
+
+  } catch (err) {
+    console.error("❌ Error al cargar rol:", err);
+    this.userRole.set('user');
+    this.roleLoaded.set(true);
+    localStorage.setItem("authRole", 'user');
   }
+}
+
+
+
 
   // ===========================================
   // ASIGNAR ROL (ADMIN)
@@ -261,7 +280,57 @@ async refreshCurrentUser() {
       }
     }, 20);
   });
+
 }
+
+// async getProgramadoresConNombre(): Promise<{ uid: string; nombre: string; foto?: string }[]> {
+//   const q = query(
+//     collection(this.firestore, 'usuarios'),
+//     where('role', '==', 'programmer')
+//   );
+
+//   const snapshot = await getDocs(q);
+
+//   return snapshot.docs.map(doc => ({
+//     uid: doc.id,
+//     nombre: doc.data()['nombre'] || 'Sin nombre',
+//     foto: doc.data()['foto'] || 'https://via.placeholder.com/40'
+//   }));
+// }
+async getProgramadoresConNombre(): Promise<{ uid: string; nombre: string }[]> {
+  const q = query(
+    collection(this.firestore, 'usuarios'),
+    where('role', '==', 'programmer')
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    uid: doc.id,
+    nombre: doc.data()['nombre'] || 'Sin nombre'
+  }));
+}
+async getNombreProgramador(uid: string): Promise<string> {
+    try {
+      const docRef = doc(this.firestore, `usuarios/${uid}`);
+      const docSnap = await getDoc(docRef);
+
+      // Si existe el documento y tiene nombre, lo retornamos
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return (data && data['nombre']) ? data['nombre'] : 'Sin nombre';
+      }
+
+      // Si no existe, devolvemos 'Sin nombre'
+      return 'Sin nombre';
+
+    } catch (err) {
+      // Captura cualquier error, incluidos problemas de permisos
+      console.warn(`No se pudo obtener el nombre del programador ${uid}:`, err);
+      return 'Sin nombre';
+    }
+  }
+
 
 
 waitForRoleLoaded(): Promise<void> {
