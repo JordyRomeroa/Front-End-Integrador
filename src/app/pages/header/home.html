@@ -116,14 +116,8 @@
     <router-outlet></router-outlet>
 
     <!-- CTA Asesoría solo para user -->
-    @if (showAsesoria) {
-      <!-- Mantener el mismo contenido que tu CTA actual -->
-    }
-
-    <!-- Modal flotante -->
-    @if (showAsesoriaModal()) {
-      <!-- Mantener el mismo contenido que tu modal actual -->
-    }
+    <div class="w-full flex justify-center mt-12"> <div class="relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 shadow-2xl animate-fadeInUp w-full md:w-2/3 lg:w-1/2 transform transition-all duration-500 hover:scale-105 flex flex-col md:flex-row items-center md:items-start gap-6" > <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse-slow"></div> <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse-slow"></div> <div class="w-32 h-32 md:w-40 md:h-40 shrink-0"> <img src="asesora.png" alt="GIF Asesoría" class="w-full h-full object-cover rounded-full shadow-lg" /> </div> <div class="relative z-10 text-white flex-1"> <h3 class="text-3xl md:text-4xl font-extrabold drop-shadow-lg mb-2"> ¿Necesitas <span class="text-yellow-400">asesoría personalizada?</span> </h3> <p class="mt-2 text-lg md:text-xl opacity-90"> Conecta con expertos que pueden ayudarte a impulsar tu proyecto y alcanzar tus metas. </p> <button (click)="showAsesoriaModal.set(true)" [disabled]="role === 'admin' || role === 'programmer'" class="mt-6 px-8 py-3 font-bold rounded-xl shadow-2xl bg-white text-black transition-all duration-300 flex items-center gap-3 animate-bounce hover:bg-gray-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" > <span class="text-xl">💬</span> Solicitar Asesoría </button> </div> </div> </div>
+     <!-- Modal flotante --> @if (showAsesoriaModal()) { <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-lg relative"> <button (click)="showAsesoriaModal.set(false)" class="absolute top-2 right-2 text-red-700 font-bold text-2xl" >&times;</button> <app-user></app-user> </div> </div> }
   </main>
 
   <!-- FOOTER -->
