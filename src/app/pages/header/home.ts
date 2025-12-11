@@ -13,10 +13,15 @@ import { Team } from './components/admin/team/team';
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule, User, AboutUs, Team]
+  imports: [RouterOutlet, RouterModule, CommonModule, User]
 })
 export class Home {
+ sidebarOpen: boolean = false;
 
+  // Método opcional para toggle manual si quieres
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
   myRepos: any[] = [];
   partnerRepos: any[] = [];  // evita errores en tu template
 
@@ -39,32 +44,31 @@ export class Home {
       this.currentRoute = this.router.url;
     });
 
-    // Efecto para manejar usuario y rol
     effect(() => {
-      const firebaseUser = this.authService.currentUser();
-      const loaded = this.authService.roleLoaded();
+  const firebaseUser = this.authService.currentUser();
+  const loaded = this.authService.roleLoaded();
 
-      if (!firebaseUser) {
-        this.role = null;
-        this.loading.set(false);
-        return;
-      }
+  if (!firebaseUser) {
+    this.role = null;
+    this.loading.set(false);
+    return;
+  }
 
-      if (!loaded) return; // esperar rol
+  if (!loaded) return; // esperar rol
 
-      const role = this.authService.getUserRole();
-      if (!role) return;
+  const role = this.authService.getUserRole();
+  if (!role) return;
 
-      console.log("🟩 Rol cargado:", role);
+  console.log("🟩 Rol cargado:", role);
 
-      this.role = role;
-      this.loading.set(false);
+  this.role = role;
+  this.loading.set(false);
 
-      // Solo abrir modal automáticamente si es usuario
-      if (role === 'user') {
-        this.showAsesoriaModal.set(true);
-      }
-    });
+  // ❌ Elimina esta línea:
+  // if (role === 'user') {
+  //   this.showAsesoriaModal.set(true);
+  // }
+});
 
   }
 

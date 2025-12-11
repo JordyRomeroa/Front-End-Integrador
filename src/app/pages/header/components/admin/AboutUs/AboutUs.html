@@ -2,7 +2,7 @@
 
   <!-- Fondo aurora sutil -->
   <div class="absolute inset-0 -z-10 pointer-events-none">
-    <div class="absolute top-0 left-1/4 w-1/2 h-1/2 bg-gradient-to-tr from-indigo-500/40 to-purple-600/30 blur-[120px] rounded-full"></div>
+    <div class="absolute top-0 left-1/4 w-1/2 h-1/2 bg-linear-to-tr from-indigo-500/40 to-purple-600/30 blur-[120px] rounded-full"></div>
     <div class="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-gradient-to-bl from-pink-500/30 to-yellow-400/30 blur-[140px] rounded-full"></div>
   </div>
 
@@ -15,12 +15,23 @@
   <!-- Contenedor del carrusel centrado -->
   <div class="relative w-full flex justify-center">
 
-    <!-- Botón izquierda -->
-    <button
-      class="absolute left-0 top-1/2 -translate-y-1/2 btn btn-circle btn-sm z-10 transform transition-transform duration-300 hover:-translate-x-2 hover:scale-110"
-      (click)="scrollLeft()">
-      ‹
-    </button>
+    <!-- BOTONES solo desktop y solo si hay varios -->
+    @if (bloques().length > 1)
+    {
+      <!-- Botón izquierda -->
+      <button
+        class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 btn btn-circle btn-sm z-10 transform transition-transform duration-300 hover:-translate-x-2 hover:scale-110"
+        (click)="scrollLeft()">
+        ‹
+      </button>
+
+      <!-- Botón derecha -->
+      <button
+        class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 btn btn-circle btn-sm z-10 transform transition-transform duration-300 hover:translate-x-2 hover:scale-110"
+        (click)="scrollRight()">
+        ›
+      </button>
+    }
 
     <!-- Carrusel centrado -->
     <div
@@ -43,20 +54,12 @@
           <!-- Descripción -->
           <div class="bg-white/20 p-3 rounded-xl shadow-md flex flex-col gap-1 text-sm max-w-[220px] text-center overflow-hidden">
             <h3 class="font-bold text-black text-lg truncate">{{ prog.nombre }}</h3>
-            <span class="text-black/70 truncate">• {{ prog.especialidad }}</span>
-            <span class="text-black truncate">• {{ prog.descripcion }}</span>
+            <span class="text-black/70 truncate">• {{ prog.especialidad}}</span>
           </div>
 
         </div>
       }
     </div>
-
-    <!-- Botón derecha -->
-    <button
-      class="absolute right-0 top-1/2 -translate-y-1/2 btn btn-circle btn-sm z-10 transform transition-transform duration-300 hover:translate-x-2 hover:scale-110"
-      (click)="scrollRight()">
-      ›
-    </button>
 
   </div>
 

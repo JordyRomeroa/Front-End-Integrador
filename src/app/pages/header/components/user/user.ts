@@ -110,7 +110,7 @@ export class User implements OnInit, OnDestroy {
 
     try {
       const id = await this.asesoriaService.crearAsesoria(nuevaAsesoria);
-      this.showDialog(`Asesoría enviada con ID: ${id}`);
+      this.showDialog(`Asesoría enviada `);
       this.mensaje = '';
       this.programadorId = this.programadores().length ? this.programadores()[0].uid : '';
       this.fecha = '';

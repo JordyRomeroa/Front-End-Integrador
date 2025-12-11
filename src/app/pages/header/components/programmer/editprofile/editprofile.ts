@@ -35,24 +35,30 @@ export class EditProfileProgrammerComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const user = this.authService.currentUser();
-    if (!user) return;
+  const user = this.authService.currentUser();
+  if (!user) return;
 
-    this.programadorService.getProgramadorByUid(user.uid)
-      .then(programmer => {
-        if (programmer) {
-          this.programmer = programmer;
-          this.nombre = programmer.nombre || '';
-          this.especialidad = programmer.especialidad || '';
-          this.descripcion = programmer.descripcion || '';
-          this.contacto = programmer.contacto || '';
-          this.redes = programmer.redes?.length ? [...programmer.redes] : [''];
-          this.fotoPreview = programmer.foto || 'https://via.placeholder.com/150';
-          this.cdr.detectChanges(); // Forzar actualización de la vista
-        }
-      })
-      .catch(err => console.error('Error al cargar perfil:', err));
-  }
+  this.loading = true;
+
+  this.programadorService.getProgramadorByUid(user.uid)
+    .then(programmer => {
+      if (programmer) {
+        this.programmer = programmer;
+        this.nombre = programmer.nombre || '';
+        this.especialidad = programmer.especialidad || '';
+        this.descripcion = programmer.descripcion || '';
+        this.contacto = programmer.contacto || '';
+        this.redes = programmer.redes?.length ? [...programmer.redes] : [''];
+        this.fotoPreview = programmer.foto || 'https://via.placeholder.com/150';
+      }
+    })
+    .catch(err => console.error('Error al cargar perfil:', err))
+    .finally(() => {
+      this.loading = false;
+      this.cdr.detectChanges(); // Forzar refresco
+    });
+}
+
 
   onFotoSeleccionada(event: any) {
     const file = event.target.files[0] ?? null;
@@ -78,8 +84,7 @@ export class EditProfileProgrammerComponent implements OnInit {
     const response = await axios.post(url, formData);
     return response.data.secure_url;
   }
-
- async actualizarPerfil() {
+async actualizarPerfil() {
   if (!this.programmer) return;
 
   this.loading = true;
@@ -88,7 +93,6 @@ export class EditProfileProgrammerComponent implements OnInit {
     const currentUser = this.authService.currentUser();
     if (!currentUser) {
       alert('Debes iniciar sesión para actualizar tu perfil');
-      this.loading = false; // <- Importante
       return;
     }
 
@@ -123,7 +127,9 @@ export class EditProfileProgrammerComponent implements OnInit {
     alert('Error al actualizar perfil: ' + err.message);
   } finally {
     this.loading = false;
+    this.cdr.detectChanges();
   }
 }
+
 
 }
