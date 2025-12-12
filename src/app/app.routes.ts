@@ -3,6 +3,7 @@ import { ProgrammerGuard } from './core/programmer-guard';
 import { MustChangePasswordGuard } from './core/MustChangePasswordGuard';
 import { Routes } from '@angular/router';
 import { User } from './pages/header/components/user/user';
+import { EquipoComponent } from './pages/header/components/InicioComponent/equipo/equipo.component';
 
 export const routes: Routes = [
   {
@@ -19,7 +20,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/mustChangePassword/mustChangePassword').then(m => m.MustChangePassword),
     canActivate: [MustChangePasswordGuard]
   },
-  
+
   {
     path: 'register',
     loadComponent: () => import('./pages/header/components/register-user/register').then(m => m.RegisterPage)
@@ -41,6 +42,8 @@ export const routes: Routes = [
         path: 'proyectos',
         loadComponent: () => import('./pages/header/components/user/proyectos/proyectos').then(m => m.Proyectos)
       },
+        //prueba
+{ path: 'equipo', component: EquipoComponent },
       {
         path: 'admin',
         loadComponent: () => import('./pages/header/components/admin/admin').then(m => m.Admin),
@@ -62,12 +65,12 @@ export const routes: Routes = [
 
     {
             path: 'management',
-            
+
             loadComponent: () => import('./pages/header/components/programmer/management/management').then(m => m.Management)
           },
           {
             path: 'editprofile',
-            
+
             loadComponent: () => import('./pages/header/components/programmer/editprofile/editprofile').then(m => m.EditProfileProgrammerComponent)
           },
         {
@@ -76,11 +79,12 @@ export const routes: Routes = [
         },
           {
             path: 'schedules',
-            
+
             loadComponent: () => import('./pages/header/components/programmer/schedules/schedules').then(m => m.Schedules)
           }
         ]
       }
     ]
   }
+
 ];
