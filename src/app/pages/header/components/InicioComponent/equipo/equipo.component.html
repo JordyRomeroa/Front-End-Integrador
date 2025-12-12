@@ -1,0 +1,161 @@
+<section class="w-full px-6 py-20 text-white flex justify-center">
+  <div class="w-full max-w-7xl">
+
+    <!-- TITULO PRINCIPAL -->
+    <div class="text-center mb-20">
+      <h1 class="text-5xl font-extrabold drop-shadow-xl tracking-wide">
+        Nuestro Equipo
+      </h1>
+      <p class="text-gray-300 text-lg mt-4 max-w-2xl mx-auto">
+        Conoce a las personas que impulsan este proyecto con dedicación, habilidad y visión.
+      </p>
+    </div>
+
+
+
+
+    <!-- ========================================================= -->
+    <!--                    SECCIÓN ADMINISTRADORES                -->
+    <!-- ========================================================= -->
+    <div class="mb-24">
+
+      <!-- TÍTULO CENTRADO -->
+      <div class="flex justify-center mb-10">
+        <h2 class="text-3xl font-semibold text-yellow-300 flex items-center gap-3">
+          <span class="w-2 h-8 bg-yellow-300 rounded"></span>
+          Administradores
+          <span class="w-2 h-8 bg-yellow-300 rounded"></span>
+        </h2>
+      </div>
+
+      <!-- CARDS -->
+      <div class="grid sm:grid-cols-2 gap-12">
+
+        @for (admin of admins; track admin.name) {
+
+          <div class="relative group">
+
+            <div class="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl
+                        border border-white/20 transition-all duration-300
+                        group-hover:scale-[1.03] group-hover:shadow-yellow-500/20">
+
+              <img
+                [src]="admin.photo"
+                class="w-40 h-40 rounded-full mx-auto object-cover shadow-2xl border-4 border-yellow-400"
+              />
+
+              <h3 class="text-2xl font-bold mt-6 text-center tracking-wide">
+                {{ admin.name }}
+              </h3>
+
+              <p class="text-yellow-300 text-center mt-1 font-medium">
+                {{ admin.role }}
+              </p>
+
+              <p class="text-gray-300 text-sm text-center mt-4 leading-relaxed max-w-sm mx-auto">
+                {{ admin.description }}
+              </p>
+
+              <div class="flex justify-center gap-6 text-3xl mt-6">
+                @if (admin.instagram) {
+                  <a [href]="admin.instagram" target="_blank"
+                     class="hover:text-yellow-300 transition">
+                    <i class="fa-brands fa-instagram"></i>
+                  </a>
+                }
+                @if (admin.github) {
+                  <a [href]="admin.github" target="_blank"
+                     class="hover:text-yellow-300 transition">
+                    <i class="fa-brands fa-github"></i>
+                  </a>
+                }
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+    </div>
+
+
+
+
+
+    <!-- ========================================================= -->
+    <!--                    SECCIÓN PROGRAMADORES                  -->
+    <!-- ========================================================= -->
+    <div>
+
+      <!-- TÍTULO CENTRADO -->
+      <div class="flex justify-center mb-10">
+        <h2 class="text-3xl font-semibold text-blue-300 flex items-center gap-3">
+          <span class="w-2 h-8 bg-blue-300 rounded"></span>
+          Programadores
+          <span class="w-2 h-8 bg-blue-300 rounded"></span>
+        </h2>
+      </div>
+
+      <!-- CARDS -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-12">
+
+        @for (p of programmers; track p.name) {
+
+          <div class="relative group">
+
+            <div class="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl
+                        border border-white/20 transition-all duration-300
+                        group-hover:scale-[1.03] group-hover:shadow-blue-500/20">
+
+              <img
+                [src]="p.photo"
+                class="w-36 h-36 rounded-full mx-auto object-cover shadow-2xl border-4 border-blue-400"
+              />
+
+              <h3 class="text-xl font-bold mt-6 text-center tracking-wide">
+                {{ p.name }}
+              </h3>
+
+              <p class="text-blue-300 text-center mt-1 font-medium">
+                {{ p.role }}
+              </p>
+
+              <p class="text-blue-200 text-sm italic text-center mt-2">
+                {{ p.specialty }}
+              </p>
+
+              <p class="text-gray-300 text-sm text-center mt-4 leading-relaxed max-w-sm mx-auto">
+                {{ p.description }}
+              </p>
+
+              <div class="flex justify-center gap-6 text-3xl mt-6">
+                @if (p.instagram) {
+                  <a [href]="p.instagram" target="_blank"
+                     class="hover:text-blue-300 transition">
+                    <i class="fa-brands fa-instagram"></i>
+                  </a>
+                }
+                @if (p.github) {
+                  <a [href]="p.github" target="_blank"
+                     class="hover:text-blue-300 transition">
+                    <i class="fa-brands fa-github"></i>
+                  </a>
+                }
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+    </div>
+
+
+
+
+  </div>
+</section>
