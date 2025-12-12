@@ -146,7 +146,7 @@ export class Advice {
   getWhatsAppLink(data: AsesoriaConId): string {
     if (!data.telefono) return '#';
 
-    const text = `Hola ${data.nombreUsuario}, he aceptado tu solicitud de asesoría sobre "${data.mensaje}".`;
+    const text = `Mucho gusto, he revisado tu solicitud ${data.nombreUsuario}, sobre "${data.mensaje}".`;
 
     return `https://wa.me/${data.telefono}?text=${encodeURIComponent(text)}`;
   }
