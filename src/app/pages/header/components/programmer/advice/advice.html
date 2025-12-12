@@ -1,58 +1,127 @@
 <section class="w-full max-w-6xl mx-auto relative">
-<!-- Notificación Usuario -->
-<!-- Notificación Usuario -->
-@if (notificacionUsuario()) {
-  <div class="fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-lg animate-fadeInDown z-50">
-    {{ notificacionUsuario() }}
-  </div>
-}
 
-<!-- Notificación Admin -->
-@if (notificacionAdmin()) {
-  <div class="fixed top-4 right-4 bg-blue-500 text-white p-4 rounded shadow-lg animate-fadeInDown z-50">
-    {{ notificacionAdmin() }}
-  </div>
-}
-  @if (asesorias().length > 0) {
-    @for (asesoria of asesorias(); track asesoria.id) {
-      <!-- Cambiamos la clase según el estado -->
-      <div class="card shadow-md p-4 mb-4"
-           [class.bg-gray-100]="asesoria.estado !== 'pendiente'"
-           [class.text-gray-500]="asesoria.estado !== 'pendiente'">
-        <div class="card-body">
-          <p><strong>Usuario:</strong> {{ asesoria.nombreUsuario }}</p>
-          <p><strong>Fecha y Hora de envio :</strong> {{ asesoria.createdAt?.toDate() | date:'dd/MM/yyyy HH:mm' }}</p>
-          <p><strong>Comentario:</strong> {{ asesoria.mensaje }}</p>
-          <p><strong>Estado:</strong> {{ asesoria.estado }}</p>
-          <p><strong>Fecha de citacion :</strong> {{ asesoria.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
+  <!-- Notificación Usuario -->
+  @if (notificacionUsuario()) {
+    <div class="fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-lg animate-fadeInDown z-50">
+      {{ notificacionUsuario() }}
+    </div>
+  }
 
-          <!-- Solo mostramos los botones si la asesoría está pendiente -->
-          @if (asesoria.estado === 'pendiente') {
-            <div class="card-actions mt-2 space-x-2">
-              <button class="btn btn-success" (click)="cambiarEstado(asesoria.id, 'aceptada')">Aceptar</button>
-              <button class="btn btn-error" (click)="showRechazo[asesoria.id] = !showRechazo[asesoria.id]">
-                Rechazar
-              </button>
-            </div>
+  <!-- Notificación Admin -->
+  @if (notificacionAdmin()) {
+    <div class="fixed top-4 right-4 bg-blue-500 text-white p-4 rounded shadow-lg animate-fadeInDown z-50">
+      {{ notificacionAdmin() }}
+    </div>
+  }
 
-            <!-- Campo motivo de rechazo -->
-            @if (showRechazo[asesoria.id]) {
-              <div class="mt-2">
-                <textarea
-                  [(ngModel)]="motivosRechazo[asesoria.id]"
-                  placeholder="Ingrese el motivo de rechazo..."
-                  class="w-full border p-2 rounded"
-                ></textarea>
-                <button class="btn btn-warning mt-2" (click)="cambiarEstado(asesoria.id, 'rechazada')">
-                  Confirmar Rechazo
-                </button>
-              </div>
-            }
-          }
+
+  
+  <h2 class="text-xl font-bold mt-6 mb-3">Solicitudes Pendientes</h2>
+
+  @if (pendientes().length > 0) {
+    @for (asesoria of pendientes(); track asesoria.id) {
+
+      <div class="card shadow-md p-4 mb-4 bg-white">
+
+        <p><strong>Usuario:</strong> {{ asesoria.nombreUsuario }}</p>
+        <p><strong>Teléfono:</strong> {{ asesoria.telefono || 'No registrado' }}</p>
+        <p><strong>Comentario:</strong> {{ asesoria.mensaje }}</p>
+        <p><strong>Fecha solicitada:</strong> {{ asesoria.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p><strong>Estado:</strong> {{ asesoria.estado }}</p>
+
+        <div class="mt-3 space-x-2">
+          <button class="btn btn-success" (click)="abrirModal(asesoria)">Responder</button>
         </div>
       </div>
+
     }
   } @else {
-    <div class="text-gray-500">No tienes asesorías pendientes.</div>
+    <p class="text-gray-500">No tienes asesorías pendientes.</p>
   }
+
+
+
+  <!-- ===========================================================
+        SECCIÓN DE HISTORIAL
+  ============================================================ -->
+  <h2 class="text-xl font-bold mt-8 mb-3">Historial</h2>
+
+  @if (historial().length > 0) {
+    @for (asesoria of historial(); track asesoria.id) {
+
+      <div class="card shadow-md p-4 mb-4 bg-gray-100 text-gray-700">
+
+        <p><strong>Usuario:</strong> {{ asesoria.nombreUsuario }}</p>
+        <p><strong>Teléfono:</strong> {{ asesoria.telefono || 'No registrado' }}</p>
+        <p><strong>Comentario:</strong> {{ asesoria.mensaje }}</p>
+        <p><strong>Fecha solicitada:</strong> {{ asesoria.fecha | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p><strong>Estado:</strong> {{ asesoria.estado }}</p>
+
+        <!-- Cuando está aceptada -> mostrar botones -->
+        @if (asesoria.estado === 'aceptada') {
+
+          <div class="mt-3 space-x-3 flex">
+
+            <a class="btn btn-success"
+               target="_blank"
+               [href]="getWhatsAppLink(asesoria)">
+                <i class="fa-brands fa-whatsapp" style="color: #63E6BE;"></i>
+              WhatsApp
+            </a>
+
+           
+
+          </div>
+
+        }
+      </div>
+
+    }
+  } @else {
+    <p class="text-gray-500">No hay historial todavía.</p>
+  }
+
+
+
+  <!-- ===========================================================
+        MODAL DE RESPUESTA
+  ============================================================ -->
+  @if (asesorSeleccionado()) {
+
+    <div class="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+
+        <h3 class="text-lg font-bold mb-2">Responder Solicitud</h3>
+
+        <p><strong>Usuario:</strong> {{ asesorSeleccionado()?.nombreUsuario }}</p>
+        <p><strong>Teléfono:</strong> {{ asesorSeleccionado()?.telefono }}</p>
+        <p><strong>Comentario:</strong> {{ asesorSeleccionado()?.mensaje }}</p>
+        
+
+        <textarea
+          class="w-full border p-2 rounded mt-3"
+          placeholder="Escribe tu mensaje..."
+          [ngModel]="mensajeRespuesta()"
+          (ngModelChange)="mensajeRespuesta.set($event)">
+        </textarea>
+
+        <div class="mt-4 flex justify-between">
+          <button class="btn btn-success" (click)="enviarRespuesta('aceptada')">
+            Aceptar
+          </button>
+
+          <button class="btn btn-error" (click)="enviarRespuesta('rechazada')">
+            Rechazar
+          </button>
+
+          <button class="btn" (click)="asesorSeleccionado.set(null)">
+            Cancelar
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  }
+
 </section>

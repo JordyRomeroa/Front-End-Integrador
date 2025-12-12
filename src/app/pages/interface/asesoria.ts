@@ -5,5 +5,6 @@ export interface AsesoriaConId extends Asesoria {
   correoUsuario?: string;
   nombreUsuario?: string;
   fecha?: string;
+  telefono:string;
   
 }

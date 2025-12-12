@@ -16,14 +16,24 @@ import { AsesoriaService } from '../../../../../../services/advice';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Advice {
+
   role: Role | null = null;
   asesorias = signal<AsesoriaConId[]>([]);
-  motivosRechazo: { [asesoriaId: string]: string } = {};
-  showRechazo: { [asesoriaId: string]: boolean } = {};
 
-  // Señales para notificaciones visuales
+  // NUEVO: listas separadas como tu otro proyecto
+  pendientes = signal<AsesoriaConId[]>([]);
+  historial = signal<AsesoriaConId[]>([]);
+
+  // Modal
+  asesorSeleccionado = signal<AsesoriaConId | null>(null);
+  mensajeRespuesta = signal('');
+
+  // Notificaciones visuales
   notificacionUsuario = signal<string | null>(null);
   notificacionAdmin = signal<string | null>(null);
+
+  motivosRechazo: { [asesoriaId: string]: string } = {};
+  showRechazo: { [asesoriaId: string]: boolean } = {};
 
   private firestore = inject(Firestore);
 
@@ -32,13 +42,15 @@ export class Advice {
     private router: Router,
     private asesoriaService: AsesoriaService
   ) {
-    // Cargar rol y asesorías al iniciar
     if (this.authService.roleLoaded()) {
       this.role = this.authService.getUserRole();
       this.cargarAsesorias();
     }
   }
 
+  // =====================================================================================
+  //  CARGAR ASESORÍAS DESDE FIRESTORE
+  // =====================================================================================
   async cargarAsesorias() {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
@@ -62,9 +74,11 @@ export class Advice {
       } as AsesoriaConId));
 
       this.asesorias.set(lista);
-      console.log('Asesorías cargadas:', lista);
 
-      // Mostrar notificaciones pendientes al usuario al iniciar sesión
+      // separar pendientes y revisadas
+      this.pendientes.set(lista.filter(a => a.estado === 'pendiente'));
+      this.historial.set(lista.filter(a => a.estado !== 'pendiente'));
+
       if (this.role === 'user') {
         this.mostrarNotificacionesPendientesUsuario(lista);
       }
@@ -74,73 +88,97 @@ export class Advice {
     }
   }
 
+  // =====================================================================================
+  //  NOTIFICACIONES AUTOMÁTICAS
+  // =====================================================================================
   private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
     const pendientes = lista.filter(a => a.estado !== 'pendiente');
     if (pendientes.length === 0) return;
 
-    // Mostrar solo la última solicitud que cambió de estado
     const ultima = pendientes[pendientes.length - 1];
     this.notificacionUsuario.set(`📧 Tu solicitud ha sido ${ultima.estado}.`);
     setTimeout(() => this.notificacionUsuario.set(null), 4000);
   }
 
-  async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
-    try {
-      const mensajeRespuesta = this.motivosRechazo[asesoriaId]?.trim() || '';
+  // =====================================================================================
+  //  ABRIR MODAL DE RESPUESTA (como en AdviceRequests)
+  // =====================================================================================
+  abrirModal(asesoria: AsesoriaConId) {
+    this.asesorSeleccionado.set(asesoria);
+    this.mensajeRespuesta.set('');
+  }
 
-      if (nuevoEstado === 'rechazada' && !mensajeRespuesta) {
-        alert('Debe proporcionar un motivo para rechazar la asesoría.');
-        return;
+  // =====================================================================================
+  //  ENVIAR RESPUESTA (Aceptar / Rechazar)
+  // =====================================================================================
+  async enviarRespuesta(estado: 'aceptada' | 'rechazada') {
+    const asesoria = this.asesorSeleccionado();
+    if (!asesoria) return;
+
+    const msj = this.mensajeRespuesta().trim();
+    if (!msj) {
+      alert('Escribe un mensaje para el usuario.');
+      return;
+    }
+
+    const datosActualizar = {
+      estado,
+      mensajeRespuesta: msj
+    };
+
+    try {
+      await this.asesoriaService.actualizarAsesoria(asesoria.id, datosActualizar);
+
+      // actualizar en memoria
+      const actualizada = this.asesorias().map(a =>
+        a.id === asesoria.id ? { ...a, ...datosActualizar } : a
+      );
+
+      this.asesorias.set(actualizada);
+      this.pendientes.set(actualizada.filter(a => a.estado === 'pendiente'));
+      this.historial.set(actualizada.filter(a => a.estado !== 'pendiente'));
+
+      if (estado === 'aceptada') {
+        alert('Solicitud aceptada. Ahora puedes contactar al cliente.');
+      } else {
+        alert('Solicitud rechazada.');
       }
 
-      const datosActualizar = {
-        estado: nuevoEstado,
-        mensajeRespuesta
-      };
-
-      await this.asesoriaService.actualizarAsesoria(asesoriaId, datosActualizar);
-
-      // Actualizamos la señal local
-      const updatedList = this.asesorias().map(a =>
-        a.id === asesoriaId ? { ...a, ...datosActualizar } : a
-      );
-      this.asesorias.set(updatedList);
-
-      // Limpiamos motivos y ocultamos textarea
-      delete this.motivosRechazo[asesoriaId];
-      delete this.showRechazo[asesoriaId];
-
-      // 🔔 Notificación al usuario y admin
-      this.mostrarNotificacion(asesoriaId, nuevoEstado);
+      this.asesorSeleccionado.set(null);
 
     } catch (err) {
-      console.error('Error al actualizar estado de la asesoría:', err);
+      console.error(err);
+      alert('Error al actualizar');
     }
   }
 
-  // Método que simula notificaciones de correo
+  // =====================================================================================
+  //  WHATSAPP
+  // =====================================================================================
+  getWhatsAppLink(data: AsesoriaConId): string {
+    if (!data.telefono) return '#';
+
+    const text = `Hola ${data.nombreUsuario}, he aceptado tu solicitud de asesoría sobre "${data.mensaje}".`;
+
+    return `https://wa.me/${data.telefono}?text=${encodeURIComponent(text)}`;
+  }
+
   private mostrarNotificacion(asesoriaId: string, estado: string) {
     const asesoria = this.asesorias().find(a => a.id === asesoriaId);
     if (!asesoria) return;
 
-    const usuario = asesoria.nombreUsuario || 'Usuario';
+    const usuario = asesoria.nombreUsuario ?? 'Usuario';
     const admin = 'Admin';
 
-    // Notificación al usuario que creó la asesoría
     this.notificacionUsuario.set(`📧 Correo a ${usuario}: Tu solicitud ha sido ${estado}.`);
 
-    // Notificación al admin solo si el rol actual es admin
     if (this.role === 'admin') {
-      this.notificacionAdmin.set(`📧 Correo a ${admin}: La asesoría del usuario ${usuario} ha sido ${estado}.`);
+      this.notificacionAdmin.set(`📧 Correo al admin: La asesoría del usuario ${usuario} ha sido ${estado}.`);
     }
 
-    // Desaparecen después de 4 segundos
     setTimeout(() => {
       this.notificacionUsuario.set(null);
       this.notificacionAdmin.set(null);
     }, 4000);
-
-    console.log('Usuario:', this.notificacionUsuario());
-    console.log('Admin:', this.notificacionAdmin());
   }
 }

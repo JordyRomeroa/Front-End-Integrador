@@ -10,6 +10,7 @@ export interface Asesoria {
   createdAt?: any;
   updatedAt?: any;
   fecha?: string;
+  telefono:string;
   correoUsuario?: string;
   nombreUsuario?: string;
    
@@ -37,17 +38,21 @@ export class AsesoriaService {
   }
 
   async actualizarAsesoria(id: string, data: Partial<Asesoria>) {
-    const docRef = doc(this.asesoriasRef, id);
+  const docRef = doc(this.asesoriasRef, id);
 
-    const allowedKeys = ['estado', 'mensaje'];
-    const filteredData: any = {};
-    Object.keys(data).forEach(key => {
-      if (allowedKeys.includes(key)) filteredData[key] = (data as any)[key];
-    });
+  const allowedKeys = ['estado', 'mensaje', 'mensajeRespuesta', 'fecha', 'telefono'];
+  const filteredData: any = {};
 
-    await updateDoc(docRef, {
-      ...filteredData,
-      updatedAt: serverTimestamp()
-    });
-  }
+  Object.keys(data).forEach(key => {
+    if (allowedKeys.includes(key)) {
+      filteredData[key] = (data as any)[key];
+    }
+  });
+
+  await updateDoc(docRef, {
+    ...filteredData,
+    updatedAt: serverTimestamp()
+  });
+}
+
 }

@@ -28,6 +28,7 @@ export class User implements OnInit, OnDestroy {
   mensaje: string = '';
   programadores = signal<ProgramadorConId[]>([]);
   programadorId = '';
+  telefono: string = '';
 
   private progService = inject(ProgramadorService);
   private authService = inject(AuthService);
@@ -105,7 +106,8 @@ export class User implements OnInit, OnDestroy {
       programadorId: this.programadorId,
       usuarioId: currentUser.uid,
       nombreUsuario: currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuario',
-      fecha: this.fecha
+      fecha: this.fecha,
+      telefono:this.telefono
     };
 
     try {
