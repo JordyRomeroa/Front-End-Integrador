@@ -35,9 +35,7 @@ export class Advice {
     // Cargar rol y asesorías al iniciar
     if (this.authService.roleLoaded()) {
       this.role = this.authService.getUserRole();
-      if (this.role === 'programmer') {
-        this.cargarAsesorias();
-      }
+      this.cargarAsesorias();
     }
   }
 
@@ -47,9 +45,17 @@ export class Advice {
 
     try {
       const asesoriasCol = collection(this.firestore, 'asesorias');
-      const q = query(asesoriasCol, where('programadorId', '==', currentUser.uid));
-      const snapshot = await getDocs(q);
+      let q;
 
+      if (this.role === 'programmer') {
+        q = query(asesoriasCol, where('programadorId', '==', currentUser.uid));
+      } else if (this.role === 'user') {
+        q = query(asesoriasCol, where('usuarioId', '==', currentUser.uid));
+      } else {
+        return;
+      }
+
+      const snapshot = await getDocs(q);
       const lista: AsesoriaConId[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -58,9 +64,24 @@ export class Advice {
       this.asesorias.set(lista);
       console.log('Asesorías cargadas:', lista);
 
+      // Mostrar notificaciones pendientes al usuario al iniciar sesión
+      if (this.role === 'user') {
+        this.mostrarNotificacionesPendientesUsuario(lista);
+      }
+
     } catch (err) {
       console.error('Error al cargar asesorías:', err);
     }
+  }
+
+  private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
+    const pendientes = lista.filter(a => a.estado !== 'pendiente');
+    if (pendientes.length === 0) return;
+
+    // Mostrar solo la última solicitud que cambió de estado
+    const ultima = pendientes[pendientes.length - 1];
+    this.notificacionUsuario.set(`📧 Tu solicitud ha sido ${ultima.estado}.`);
+    setTimeout(() => this.notificacionUsuario.set(null), 4000);
   }
 
   async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
@@ -89,7 +110,7 @@ export class Advice {
       delete this.motivosRechazo[asesoriaId];
       delete this.showRechazo[asesoriaId];
 
-      // 🔔 Simulación de notificación
+      // 🔔 Notificación al usuario y admin
       this.mostrarNotificacion(asesoriaId, nuevoEstado);
 
     } catch (err) {
@@ -105,12 +126,10 @@ export class Advice {
     const usuario = asesoria.nombreUsuario || 'Usuario';
     const admin = 'Admin';
 
-    // Simular notificación al usuario solo si su rol es user
-    if (this.role === 'user' || this.role === 'programmer') {
-      this.notificacionUsuario.set(`📧 Correo a ${usuario}: Tu solicitud ha sido ${estado}.`);
-    }
+    // Notificación al usuario que creó la asesoría
+    this.notificacionUsuario.set(`📧 Correo a ${usuario}: Tu solicitud ha sido ${estado}.`);
 
-    // Simular notificación al admin solo si su rol es admin
+    // Notificación al admin solo si el rol actual es admin
     if (this.role === 'admin') {
       this.notificacionAdmin.set(`📧 Correo a ${admin}: La asesoría del usuario ${usuario} ha sido ${estado}.`);
     }
@@ -121,7 +140,6 @@ export class Advice {
       this.notificacionAdmin.set(null);
     }, 4000);
 
-    // Mostrar también en consola para depuración
     console.log('Usuario:', this.notificacionUsuario());
     console.log('Admin:', this.notificacionAdmin());
   }
