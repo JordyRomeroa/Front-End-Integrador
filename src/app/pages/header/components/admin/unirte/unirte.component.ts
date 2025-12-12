@@ -3,18 +3,9 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../../../services/auth-service';
 
-// 1. ⬇️ NUEVAS IMPORTACIONES DE ANGULARFIRE (Necesarias para la conexión real) ⬇️
+
 import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 
-// 2. ❌ ELIMINAMOS O REEMPLAZAMOS LA CLASE SIMULADA ❌
-// Ya no necesitamos esta clase porque inyectaremos Firestore directamente en el componente.
-// Si la quitas, el código es más limpio:
-
-/*
-class FirestoreService {
-    // ... (Se elimina la clase simulada)
-}
-*/
 
 @Component({
   selector: 'app-unirte',
@@ -27,7 +18,7 @@ export class UnirteComponent {
 
   private fb = inject(FormBuilder);
 
-  // 3. ⬇️ INYECTAMOS EL SERVICIO DE FIREBASE/FIRESTORE OFICIAL ⬇️
+
   private firestore: Firestore = inject(Firestore);
 
   public authService = inject(AuthService);
@@ -39,7 +30,7 @@ export class UnirteComponent {
 
   canPostulate = signal(false);
 
-  // ... (Constructor y checkUserRole son iguales) ...
+
 
   constructor() {
     this.solicitudForm = this.fb.group({
@@ -68,7 +59,7 @@ export class UnirteComponent {
       console.log(`Rol: ${role}. ¿Puede postularse?: ${this.canPostulate()}`);
   }
 
-  // 4. ⬇️ LÓGICA REAL DE FIRESTORE EN EL MÉTODO ⬇️
+
   async enviarSolicitud() {
     if (!this.canPostulate()) {
         alert('Acceso denegado: Solo usuarios con rol "User" pueden enviar esta solicitud.');
@@ -93,18 +84,18 @@ export class UnirteComponent {
         estado: 'Pendiente'
       };
 
-      // 🎯 CONEXIÓN Y GUARDADO DIRECTO EN FIRESTORE
+
       const coleccionRef = collection(this.firestore, 'notificaciones');
       await addDoc(coleccionRef, data);
 
-      console.log('✅ Documento guardado exitosamente en la colección "notificaciones".');
-      // 🎯 FIN CONEXIÓN FIRESTORE
+      console.log(' Documento guardado exitosamente en la colección "notificaciones".');
+
 
       this.submitSuccess.set(true);
       this.solicitudForm.reset({ especialidad: '' });
 
     } catch (error) {
-      // Ahora se capturarán errores reales de Firebase (permisos, red, etc.)
+   
       console.error('Error REAL al enviar la solicitud a Firestore:', error);
       this.submitError.set(true);
 

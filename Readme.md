@@ -20,7 +20,20 @@
 
 ---
 
+<<<<<<< HEAD
 ## 3. **Logo Institucional**
+=======
+
+##  **Integrantes**
+
+* Nayeli Gabriela Barbecho Cajamarca
+* Jordy
+* Enlaces al repositorio
+*  https://github.com/JordyRomeroa
+* Enlace al repositorio desplegado
+*  https://github.com/Nayelic98
+##  **Logo**
+>>>>>>> a7586dac03e03c17d93fa58bbc33f248bd7cb20e
 <img src="./src/assets/logo-universidad.png" width="150">
 
 ---
