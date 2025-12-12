@@ -13,20 +13,22 @@ import { Team } from './components/admin/team/team';
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
   standalone: true,
-  imports: [RouterOutlet, RouterModule, CommonModule, User]
+  imports: [
+    RouterOutlet,
+    RouterModule,
+    CommonModule,
+    User
+  ]
 })
 export class Home {
- sidebarOpen: boolean = false;
 
-  // Método opcional para toggle manual si quieres
-  toggleSidebar() {
-    this.sidebarOpen = !this.sidebarOpen;
-  }
+  sidebarOpen = false;
+
   myRepos: any[] = [];
-  partnerRepos: any[] = [];  // evita errores en tu template
+  partnerRepos: any[] = [];
 
   role: Role | null = null;
-  currentRoute: string = '';
+  currentRoute = '';
 
   loading = signal(true);
   showAsesoriaModal = signal(false);
@@ -36,40 +38,36 @@ export class Home {
     private router: Router
   ) {
 
-    // Inicialización de ruta actual
     this.currentRoute = this.router.url;
 
-    // Detectar cambios de ruta
     this.router.events.subscribe(() => {
       this.currentRoute = this.router.url;
     });
 
     effect(() => {
-  const firebaseUser = this.authService.currentUser();
-  const loaded = this.authService.roleLoaded();
+      const firebaseUser = this.authService.currentUser();
+      const loaded = this.authService.roleLoaded();
 
-  if (!firebaseUser) {
-    this.role = null;
-    this.loading.set(false);
-    return;
+      if (!firebaseUser) {
+        this.role = null;
+        this.loading.set(false);
+        return;
+      }
+
+      if (!loaded) return;
+
+      const role = this.authService.getUserRole();
+      if (!role) return;
+
+      console.log("Rol cargado:", role);
+
+      this.role = role;
+      this.loading.set(false);
+    });
   }
 
-  if (!loaded) return; // esperar rol
-
-  const role = this.authService.getUserRole();
-  if (!role) return;
-
-  console.log("🟩 Rol cargado:", role);
-
-  this.role = role;
-  this.loading.set(false);
-
-  // ❌ Elimina esta línea:
-  // if (role === 'user') {
-  //   this.showAsesoriaModal.set(true);
-  // }
-});
-
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
   }
 
   closeModal() {
@@ -84,18 +82,14 @@ export class Home {
   logout() {
     this.authService.logout().subscribe({
       next: () => {
-        console.log("📤 Sesión cerrada. Redirigiendo a login...");
+        console.log("Sesión cerrada");
         this.router.navigate(['/login']);
       },
       error: (err) => console.error('Error al cerrar sesión:', err)
     });
   }
 
-  /** 
-   * 🔥 Se usa en el template para mostrar el CTA solo en /home/inicio
-   */
   get showAsesoria(): boolean {
     return this.currentRoute === '/home/inicio';
   }
-
 }
