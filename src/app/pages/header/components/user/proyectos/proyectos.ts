@@ -53,47 +53,53 @@ export class Proyectos implements OnInit {
 
     this.proyectoService.todosProyectos$.subscribe(async (proyectos) => {
 
-      const updatedRepos: Project[] = [];
+  // Mapear todas las promesas de nombres
+  const nombresPromises = proyectos.map(p => this.authService.getNombreProgramador(p.assignedTo));
 
-      for (const p of proyectos) {
-        const nombre = await this.authService.getNombreProgramador(p.assignedTo);
+  // Esperar todos los nombres al mismo tiempo
+  const nombres = await Promise.all(nombresPromises);
 
-        updatedRepos.push({
-          name: p.nombre,
-          description: p.descripcion,
-          role: 'Programador',
-          techs: p.tecnologias || [],
-          repoLink: p.repo,
-          deployLink: p.deploy,
-          category: p.categoria || 'Laboral',
-          owner: {
-            login: nombre,
-            avatar_url:
-              'https://avatars.githubusercontent.com/' +
-                p.repo?.split('github.com/')[1]?.split('/')[0] ||
-              'https://via.placeholder.com/40'
-          }
-        });
-      }
+  // Construir los proyectos actualizados
+  const updatedRepos: Project[] = proyectos.map((p, i) => ({
+    name: p.nombre,
+    description: p.descripcion,
+    role: 'Programador',
+    techs: p.tecnologias || [],
+    repoLink: p.repo,
+    deployLink: p.deploy,
+    category: p.categoria || 'Laboral',
+    owner: {
+      login: nombres[i],
+      avatar_url:
+        'https://avatars.githubusercontent.com/' +
+          p.repo?.split('github.com/')[1]?.split('/')[0] ||
+        'https://via.placeholder.com/40'
+    }
+  }));
 
-      this.repos = updatedRepos;
+  this.repos = updatedRepos;
 
-      // Colaboradores únicos
-      const uniqueUsers = new Set(this.repos.map(r => r.owner.login));
-      this.collaborators = Array.from(uniqueUsers).sort();
+  // Colaboradores únicos
+  this.collaborators = Array.from(new Set(this.repos.map(r => r.owner.login))).sort();
 
-      this.applyFilters();
-      this.cdr.detectChanges();
+  this.applyFilters();
+  this.cdr.detectChanges();
+});
 
-
-    });
   }
 
 
 
   getCategories(projects: Project[]): string[] {
-    return Array.from(new Set(projects.map(p => p.category || 'Laboral'))).sort();
-  }
+  return Array.from(
+    new Set(
+      projects
+        .map(p => p.category || 'Laboral')
+        .filter(cat => cat !== 'Personal') // <-- Excluir "Personal"
+    )
+  ).sort();
+}
+
 
   setActiveFilter(filter: 'category' | 'collaborator') {
     this.activeFilter = filter;
