@@ -1,6 +1,6 @@
 import { Component, effect, signal } from '@angular/core';
 import { AuthService, Role } from '../../../services/auth-service';
-import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { Router, RouterLinkActive, RouterModule, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 // Componentes internos
@@ -17,7 +17,8 @@ import { Team } from './components/admin/team/team';
     RouterOutlet,
     RouterModule,
     CommonModule,
-    User
+    User,
+    RouterLinkActive
   ]
 })
 export class Home {
