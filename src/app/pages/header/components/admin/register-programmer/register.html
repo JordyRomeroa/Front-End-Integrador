@@ -16,9 +16,22 @@
 
       <!-- Especialidad -->
       <div class="form-control w-full">
-        <label class="label"><span class="label-text font-semibold">Especialidad</span></label>
-        <input type="text" class="input input-bordered w-full rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200" [(ngModel)]="especialidad" placeholder="Frontend / Backend / Fullstack">
-      </div>
+  <label class="label">
+    <span class="label-text font-semibold">Especialidad</span>
+  </label>
+
+  <select 
+    class="select select-bordered w-full rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200" 
+    [(ngModel)]="especialidad">
+    
+    <option value="" disabled selected>Selecciona una especialidad</option>
+    <option value="Frontend">Frontend</option>
+    <option value="Backend">Backend</option>
+    <option value="Fullstack">Fullstack</option>
+
+  </select>
+</div>
+
 
       <!-- Descripción -->
       <div class="form-control w-full">
