@@ -10,7 +10,7 @@
 ## 2. *Integrantes*
 
 * Nayeli Gabriela Barbecho Cajamarca  
-* Jordy  
+* Jordy Romero Armijos
 
 *Enlaces al repositorio:*  
 * [Repositorio Principal](https://github.com/JordyRomeroa/Front-End-Integrador)  
