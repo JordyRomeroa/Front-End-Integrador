@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, ChangeDetectorRef, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../../services/programmer-service';
@@ -23,8 +23,12 @@ export class EditProfileProgrammerComponent implements OnInit {
   contacto = '';
   redes: string[] = [''];
   foto: File | null = null;
-  fotoPreview: string = 'https://via.placeholder.com/150'; // Foto por defecto
+  fotoPreview: string = 'https://via.placeholder.com/150';
   loading = false;
+
+  // Señal para mostrar mensaje
+  message = signal<string | null>(null);
+  messageType = signal<'success' | 'error'>('success');
 
   @Output() updated = new EventEmitter<void>();
 
@@ -35,36 +39,35 @@ export class EditProfileProgrammerComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-  const user = this.authService.currentUser();
-  if (!user) return;
+    const user = this.authService.currentUser();
+    if (!user) return;
 
-  this.loading = true;
+    this.loading = true;
 
-  this.programadorService.getProgramadorByUid(user.uid)
-    .then(programmer => {
-      if (programmer) {
-        this.programmer = programmer;
-        this.nombre = programmer.nombre || '';
-        this.especialidad = programmer.especialidad || '';
-        this.descripcion = programmer.descripcion || '';
-        this.contacto = programmer.contacto || '';
-        this.redes = programmer.redes?.length ? [...programmer.redes] : [''];
-        this.fotoPreview = programmer.foto || 'https://via.placeholder.com/150';
-      }
-    })
-    .catch(err => console.error('Error al cargar perfil:', err))
-    .finally(() => {
-      this.loading = false;
-      this.cdr.detectChanges(); // Forzar refresco
-    });
-}
-
+    this.programadorService.getProgramadorByUid(user.uid)
+      .then(programmer => {
+        if (programmer) {
+          this.programmer = programmer;
+          this.nombre = programmer.nombre || '';
+          this.especialidad = programmer.especialidad || '';
+          this.descripcion = programmer.descripcion || '';
+          this.contacto = programmer.contacto || '';
+          this.redes = programmer.redes?.length ? [...programmer.redes] : [''];
+          this.fotoPreview = programmer.foto || 'https://via.placeholder.com/150';
+        }
+      })
+      .catch(err => this.showMessage('Error al cargar perfil', 'error'))
+      .finally(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      });
+  }
 
   onFotoSeleccionada(event: any) {
     const file = event.target.files[0] ?? null;
     if (file) {
       this.foto = file;
-      this.fotoPreview = URL.createObjectURL(file); // Vista previa temporal
+      this.fotoPreview = URL.createObjectURL(file);
     } else {
       this.foto = null;
       this.fotoPreview = this.programmer?.foto || 'https://via.placeholder.com/150';
@@ -84,52 +87,57 @@ export class EditProfileProgrammerComponent implements OnInit {
     const response = await axios.post(url, formData);
     return response.data.secure_url;
   }
-async actualizarPerfil() {
-  if (!this.programmer) return;
 
-  this.loading = true;
+  async actualizarPerfil() {
+    if (!this.programmer) return;
 
-  try {
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) {
-      alert('Debes iniciar sesión para actualizar tu perfil');
-      return;
+    this.loading = true;
+
+    try {
+      const currentUser = this.authService.currentUser();
+      if (!currentUser) {
+        this.showMessage('Debes iniciar sesión para actualizar tu perfil', 'error');
+        return;
+      }
+
+      let fotoURL = this.programmer.foto || 'https://via.placeholder.com/150';
+      if (this.foto) {
+        fotoURL = await this.subirImagenCloudinary(this.foto);
+      }
+
+      const actualizado: ProgramadorData = {
+        ...this.programmer,
+        nombre: this.nombre,
+        especialidad: this.especialidad,
+        descripcion: this.descripcion,
+        contacto: this.contacto,
+        redes: this.redes,
+        foto: fotoURL
+      };
+
+      await this.programadorService.registrarProgramador(
+        actualizado,
+        currentUser,
+        actualizado.uid
+      );
+
+      this.showMessage('Perfil actualizado correctamente', 'success');
+      this.updated.emit();
+      this.foto = null;
+      this.fotoPreview = fotoURL;
+
+    } catch (err: any) {
+      console.error(err);
+      this.showMessage('Error al actualizar perfil: ' + err.message, 'error');
+    } finally {
+      this.loading = false;
+      this.cdr.detectChanges();
     }
-
-    let fotoURL = this.programmer.foto || 'https://via.placeholder.com/150';
-    if (this.foto) {
-      fotoURL = await this.subirImagenCloudinary(this.foto);
-    }
-
-    const actualizado: ProgramadorData = {
-      ...this.programmer,
-      nombre: this.nombre,
-      especialidad: this.especialidad,
-      descripcion: this.descripcion,
-      contacto: this.contacto,
-      redes: this.redes,
-      foto: fotoURL
-    };
-
-    await this.programadorService.registrarProgramador(
-      actualizado,
-      currentUser,
-      actualizado.uid
-    );
-
-    alert('Perfil actualizado correctamente');
-    this.updated.emit();
-    this.foto = null;
-    this.fotoPreview = fotoURL;
-
-  } catch (err: any) {
-    console.error(err);
-    alert('Error al actualizar perfil: ' + err.message);
-  } finally {
-    this.loading = false;
-    this.cdr.detectChanges();
   }
-}
 
-
+  private showMessage(msg: string, type: 'success' | 'error' = 'success') {
+    this.messageType.set(type);
+    this.message.set(msg);
+    setTimeout(() => this.message.set(null), 4000); // desaparece después de 4s
+  }
 }

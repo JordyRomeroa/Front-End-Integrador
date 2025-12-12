@@ -168,3 +168,20 @@ await setDoc(docRef, {
   updatedAt: serverTimestamp()
 });
 ```
+## 9. **Conclusiones** 
+### **Logros del proyecto**
+ * Se desarrolló una aplicación funcional en Angular que gestiona portafolios, asesorías y roles de usuario. * Integración completa con Firebase para Firestore, Authentication y sincronización en tiempo real. * Implementación de notificaciones, control de acceso y reactividad.
+  * Plataforma que optimiza la interacción entre usuarios y programadores. 
+  ### **Qué se aprendió** 
+  * Uso avanzado de Angular (componentes, rutas, servicios, reactividad).
+   * Integración práctica de Firebase y reglas de seguridad. 
+   * Manejo de flujos reales: solicitudes, aceptación/rechazo, gestión administrativa. 
+   * Arquitectura modular y escalable. 
+   * Implementación de validaciones y actualizaciones dinámicas. 
+  ### **Posibles mejoras futuras** 
+  * Sistema de chat en tiempo real. 
+  * Panel de estadísticas para administradores y programadores. 
+  * Mejoras UI/UX.
+   * Notificaciones push y correo automatizado. 
+   * Módulo de proyectos con imágenes, demos y filtros avanzados. 
+   * Pruebas unitarias y de integración.
