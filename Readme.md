@@ -11,9 +11,9 @@
 * Nayeli Gabriela Barbecho Cajamarca
 * Jordy
 * Enlaces al repositorio
-*  https://github.com/juanperez
+*  https://github.com/JordyRomeroa
 * Enlace al repositorio desplegado
-*  https://github.com/juanperez
+*  https://github.com/Nayelic98
 ##  **Logo**
 <img src="./src/assets/logo-universidad.png" width="150">
 
