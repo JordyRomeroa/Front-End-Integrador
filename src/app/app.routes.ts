@@ -4,6 +4,7 @@ import { MustChangePasswordGuard } from './core/MustChangePasswordGuard';
 import { Routes } from '@angular/router';
 import { User } from './pages/header/components/user/user';
 import { EquipoComponent } from './pages/header/components/InicioComponent/equipo/equipo.component';
+import { UnirteComponent } from './pages/header/components/admin/unirte/unirte.component';
 
 export const routes: Routes = [
   {
@@ -43,7 +44,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/header/components/user/proyectos/proyectos').then(m => m.Proyectos)
       },
         //prueba
-{ path: 'equipo', component: EquipoComponent },
+      { path: 'equipo', component: EquipoComponent },
+      {path: 'unirte', component:UnirteComponent },
       {
         path: 'admin',
         loadComponent: () => import('./pages/header/components/admin/admin').then(m => m.Admin),

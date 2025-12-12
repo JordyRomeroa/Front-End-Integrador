@@ -1,0 +1,126 @@
+<section class="min-h-screen w-full flex items-center justify-center p-4 md:p-8">
+  <div class="max-w-4xl w-full bg-gradient-to-br from-white/60 to-white/30 p-6 md:p-10 rounded-2xl shadow-3xl space-y-8 backdrop-blur-md border border-white/40 transform transition-transform duration-500 hover:shadow-indigo-500/50">
+
+    <div class="text-center">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">
+        Únete a Nuestro Grupo Selecto
+      </h1>
+      <p class="text-gray-700 text-base md:text-lg max-w-2xl mx-auto">
+        Completa el siguiente formulario para postularte como miembro de nuestro equipo de programadores.
+      </p>
+    </div>
+
+    @if (!canPostulate()) {
+      <div class="mt-6 p-4 rounded-lg bg-red-100 border border-red-400 text-red-800 text-center font-medium shadow-md">
+         **No tienes permiso para postularte, necesitas iniciar sesión.** @if (authService.currentUser()) {
+        }
+      </div>
+    }
+
+    <form [formGroup]="solicitudForm"
+          (ngSubmit)="enviarSolicitud()"
+          class="space-y-6"
+          [attr.aria-disabled]="!canPostulate()">
+
+      <fieldset [disabled]="!canPostulate()"> <div class="bg-gray-50/70 p-6 rounded-xl shadow-inner border border-gray-100">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Datos Personales</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <div>
+              <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo <span class="text-red-500">*</span></label>
+              <input id="nombre" type="text" formControlName="nombre" placeholder="Ej: Juan Pérez"
+                    class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500">
+              @if (solicitudForm.get('nombre')?.invalid && (solicitudForm.get('nombre')?.dirty || solicitudForm.get('nombre')?.touched)) {
+                <p class="text-red-500 text-xs mt-1">El nombre es obligatorio.</p>
+              }
+            </div>
+
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+              <input id="email" type="email" formControlName="email" placeholder="ejemplo@correo.com"
+                    class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500">
+              @if (solicitudForm.get('email')?.invalid && (solicitudForm.get('email')?.dirty || solicitudForm.get('email')?.touched)) {
+                <p class="text-red-500 text-xs mt-1">Debe ser un email válido.</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50/70 p-6 rounded-xl shadow-inner border border-gray-100">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Experiencia y Perfil</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
+            <div>
+              <label for="especialidad" class="block text-sm font-medium text-gray-700">Especialidad <span class="text-red-500">*</span></label>
+              <select id="especialidad" formControlName="especialidad"
+                      class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-800 disabled:bg-gray-200 disabled:text-gray-500">
+                <option value="" disabled>Selecciona tu área principal</option>
+                <option value="Frontend">Frontend (UI/UX)</option>
+                <option value="Backend">Backend (Servidores/API)</option>
+                <option value="FullStack">Full-Stack (Ambos)</option>
+                <option value="DevOps">DevOps/Cloud</option>
+                <option value="Otros">Otro</option>
+              </select>
+              @if (solicitudForm.get('especialidad')?.invalid && (solicitudForm.get('especialidad')?.dirty || solicitudForm.get('especialidad')?.touched)) {
+                <p class="text-red-500 text-xs mt-1">Seleccionar una especialidad es obligatorio.</p>
+              }
+            </div>
+
+            <div>
+              <label for="portafolio" class="block text-sm font-medium text-gray-700">URL Portafolio/GitHub <span class="text-red-500">*</span></label>
+              <input id="portafolio" type="url" formControlName="portafolio" placeholder="https://github.com/tu-usuario"
+                    class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500">
+              @if (solicitudForm.get('portafolio')?.invalid && (solicitudForm.get('portafolio')?.dirty || solicitudForm.get('portafolio')?.touched)) {
+                <p class="text-red-500 text-xs mt-1">El enlace es obligatorio y debe ser una URL válida.</p>
+              }
+            </div>
+
+          </div>
+
+          <div>
+            <label for="descripcion" class="block text-sm font-medium text-gray-700">¿Por qué quieres unirte? <span class="text-red-500">*</span></label>
+            <textarea id="descripcion" formControlName="descripcion" rows="4" placeholder="Describe brevemente tu experiencia y motivación..."
+                      class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500"></textarea>
+            @if (solicitudForm.get('descripcion')?.invalid && (solicitudForm.get('descripcion')?.dirty || solicitudForm.get('descripcion')?.touched)) {
+                <p class="text-red-500 text-xs mt-1">La descripción es obligatoria.</p>
+              }
+          </div>
+        </div>
+      </fieldset>
+
+
+      <div class="pt-4">
+        <button type="submit"
+                [disabled]="solicitudForm.invalid || isSubmitting() || !canPostulate()"
+                class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-white
+                       bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                       transition-all duration-300 transform hover:scale-[1.01]
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (isSubmitting()) {
+            <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></span>
+            Enviando...
+          } @else if (!canPostulate()) {
+            Acceso Restringido
+          } @else {
+            Enviar Solicitud de Postulación
+          }
+        </button>
+      </div>
+
+      @if (submitSuccess()) {
+        <div class="mt-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-medium">
+           ¡Solicitud enviada con éxito! Nos pondremos en contacto pronto.
+        </div>
+      }
+      @if (submitError()) {
+        <div class="mt-4 p-3 rounded-lg bg-red-100 text-red-800 text-center font-medium">
+           Error al enviar la solicitud. Por favor, inténtalo de nuevo.
+        </div>
+      }
+
+    </form>
+  </div>
+</section>
