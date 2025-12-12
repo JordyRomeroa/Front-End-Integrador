@@ -1,59 +1,210 @@
-# Proyecto
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.6.
 
-## Development server
 
-To start a local development server, run:
+### **1. Flujo general del sistema**
 
-```bash
-ng serve
+* Explicar brevemente **qué problema resuelve el sistema** y cuál es su propósito.
+* Mostrar **qué ve un usuario cuando ingresa a la página sin iniciar sesión**:
+
+  * Página principal
+  * Opciones visibles
+  * Navegación básica
+
+---
+
+### **2. Casos de uso por roles**
+
+####  **Rol Administrador**
+
+
+
+####  **Rol Programador**
+
+* Iniciar sesión como programador.
+* Mostrar el panel de acceso del programador (dashboard específico si existe).
+* Cómo accede a las funciones administrativas asignadas a su rol.
+* Qué puede editar (proyectos, solicitudes, tareas, módulos).
+* Cómo guarda los cambios y dónde se ven reflejados.
+* Cómo revisa solicitudes o proyectos asignados.
+
+####  **Rol Usuario General**
+
+* Iniciar sesión como usuario común.
+* Qué opciones aparecen en su pantalla inicial.
+* Cómo crear una nueva solicitud o proyecto.
+* Cómo puede visualizar el estado de sus solicitudes.
+* Cómo se navega por las pantallas disponibles.
+
+---
+
+### **3. Flujo técnico del sistema**  EJEMPLOS poner los que tienen ustedes 
+
+
+Ejemplo recomendado:
+
+> “Aquí genero un nuevo proyecto, y en este momento se registra la información en Firebase.
+> Vamos a la consola de Firebase → Firestore Database y podemos ver el documento recién creado con los datos que el sistema envió.”
+
+También deben mostrar:
+
+* Actualizaciones en tiempo real (si aplica).
+* Ejemplo puntual de código permitido:
+
+  * Cómo se envía un correo con EmailJS.
+  * Cómo se guarda un registro en Firebase.
+  * Cómo se envía un mensaje por WhatsApp (si aplica).
+  * Cómo ven notificaciones  (si aplica).
+  
+
+**El código mostrado debe ser muy específico**, no una clase completa ni un componente entero.
+Solo fragmentos puntuales.
+
+Ejemplo:
+
+```ts
+emailjs.send("service_id", "template_id", {
+  user: form.name,
+  solicitud: form.descripcion
+});
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+### **4. Cierre del video**
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+* Resumen breve del sistema.
+* Cuáles son los módulos principales.
+* Qué tecnologías se usaron.
+* Qué roles existen y qué funcionalidades cubre cada uno.
 
-```bash
-ng generate component component-name
-```
+---
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+#  **Estructura del Informe/README del Proyecto**
 
-```bash
-ng generate --help
-```
+El README debe tener la siguiente estructura:
 
-## Building
+---
 
-To build the project run:
+## 1. **Logo de la Carrera y del Proyecto**
 
-```bash
-ng build
-```
+(Incluir imagen del logo institucional y el logo del equipo/proyecto si existe).
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## 2. **Integrantes**
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+* Nombres completos
+* Enlaces a los repositorios personales de GitHub
+* Enlace al repositorio principal del proyecto
 
-```bash
-ng test
-```
+Ejemplo:
 
-## Running end-to-end tests
+* Juan Pérez – [https://github.com/juanperez](https://github.com/juanperez)
+* María López – [https://github.com/marialopez](https://github.com/marialopez)
 
-For end-to-end (e2e) testing, run:
+---
 
-```bash
-ng e2e
-```
+## 3. **Tecnologías Utilizadas** EJEMLO
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Colocar logos 
 
-## Additional Resources
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+###  **Angular + Firebase + EmailJS**
+
+* Angular para frontend
+* Firebase como backend serverless
+* EmailJS para envío automático de correos
+* WhatsApp API para contacto directo (si aplica)
+
+###  **React + Firebase**
+
+* Componentes del portafolio construidos con React
+* Firebase Authentication / Firestore / Storage
+
+(Dependiendo de su sistema).
+
+---
+
+## 4. **Descripción del Proyecto**
+
+Explicar en un párrafo qué hace el sistema.
+
+Ejemplo:
+
+> El Portafolio Administrativo es una plataforma web diseñada para gestionar solicitudes, proyectos y registros administrativos según el rol del usuario. Permite a administradores gestionar usuarios y roles, a programadores revisar y dar mantenimiento al sistema, y a usuarios generales crear y monitorear solicitudes.
+> El sistema está construido con Angular/React y utiliza Firebase como backend para autenticación, almacenamiento de datos y hosting.
+
+---
+
+## 5. **Roles y Funcionalidades** EJEMPLOS poner los que tienen ustedes
+
+### **Administrador**
+
+* Gestión de usuarios
+* Gestión de roles
+* Revisión y aprobación de solicitudes
+* Acceso completo a panel administrativo
+* Edición de módulos internos
+
+### **Programador**
+
+* Acceso al área técnica
+* Edición de proyectos y solicitudes
+* Mantenimiento de datos
+* Acceso limitado según permisos
+
+### **Usuario General**
+
+* Crear solicitudes
+* Visualizar solicitudes enviadas
+* Actualizar datos personales
+* Recibir notificaciones y correos
+
+---
+
+## 6. **Módulos y Pantallas del Sistema**  EJEMPLOS poner los que tienen ustedes
+
+Describir cada pantalla:
+
+* Login
+* Dashboard Admin
+* Gestión de usuarios
+* Gestión de proyectos
+* Solicitudes
+* Perfil de usuario
+* Panel del programador
+* Visualización de solicitudes
+
+---
+
+## 7. **Flujos Principales del Usuario**  EJEMPLOS poner los que tienen ustedes
+
+Explicar brevemente:
+
+* Cómo se ingresa
+* Qué se puede hacer
+* Qué datos se guardan
+* Cómo se refleja en Firebase
+
+Ejemplo:
+
+> El usuario crea una solicitud, la información se envía a Firebase y se genera un documento en la colección “solicitudes”.
+> Posteriormente, el administrador puede revisar su estado desde el panel administrativo.
+
+---
+
+## 8. **Fragmentos Técnicos Importantes**  EJEMPLOS poner los que tienen ustedes
+
+* Código de envío de correo
+* Código de guardado whatsapp
+
+Fragmentos concretos y muy breves.
+
+---
+
+## 9. **Conclusiones**
+
+* Logros del proyecto
+* Qué se aprendió
+* Posibles mejoras futuras
+
