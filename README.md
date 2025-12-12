@@ -77,7 +77,10 @@ Funciones principales:
 * Ver portafolios públicos del equipo  
 * Conocer la información del proyecto  
 * Explorar programadores registrados  
+
+### Rol Usuario General (Logeado)
 * Solicitar asesorías  
+* Solicitar pertenecer al grupo de programadores
 
 Acceso restringido: No puede crear, editar ni administrar contenido dentro del sistema.
 
@@ -109,7 +112,7 @@ Acceso restringido: No puede crear, editar ni administrar contenido dentro del s
 
 AboutUs Component
 ts
-ts
+```ts
 // Crear usuario nuevo en Firebase Auth
 const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
 uid = cred.user.uid;
@@ -117,11 +120,11 @@ uid = cred.user.uid;
 ts
 // Subir imagen a Cloudinary
 fotoURL = await this.subirImagenCloudinary(this.foto);
-
+```
 
 Register Component
 ts
-ts
+```ts
 // Mensaje dinámico y cerrar modal
 alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 this.cerrar.emit();
@@ -134,10 +137,10 @@ ts
 const r = this.authService.userRole();
 this.role.set(r);
 if (!r || r !== 'admin') this.router.navigate(['/login']);
-
+```
 
 Inicio Component
-ts
+```ts
 
 // Peticiones simultáneas a GitHub usando forkJoin
 const requests = this.users.map(user => this.githubService.getRepos(user));
@@ -148,17 +151,17 @@ forkJoin(requests).subscribe({
     this.cd.markForCheck();
   }
 });
-
+```
 AuthService
 ts
-ts
+```ts
 // Creación de asesoría con timestamps automáticos
 await setDoc(docRef, {
   ...asesoria,
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp()
 });
-
+```
 ## 10. Conclusiones 
 ### Logros del proyecto
  * Se desarrolló una aplicación funcional en Angular que gestiona portafolios, asesorías y roles de usuario. * Integración completa con Firebase para Firestore, Authentication y sincronización en tiempo real. * Implementación de notificaciones, control de acceso y reactividad.
