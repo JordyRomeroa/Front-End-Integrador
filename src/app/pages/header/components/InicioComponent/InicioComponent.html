@@ -1,59 +1,96 @@
-<!-- CONTENEDOR FLEX PARA PROYECTOS + TEAM -->
- <app-team></app-team>
+<!-- CONTENEDOR TEAM -->
+<app-team></app-team>
+
 <section class="w-full px-4 md:px-6 my-10 flex flex-col lg:flex-row gap-8">
-
-
 
   <!-- COLUMNA DE PROYECTOS -->
   <div class="flex-1 w-full">
 
-    <h2 class="text-3xl font-bold text-white mb-4 animate-fadeIn">
+    <h2 class="text-3xl font-bold text-white mb-6 animate-fadeIn">
       Proyectos Destacados
     </h2>
 
-    <!-- GRID RESPONSIVE SIN DESBORDAR -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+    <!-- GRID RESPONSIVE -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
 
-      <!-- Mis proyectos -->
+      <!-- MIS PROYECTOS -->
       @for (repo of myRepos; track repo) {
-        <div class="card bg-black/40 backdrop-blur-lg p-4 rounded-xl shadow text-white
-                    hover:scale-[1.03] transition-transform duration-300">
+        <div
+          class="card bg-black/40 backdrop-blur-lg p-4 rounded-2xl shadow-xl text-white
+                 hover:scale-[1.04] transition-transform duration-300">
 
-          <div class="flex items-center mb-3">
-            <img [src]="repo.owner.avatar_url"
-                 class="w-10 h-10 rounded-full border-2 border-yellow-400 mr-2">
-            <span class="font-semibold">{{ repo.owner.login }}</span>
+          <!-- IMAGEN PROYECTO -->
+          <div class="relative mb-4 overflow-hidden rounded-xl">
+            <img
+              src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80"
+              alt="Proyecto de programación"
+              class="w-full h-40 object-cover transition-transform duration-300 hover:scale-110"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
           </div>
 
-          <h3 class="text-lg font-bold mb-1">
-            <a [href]="repo.html_url" target="_blank" class="hover:underline">
+          <!-- AUTOR -->
+          <div class="flex items-center mb-3">
+            <img
+              [src]="repo.owner.avatar_url"
+              class="w-10 h-10 rounded-full border-2 border-yellow-400 mr-2"
+            >
+            <span class="font-semibold text-sm">
+              {{ repo.owner.login }}
+            </span>
+          </div>
+
+          <!-- NOMBRE PROYECTO -->
+          <h3 class="text-lg font-bold">
+            <a
+              [href]="repo.html_url"
+              target="_blank"
+              class="hover:underline hover:text-yellow-300 transition-colors"
+            >
               {{ repo.name }}
             </a>
           </h3>
-
-          
 
         </div>
       }
 
-      <!-- Proyectos del compañero -->
+      <!-- PROYECTOS DEL COMPAÑERO -->
       @for (repo of partnerRepos; track repo) {
-        <div class="card bg-black/40 backdrop-blur-lg p-4 rounded-xl shadow text-white
-                    hover:scale-[1.03] transition-transform duration-300">
+        <div
+          class="card bg-black/40 backdrop-blur-lg p-4 rounded-2xl shadow-xl text-white
+                 hover:scale-[1.04] transition-transform duration-300">
 
-          <div class="flex items-center mb-3">
-            <img [src]="repo.owner.avatar_url"
-                 class="w-10 h-10 rounded-full border-2 border-yellow-400 mr-2">
-            <span class="font-semibold">{{ repo.owner.login }}</span>
+          <!-- IMAGEN PROYECTO -->
+          <div class="relative mb-4 overflow-hidden rounded-xl">
+            <img
+              src="https://images.unsplash.com/photo-1542831371-d531d36971e6?auto=format&fit=crop&w=1200&q=80"
+              alt="Proyecto de programación"
+              class="w-full h-40 object-cover transition-transform duration-300 hover:scale-110"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
           </div>
 
-          <h3 class="text-lg font-bold mb-1">
-            <a [href]="repo.html_url" target="_blank" class="hover:underline">
+          <!-- AUTOR -->
+          <div class="flex items-center mb-3">
+            <img
+              [src]="repo.owner.avatar_url"
+              class="w-10 h-10 rounded-full border-2 border-yellow-400 mr-2"
+            >
+            <span class="font-semibold text-sm">
+              {{ repo.owner.login }}
+            </span>
+          </div>
+
+          <!-- NOMBRE PROYECTO -->
+          <h3 class="text-lg font-bold">
+            <a
+              [href]="repo.html_url"
+              target="_blank"
+              class="hover:underline hover:text-yellow-300 transition-colors"
+            >
               {{ repo.name }}
             </a>
           </h3>
-
-          
 
         </div>
       }
@@ -63,4 +100,6 @@
   </div>
 
 </section>
+
+<!-- ABOUT US -->
 <app-about-us></app-about-us>
