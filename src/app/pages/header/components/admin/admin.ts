@@ -17,7 +17,7 @@ import { ProgramadorData } from '../../../interface/programador';
 export class Admin implements OnInit {
 
   ngOnInit() {
-    this.programadorService.refrescarTabla(); // 🔥 carga inicial
+    this.programadorService.refrescarTabla();
   }
 
   private router = inject(Router);
@@ -26,8 +26,8 @@ export class Admin implements OnInit {
 
   role = signal<string | null>(null);
   programadores = signal<ProgramadorData[]>([]);
-  
-  // ← Controla la visibilidad del modal
+
+
   showRegisterModal = signal(false);
 
   constructor() {
@@ -51,9 +51,9 @@ export class Admin implements OnInit {
     });
   }
 
-  // Abrir modal para registrar un programador NUEVO
+
 registerProgrammer() {
-  this.programmerSelected.set(null);  // <-- Limpiamos cualquier programador seleccionado
+  this.programmerSelected.set(null);
   this.showRegisterModal.set(true);
 }
 
@@ -62,12 +62,12 @@ registerProgrammer() {
     this.showRegisterModal.set(false);
   }
 
- // Señal para el programador a editar
+
 programmerSelected = signal<ProgramadorData | null>(null);
 
 editarProgramador(programmer: ProgramadorData) {
-  this.programmerSelected.set(programmer); // Guardamos el programador a editar
-  this.showRegisterModal.set(true); // Abrimos el modal
+  this.programmerSelected.set(programmer);
+  this.showRegisterModal.set(true); 
 }
 
 async eliminarProgramador(programmer: ProgramadorData) {

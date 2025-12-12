@@ -48,9 +48,6 @@ export class Advice {
     }
   }
 
-  // =====================================================================================
-  //  CARGAR ASESORÍAS DESDE FIRESTORE
-  // =====================================================================================
   async cargarAsesorias() {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
@@ -88,9 +85,6 @@ export class Advice {
     }
   }
 
-  // =====================================================================================
-  //  NOTIFICACIONES AUTOMÁTICAS
-  // =====================================================================================
   private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
     const pendientes = lista.filter(a => a.estado !== 'pendiente');
     if (pendientes.length === 0) return;
@@ -100,17 +94,13 @@ export class Advice {
     setTimeout(() => this.notificacionUsuario.set(null), 4000);
   }
 
-  // =====================================================================================
-  //  ABRIR MODAL DE RESPUESTA (como en AdviceRequests)
-  // =====================================================================================
+
   abrirModal(asesoria: AsesoriaConId) {
     this.asesorSeleccionado.set(asesoria);
     this.mensajeRespuesta.set('');
   }
 
-  // =====================================================================================
-  //  ENVIAR RESPUESTA (Aceptar / Rechazar)
-  // =====================================================================================
+
   async enviarRespuesta(estado: 'aceptada' | 'rechazada') {
     const asesoria = this.asesorSeleccionado();
     if (!asesoria) return;
@@ -152,9 +142,7 @@ export class Advice {
     }
   }
 
-  // =====================================================================================
-  //  WHATSAPP
-  // =====================================================================================
+
   getWhatsAppLink(data: AsesoriaConId): string {
     if (!data.telefono) return '#';
 

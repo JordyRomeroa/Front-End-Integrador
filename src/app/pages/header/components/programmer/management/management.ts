@@ -47,17 +47,17 @@ export class Management {
         return;
       }
 
-      // 🟣 Cargar solo proyectos del programador
+      //  Cargar solo proyectos del programador
       this.proyectoService.cargarProyectosProgramador(user.uid)
         .then(() => {
-          // 🟣 Escuchar solo proyectos del programador
+          //  Escuchar solo proyectos del programador
           this.proyectoService.proyectosProgramador$.subscribe(lista => {
             this.proyectos.set(lista);
           });
         })
         .finally(() => this.cargando.set(false));
 
-      // 🔵 Cargar info del programador actual
+      //  Cargar info del programador actual
       this.programadorService.programadores$.subscribe(lista => {
         this.programador = lista.find(p => p.uid === user.uid) || null;
       });

@@ -117,13 +117,11 @@ export class RegisterProgrammer implements OnChanges {
 
       await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
 
-      alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 
       this.cerrar.emit();
       this.resetFormulario();
     } catch (error: any) {
       console.error(error);
-      alert("Error registrando programador: " + error.message);
     }
   }
 
