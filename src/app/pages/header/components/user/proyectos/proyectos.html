@@ -1,6 +1,6 @@
 <section class="projects relative px-6 py-16 min-h-screen overflow-hidden">
 
-  <!-- Fondo AURORA suave -->
+
   <div class="absolute inset-0 -z-10 pointer-events-none">
     <div class="absolute top-0 left-0 w-[55%] h-[55%] bg-blue-500/40 blur-[120px] rounded-full"></div>
     <div class="absolute bottom-0 right-0 w-[55%] h-[55%] bg-purple-600/40 blur-[140px] rounded-full"></div>
@@ -11,7 +11,6 @@
     Portafolios de Colaboradores
   </h2>
 
-  <!-- Toggle interactivo -->
   <div class="flex justify-center gap-4 mb-10">
     <button
       class="btn px-6 rounded-xl transition-all backdrop-blur-md shadow-lg"
@@ -32,7 +31,7 @@
     </button>
   </div>
 
-  <!-- Menú dinámico según filtro activo -->
+
   @if (activeFilter === 'category') {
     <div class="flex flex-wrap justify-center gap-4 mb-10">
       <button
@@ -41,7 +40,7 @@
           ? 'bg-yellow-400 text-black'
           : 'bg-white/10 text-white hover:bg-white/20'"
         (click)="showAllCategories()">Todas</button>
-      
+
       @for (cat of getCategories(repos); track cat) {
         <button
           class="px-4 py-2 rounded-lg backdrop-blur-md transition-all shadow"
@@ -61,7 +60,7 @@
           ? 'bg-yellow-400 text-black'
           : 'bg-white/10 text-white hover:bg-white/20'"
         (click)="showAllCollaborators()">Todos</button>
-      
+
       @for (user of collaborators; track user) {
         <button
           class="px-4 py-2 rounded-lg backdrop-blur-md transition-all shadow"
@@ -73,16 +72,16 @@
     </div>
   }
 
-  <!-- Grid de proyectos -->
+
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
     @for (project of filteredRepos; track project.name) {
-      
+
       <div
         class="card p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10
-        shadow-[0_0_25px_rgba(0,200,255,0.25)] text-white transition-all duration-300 
+        shadow-[0_0_25px_rgba(0,200,255,0.25)] text-white transition-all duration-300
         hover:scale-[1.03] hover:shadow-[0_0_35px_rgba(0,200,255,0.45)]">
 
-        <!-- Avatar y Nombre -->
+
         <div class="flex items-center mb-4">
           <img [src]="project.owner.avatar_url"
                alt="Avatar"
@@ -104,12 +103,12 @@
           }
         </h3>
 
-        <!-- Descripción -->
+
         <p class="text-white/80 mb-4 leading-relaxed">
           {{ project.description || 'Sin descripción disponible' }}
         </p>
 
-        <!-- Tipo de participación -->
+
         <div class="flex items-center gap-2 text-white/80 mb-4">
           <svg xmlns="http://www.w3.org/2000/svg"
                class="h-5 w-5 text-yellow-400"
@@ -122,7 +121,7 @@
           </span>
         </div>
 
-        <!-- Tecnologías -->
+
         <div class="flex flex-wrap gap-2 mb-4">
           @for (tech of project.techs; track tech) {
             <span class="px-2 py-1 bg-yellow-400 text-black rounded-md text-sm font-semibold shadow">
@@ -131,7 +130,7 @@
           }
         </div>
 
-        <!-- Enlaces -->
+        
         <div class="flex gap-3 mt-4">
           @if (project.repoLink) {
             <a [href]="project.repoLink" target="_blank"
@@ -139,7 +138,7 @@
               Repo
             </a>
           }
-          
+
           @if (project.deployLink) {
             <a [href]="project.deployLink" target="_blank"
                class="px-3 py-1 rounded bg-white/10 hover:bg-white/20 transition text-sm">

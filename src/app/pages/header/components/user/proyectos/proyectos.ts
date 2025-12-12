@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ProyectoService } from '../../../../../../services/proyecto-service';
 import { AuthService } from '../../../../../../services/auth-service';
 
+interface Collaborator {
+  login: string; // Nombre del programador
+  avatar_url: string; // URL del avatar
+}
+
 interface Project {
   name: string;
   description?: string;
@@ -22,16 +27,16 @@ interface Project {
   imports: [CommonModule],
 })
 export class Proyectos implements OnInit {
-  
+
   repos: Project[] = [];
   filteredRepos: Project[] = [];
 
-  // Filtros
+
   selectedCategory: string = '';
   selectedCollaborator: string = '';
   collaborators: string[] = [];
 
-  // Control de menú activo
+
   activeFilter: 'category' | 'collaborator' = 'category';
 
   constructor(
@@ -42,10 +47,10 @@ export class Proyectos implements OnInit {
 
   ngOnInit(): void {
 
-    // 🟣 Cargar TODOS los proyectos al inicio
+
     this.proyectoService.cargarTodosLosProyectos();
 
-    // 🟣 Suscribirse a la lista global
+
     this.proyectoService.todosProyectos$.subscribe(async (proyectos) => {
 
       const updatedRepos: Project[] = [];
@@ -79,13 +84,11 @@ export class Proyectos implements OnInit {
 
       this.applyFilters();
       this.cdr.detectChanges();
+
+
     });
   }
 
-  // ============================
-  // ❌ Ya NO se usa
-  // async cargarProyectosProgramador() {}
-  // ============================
 
 
   getCategories(projects: Project[]): string[] {
