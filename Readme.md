@@ -1,127 +1,46 @@
-
-
-
-### **1. Flujo general del sistema**
-
-* Explicar brevemente **qué problema resuelve el sistema** y cuál es su propósito.
-* Mostrar **qué ve un usuario cuando ingresa a la página sin iniciar sesión**:
-
-  * Página principal
-  * Opciones visibles
-  * Navegación básica
-
----
-
-### **2. Casos de uso por roles**
-
-####  **Rol Administrador**
-
-
-
-####  **Rol Programador**
-
-* Iniciar sesión como programador.
-* Mostrar el panel de acceso del programador (dashboard específico si existe).
-* Cómo accede a las funciones administrativas asignadas a su rol.
-* Qué puede editar (proyectos, solicitudes, tareas, módulos).
-* Cómo guarda los cambios y dónde se ven reflejados.
-* Cómo revisa solicitudes o proyectos asignados.
-
-####  **Rol Usuario General**
-
-* Iniciar sesión como usuario común.
-* Qué opciones aparecen en su pantalla inicial.
-* Cómo crear una nueva solicitud o proyecto.
-* Cómo puede visualizar el estado de sus solicitudes.
-* Cómo se navega por las pantallas disponibles.
-
----
-
-### **3. Flujo técnico del sistema**  EJEMPLOS poner los que tienen ustedes 
-
-
-Ejemplo recomendado:
-
-> “Aquí genero un nuevo proyecto, y en este momento se registra la información en Firebase.
-> Vamos a la consola de Firebase → Firestore Database y podemos ver el documento recién creado con los datos que el sistema envió.”
-
-También deben mostrar:
-
-* Actualizaciones en tiempo real (si aplica).
-* Ejemplo puntual de código permitido:
-
-  * Cómo se envía un correo con EmailJS.
-  * Cómo se guarda un registro en Firebase.
-  * Cómo se envía un mensaje por WhatsApp (si aplica).
-  * Cómo ven notificaciones  (si aplica).
-  
-
-**El código mostrado debe ser muy específico**, no una clase completa ni un componente entero.
-Solo fragmentos puntuales.
-
-Ejemplo:
-
-```ts
-emailjs.send("service_id", "template_id", {
-  user: form.name,
-  solicitud: form.descripcion
-});
-```
-
----
-
-### **4. Cierre del video**
-
-* Resumen breve del sistema.
-* Cuáles son los módulos principales.
-* Qué tecnologías se usaron.
-* Qué roles existen y qué funcionalidades cubre cada uno.
-
----
-
-#  **Estructura del Informe/README del Proyecto**
-
-El README debe tener la siguiente estructura:
-
----
-
 ## 1. **Logo de la Carrera y del Proyecto**
+![Logo del Proyecto](./src/assets/logo-proyecto.png)
 
-(Incluir imagen del logo institucional y el logo del equipo/proyecto si existe).
 
----
-
-## 2. **Integrantes**
-
-* Nombres completos
-* Enlaces a los repositorios personales de GitHub
-* Enlace al repositorio principal del proyecto
-
-Ejemplo:
-
-* Juan Pérez – [https://github.com/juanperez](https://github.com/juanperez)
-* María López – [https://github.com/marialopez](https://github.com/marialopez)
 
 ---
 
-## 3. **Tecnologías Utilizadas** EJEMLO
 
-Colocar logos 
+##  **Integrantes**
+
+* Nayeli Gabriela Barbecho Cajamarca
+* Jordy
+* Enlaces al repositorio
+*  https://github.com/juanperez
+* Enlace al repositorio desplegado
+*  https://github.com/juanperez
+##  **Logo**
+<img src="./src/assets/logo-universidad.png" width="150">
 
 
-###  **Angular + Firebase + EmailJS**
 
-* Angular para frontend
-* Firebase como backend serverless
-* EmailJS para envío automático de correos
-* WhatsApp API para contacto directo (si aplica)
+---
 
-###  **React + Firebase**
+## 3. **Tecnologías Utilizadas**
+<img src="./src/assets/html.png" width="60">
+<img src="./src/assets/Cloudinary.png" width="60">
+<img src="./src/assets/javascript.png" width="60">
+<img src="./src/assets/Angular.png" width="60">
 
-* Componentes del portafolio construidos con React
-* Firebase Authentication / Firestore / Storage
 
-(Dependiendo de su sistema).
+
+### **Angular + Firebase **
+
+* Angular para frontend  
+* Firebase como backend serverless  
+
+
+### **React + Firebase**
+
+* Componentes del portafolio construidos con React  
+* Firebase Authentication / Firestore / Storage  
+
+(Dependiendo de su sistema)
 
 ---
 
@@ -131,80 +50,124 @@ Explicar en un párrafo qué hace el sistema.
 
 Ejemplo:
 
-> El Portafolio Administrativo es una plataforma web diseñada para gestionar solicitudes, proyectos y registros administrativos según el rol del usuario. Permite a administradores gestionar usuarios y roles, a programadores revisar y dar mantenimiento al sistema, y a usuarios generales crear y monitorear solicitudes.
-> El sistema está construido con Angular/React y utiliza Firebase como backend para autenticación, almacenamiento de datos y hosting.
+> El sistema es una aplicación desarrollada en Angular que centraliza y muestra los portafolios tanto de mi compañero como los míos, permitiendo a los usuarios explorar nuestros trabajos de manera organizada y accesible.
 
 ---
 
-## 5. **Roles y Funcionalidades** EJEMPLOS poner los que tienen ustedes
+## 5. **Roles y Funcionalidades**
 
-### **Administrador**
+### **Rol Administrador**
 
-* Gestión de usuarios
-* Gestión de roles
-* Revisión y aprobación de solicitudes
-* Acceso completo a panel administrativo
-* Edición de módulos internos
+El Administrador tiene control total sobre la gestión del equipo de programadores dentro de la plataforma.  
+Sus funciones permiten mantener actualizado el personal técnico y asegurar que la información mostrada al público sea correcta.
 
-### **Programador**
+**Entre sus principales casos de uso se encuentran:**
 
-* Acceso al área técnica
-* Edición de proyectos y solicitudes
-* Mantenimiento de datos
-* Acceso limitado según permisos
-
-### **Usuario General**
-
-* Crear solicitudes
-* Visualizar solicitudes enviadas
-* Actualizar datos personales
-* Recibir notificaciones y correos
+* Crear programadores  
+* Actualizar información de programadores  
+* Eliminar programadores del sistema  
 
 ---
 
-## 6. **Módulos y Pantallas del Sistema**  EJEMPLOS poner los que tienen ustedes
+### **Rol Programador**
 
-Describir cada pantalla:
+El Programador es un miembro activo dentro de la plataforma, con acceso a herramientas que le permiten gestionar su trabajo, imagen profesional y disponibilidad.
 
-* Login
-* Dashboard Admin
-* Gestión de usuarios
-* Gestión de proyectos
-* Solicitudes
-* Perfil de usuario
-* Panel del programador
-* Visualización de solicitudes
+**Casos de uso principales:**
 
----
-
-## 7. **Flujos Principales del Usuario**  EJEMPLOS poner los que tienen ustedes
-
-Explicar brevemente:
-
-* Cómo se ingresa
-* Qué se puede hacer
-* Qué datos se guardan
-* Cómo se refleja en Firebase
-
-Ejemplo:
-
-> El usuario crea una solicitud, la información se envía a Firebase y se genera un documento en la colección “solicitudes”.
-> Posteriormente, el administrador puede revisar su estado desde el panel administrativo.
+* Ver asesorías asignadas o disponibles  
+* Aceptar o negar asesorías  
+* Editar su perfil  
+* Gestionar su calendario  
+* Agregar proyectos a su portafolio  
 
 ---
 
-## 8. **Fragmentos Técnicos Importantes**  EJEMPLOS poner los que tienen ustedes
+### **Rol Usuario General (sin iniciar sesión)**
 
-* Código de envío de correo
-* Código de guardado whatsapp
+Visitante que ingresa sin registrarse. Acceso limitado a información pública.
 
-Fragmentos concretos y muy breves.
+**Casos de uso principales:**
+
+* Visualizar la página principal  
+* Ver portafolios públicos del equipo  
+* Conocer la información del proyecto  
+* Explorar programadores registrados  
+* Pedir asesorías  
+
+**Acceso restringido:** No puede crear, editar, actualizar ni administrar contenido dentro del sistema.
+
+---
+
+## 6. **Módulos y Pantallas del Sistema**
+
+(Ejemplos — colocar las que ustedes realmente tienen)
+
+* Login  
+* Dashboard Admin  
+* Gestión de usuarios  
+* Gestión de proyectos  
+* Solicitudes  
+* Perfil de usuario  
+* Panel del programador  
+* Visualización de solicitudes  
+
+---
+
+## 7. **Flujos Principales del Usuario**
+
+> El usuario registrado solicita una asesoría, y en ese momento la información se envía directamente a Firebase.  
+>  
+> Si vamos a la consola de Firebase → Firestore Database, podemos ver el documento recién generado con todos los datos registrados.  
+>  
+> Luego el programador revisa la solicitud y puede aceptarla o rechazarla.  
+> Cuando selecciona una opción, el sistema actualiza el estado en Firebase y, si la asesoría es rechazada, se añade una justificación almacenada en Firestore.  
+>  
+> Otra funcionalidad es que el programador puede agregar proyectos a su portafolio.  
+> Al guardar los cambios, la información se actualiza automáticamente en Firebase.  
+>  
+> El administrador puede actualizar o eliminar programadores y los cambios se reflejan tanto en Firestore Database como en Authentication.  
+>  
+> El sistema también cuenta con notificaciones: cuando una asesoría es aprobada o rechazada, el usuario recibe una notificación, y el administrador visualiza avisos en tiempo real.
+
+---
+
+## 8. **Fragmentos Técnicos Importantes**
+
+(Ejemplos — reemplazar por los tuyos)
+
+* Código de envío de correo  
+* Código de guardado en WhatsApp API  
+* Código de carga a Firebase  
+* Código de actualización de estado  
+
+Fragmentos concretos y breves.
 
 ---
 
 ## 9. **Conclusiones**
 
-* Logros del proyecto
-* Qué se aprendió
-* Posibles mejoras futuras
+### **Logros del proyecto**
+
+* Se desarrolló una aplicación funcional en Angular que gestiona portafolios, asesorías y roles de usuario.  
+* Integración completa con Firebase para Firestore, Authentication y sincronización en tiempo real.  
+* Implementación de notificaciones, control de acceso y reactividad.  
+* Plataforma que optimiza la interacción entre usuarios y programadores.
+
+### **Qué se aprendió**
+
+* Uso avanzado de Angular (componentes, rutas, servicios, reactividad).  
+* Integración práctica de Firebase y reglas de seguridad.  
+* Manejo de flujos reales: solicitudes, aceptación/rechazo, gestión administrativa.  
+* Arquitectura modular y escalable.  
+* Implementación de validaciones y actualizaciones dinámicas.
+
+### **Posibles mejoras futuras**
+
+* Sistema de chat en tiempo real.  
+* Panel de estadísticas para administradores y programadores.  
+* Mejoras UI/UX.  
+* Notificaciones push y correo automatizado.  
+* Módulo de proyectos con imágenes, demos y filtros avanzados.  
+* Pruebas unitarias y de integración.
 
