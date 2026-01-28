@@ -2,30 +2,30 @@
 
 ---
 
-## 1. *Logo de la Carrera y del Proyecto* 
+## 1. Logo de la Carrera y del Proyecto 
 ![Logo del Proyecto](./src/assets/logo-proyecto.png)
 
 ---
 
-## 2. *Integrantes*
+## 2. Integrantes
 
 * Nayeli Gabriela Barbecho Cajamarca  
 * Jordy Romero Armijos
 
-*Enlaces al repositorio:*  
+Enlaces al repositorio:  
 * [Repositorio Principal](https://github.com/JordyRomeroa/Front-End-Integrador)  
 
-*Enlace al proyecto desplegado:*  
+Enlace al proyecto desplegado:  
 * [Proyecto en línea](https://proyecto-final-5ed91.web.app/home/inicio)
 
 ---
 
-## 3. *Logo Proyecto*
+## 3. Logo Proyecto
 <img src="./src/assets/logo-universidad.png" width="150">
 
 ---
 
-## 4. *Tecnologías Utilizadas*
+## 4. Tecnologías Utilizadas
 
 <img src="./src/assets/html.png" width="60">
 <img src="./src/assets/Cloudinary.png" width="60">
@@ -43,18 +43,18 @@
 En nuestro proyecto, usamos Firebase como base de datos, pero para almacenar las imágenes de manera más eficiente y profesional, utilizamos Cloudinary. Esto nos permitió guardar y gestionar todas las fotos de nuestro proyecto de forma segura y rápida, mejorando la experiencia tanto para el usuario como para el equipo de desarrollo
 ---
 
-## 5. *Descripción del Proyecto*
+## 5. Descripción del Proyecto
 
 > El sistema es una aplicación desarrollada en Angular que centraliza y muestra los portafolios de los miembros del equipo, permitiendo a los usuarios explorar trabajos de manera organizada y accesible. Incluye gestión de roles, control de asesorías y sincronización en tiempo real con Firebase.
 
 ---
 
-## 6. *Roles y Funcionalidades*
+## 6. Roles y Funcionalidades
 
 ### Rol Administrador
 El administrador tiene control total sobre la gestión del equipo de programadores y el sistema.  
 
-*Funciones principales:*
+Funciones principales:
 * Crear programadores  
 * Actualizar información de programadores  
 * Eliminar programadores del sistema  
@@ -62,7 +62,7 @@ El administrador tiene control total sobre la gestión del equipo de programador
 ### Rol Programador
 El programador gestiona su perfil, proyectos y asesorías dentro de la plataforma.  
 
-*Funciones principales:*
+Funciones principales:
 * Ver asesorías asignadas o disponibles  
 * Aceptar o negar asesorías  
 * Editar su perfil  
@@ -72,18 +72,21 @@ El programador gestiona su perfil, proyectos y asesorías dentro de la plataform
 ### Rol Usuario General (sin iniciar sesión)
 Visitante con acceso limitado a información pública.  
 
-*Funciones principales:*
+Funciones principales:
 * Visualizar la página principal  
 * Ver portafolios públicos del equipo  
 * Conocer la información del proyecto  
 * Explorar programadores registrados  
-* Solicitar asesorías  
 
-*Acceso restringido:* No puede crear, editar ni administrar contenido dentro del sistema.
+### Rol Usuario General (Logeado)
+* Solicitar asesorías  
+* Solicitar pertenecer al grupo de programadores
+
+Acceso restringido: No puede crear, editar ni administrar contenido dentro del sistema.
 
 ---
 
-## 7. *Módulos y Pantallas del Sistema*
+## 7. Módulos y Pantallas del Sistema
 
 * Inicio  
 * Proyectos  
@@ -93,7 +96,7 @@ Visitante con acceso limitado a información pública.
 
 ---
 
-## 8. *Flujos Principales del Usuario*
+## 8. Flujos Principales del Usuario
 
 > 1. El usuario solicita una asesoría y la información se guarda automáticamente en Firebase.  
 > 2. En Firestore Database se puede consultar el documento generado.  
@@ -105,11 +108,16 @@ Visitante con acceso limitado a información pública.
 
 ---
 
-## 9. *Fragmentos Técnicos Importantes*
+## 9. Fragmentos Técnicos Importantes
 
+<<<<<<< HEAD
 *AboutUs Component*
 ```ts
+=======
+AboutUs Component
+>>>>>>> b6e40a4cacb5ee7555d590b436dd99b724f576e0
 ts
+```ts
 // Crear usuario nuevo en Firebase Auth
 const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
 uid = cred.user.uid;
@@ -119,24 +127,39 @@ ts
 fotoURL = await this.subirImagenCloudinary(this.foto);
 ```
 
+<<<<<<< HEAD
 *Register Component*
 ```ts
+=======
+Register Component
+>>>>>>> b6e40a4cacb5ee7555d590b436dd99b724f576e0
 ts
+```ts
 // Mensaje dinámico y cerrar modal
 alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 this.cerrar.emit();
 this.resetFormulario();
+<<<<<<< HEAD
 ```
 ```ts
+=======
+
+ts
+>>>>>>> b6e40a4cacb5ee7555d590b436dd99b724f576e0
 *Admin Component*
 ts
 // Verificar rol y redirigir si no es admin
 const r = this.authService.userRole();
 this.role.set(r);
 if (!r || r !== 'admin') this.router.navigate(['/login']);
+```
 
+<<<<<<< HEAD
 ```
 *Inicio Component*
+=======
+Inicio Component
+>>>>>>> b6e40a4cacb5ee7555d590b436dd99b724f576e0
 ```ts
 
 // Peticiones simultáneas a GitHub usando forkJoin
@@ -149,7 +172,11 @@ forkJoin(requests).subscribe({
   }
 });
 ```
+<<<<<<< HEAD
 *AuthService*
+=======
+AuthService
+>>>>>>> b6e40a4cacb5ee7555d590b436dd99b724f576e0
 ts
 ```ts
 // Creación de asesoría con timestamps automáticos
@@ -159,17 +186,22 @@ await setDoc(docRef, {
   updatedAt: serverTimestamp()
 });
 ```
+<<<<<<< HEAD
 ## 10. *Conclusiones* 
 ### *Logros del proyecto*
+=======
+## 10. Conclusiones 
+### Logros del proyecto
+>>>>>>> b6e40a4cacb5ee7555d590b436dd99b724f576e0
  * Se desarrolló una aplicación funcional en Angular que gestiona portafolios, asesorías y roles de usuario. * Integración completa con Firebase para Firestore, Authentication y sincronización en tiempo real. * Implementación de notificaciones, control de acceso y reactividad.
   * Plataforma que optimiza la interacción entre usuarios y programadores. 
-  ### *Qué se aprendió* 
+  ### Qué se aprendió 
   * Uso avanzado de Angular (componentes, rutas, servicios, reactividad).
    * Integración práctica de Firebase y reglas de seguridad. 
    * Manejo de flujos reales: solicitudes, aceptación/rechazo, gestión administrativa. 
    * Arquitectura modular y escalable. 
    * Implementación de validaciones y actualizaciones dinámicas. 
-  ### *Posibles mejoras futuras* 
+  ### Posibles mejoras futuras 
   * Sistema de chat en tiempo real. 
   * Panel de estadísticas para administradores y programadores. 
   * Mejoras UI/UX.

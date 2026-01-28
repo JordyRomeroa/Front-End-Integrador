@@ -15,7 +15,7 @@
   }
 
 
-  
+
   <h2 class="text-xl font-bold mt-6 mb-3">Solicitudes Pendientes</h2>
 
   @if (pendientes().length > 0) {
@@ -41,9 +41,7 @@
 
 
 
-  <!-- ===========================================================
-        SECCIÓN DE HISTORIAL
-  ============================================================ -->
+
   <h2 class="text-xl font-bold mt-8 mb-3">Historial</h2>
 
   @if (historial().length > 0) {
@@ -69,7 +67,7 @@
               WhatsApp
             </a>
 
-           
+
 
           </div>
 
@@ -82,10 +80,6 @@
   }
 
 
-
-  <!-- ===========================================================
-        MODAL DE RESPUESTA
-  ============================================================ -->
   @if (asesorSeleccionado()) {
 
     <div class="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
@@ -96,7 +90,7 @@
         <p><strong>Usuario:</strong> {{ asesorSeleccionado()?.nombreUsuario }}</p>
         <p><strong>Teléfono:</strong> {{ asesorSeleccionado()?.telefono }}</p>
         <p><strong>Comentario:</strong> {{ asesorSeleccionado()?.mensaje }}</p>
-        
+
 
         <textarea
           class="w-full border p-2 rounded mt-3"
