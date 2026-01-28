@@ -5,8 +5,7 @@ import { CommonModule } from '@angular/common';
 
 // Componentes internos
 import { User } from './components/user/user';
-import { AboutUs } from './components/admin/AboutUs/AboutUs';
-import { Team } from './components/admin/team/team';
+import { Advice } from './components/user/advice/advice';
 
 @Component({
   selector: 'app-home',
@@ -18,19 +17,28 @@ import { Team } from './components/admin/team/team';
     RouterModule,
     CommonModule,
     User,
-    RouterLinkActive
-  ]
+    RouterLinkActive,
+    Advice
+    
+]
 })
 export class Home {
 
+  // UI
   sidebarOpen = false;
-
-  myRepos: any[] = [];
-  partnerRepos: any[] = [];
-
-  role: Role | null = null;
   currentRoute = '';
 
+
+  role: Role | null = null;
+user: any = null;
+
+
+  isLogged = false;
+  isUser = false;
+  isAdmin = false;
+  isProgrammer = false;
+
+  // State
   loading = signal(true);
   showAsesoriaModal = signal(false);
 
@@ -40,31 +48,48 @@ export class Home {
   ) {
 
     this.currentRoute = this.router.url;
-
     this.router.events.subscribe(() => {
       this.currentRoute = this.router.url;
     });
 
-    effect(() => {
-      const firebaseUser = this.authService.currentUser();
-      const loaded = this.authService.roleLoaded();
+   effect(() => {
+  const firebaseUser = this.authService.currentUser();
+  const loaded = this.authService.roleLoaded();
 
-      if (!firebaseUser) {
-        this.role = null;
-        this.loading.set(false);
-        return;
-      }
 
-      if (!loaded) return;
+  this.resetRoles();
 
-      const role = this.authService.getUserRole();
-      if (!role) return;
+  if (!firebaseUser) {
+    this.loading.set(false);
+    return;
+  }
 
-      console.log("Rol cargado:", role);
 
-      this.role = role;
-      this.loading.set(false);
-    });
+  this.user = firebaseUser;
+
+  this.isLogged = true;
+
+  if (!loaded) return;
+
+  const role = this.authService.getUserRole();
+  if (!role) return;
+
+  this.role = role;
+
+  this.isUser = role === 'user';
+  this.isAdmin = role === 'admin';
+  this.isProgrammer = role === 'programmer';
+
+  this.loading.set(false);
+});
+  }
+
+  private resetRoles() {
+    this.role = null;
+    this.isLogged = false;
+    this.isUser = false;
+    this.isAdmin = false;
+    this.isProgrammer = false;
   }
 
   toggleSidebar() {
@@ -83,7 +108,7 @@ export class Home {
   logout() {
     this.authService.logout().subscribe({
       next: () => {
-        console.log("Sesión cerrada");
+        this.resetRoles();
         this.router.navigate(['/login']);
       },
       error: (err) => console.error('Error al cerrar sesión:', err)

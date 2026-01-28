@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth, setPersistence, createUserWithEmailAndPassword, getAuth, inMemoryPersistence } from 'firebase/auth';
@@ -18,9 +18,8 @@ import axios from 'axios';
 })
 export class RegisterProgrammer implements OnChanges {
   @Output() cerrar = new EventEmitter<void>();
-  @Input() programmer: ProgramadorData | null = null; // Programador a editar
+  @Input() programmer: ProgramadorData | null = null; 
 
-  // Campos del formulario
   nombre = '';
   especialidad = '';
   descripcion = '';
@@ -28,6 +27,11 @@ export class RegisterProgrammer implements OnChanges {
   password = '';
   redes: string[] = [''];
   foto: File | null = null;
+
+  // Señales para el diálogo
+  dialogVisible = signal(false);
+  dialogMessage = signal('');
+  dialogTitle = signal('');
 
   constructor(
     private router: Router,
@@ -56,15 +60,13 @@ export class RegisterProgrammer implements OnChanges {
     return auth2;
   }
 
-  /** Subir imagen a Cloudinary y obtener URL */
   private async subirImagenCloudinary(file: File): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'preset_angular'); // tu preset unsigned
+    formData.append('upload_preset', 'preset_angular');
     formData.append('folder', 'programadores');
 
     const url = `https://api.cloudinary.com/v1_1/dfsuyz4vw/image/upload`;
-
     try {
       const response = await axios.post(url, formData);
       return response.data.secure_url;
@@ -74,23 +76,31 @@ export class RegisterProgrammer implements OnChanges {
     }
   }
 
-  /** Crear o actualizar programador */
+  private showDialog(title: string, message: string) {
+    this.dialogTitle.set(title);
+    this.dialogMessage.set(message);
+    this.dialogVisible.set(true);
+  }
+
+  cerrarDialog() {
+    this.dialogVisible.set(false);
+  }
+
   async registrarProgramador() {
     const adminUser = this.authService.currentUser();
     if (!adminUser) {
-      alert("Debes iniciar sesión como administrador.");
+      this.showDialog("Acceso denegado", "Debes iniciar sesión como administrador.");
       return;
     }
 
     if (!this.nombre || !this.especialidad || !this.contacto || (!this.programmer && !this.password)) {
-      alert("Completa todos los campos obligatorios");
+      this.showDialog("Campos incompletos", "Completa todos los campos obligatorios");
       return;
     }
 
     try {
       let uid = this.programmer?.uid;
 
-      // Crear usuario nuevo en Auth
       if (!uid) {
         const auth2 = await this.createTemporaryAuth();
         const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
@@ -98,11 +108,8 @@ export class RegisterProgrammer implements OnChanges {
         await auth2.signOut();
       }
 
-      // Subir foto a Cloudinary si existe
       let fotoURL = this.programmer?.foto || 'https://via.placeholder.com/150';
-      if (this.foto) {
-        fotoURL = await this.subirImagenCloudinary(this.foto);
-      }
+      if (this.foto) fotoURL = await this.subirImagenCloudinary(this.foto);
 
       const nuevoProgramador: ProgramadorData = {
         uid,
@@ -117,13 +124,14 @@ export class RegisterProgrammer implements OnChanges {
 
       await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
 
-      alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
+      this.showDialog("Éxito", this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 
       this.cerrar.emit();
       this.resetFormulario();
+
     } catch (error: any) {
       console.error(error);
-      alert("Error registrando programador: " + error.message);
+      this.showDialog("Error", "Ocurrió un error al registrar el programador.");
     }
   }
 
@@ -133,10 +141,7 @@ export class RegisterProgrammer implements OnChanges {
 
   agregarRed() { this.redes.push(''); }
   eliminarRed(i: number) { this.redes.splice(i, 1); }
-
-  onFotoSeleccionada(event: any) {
-    this.foto = event.target.files[0] ?? null;
-  }
+  onFotoSeleccionada(event: any) { this.foto = event.target.files[0] ?? null; }
 
   private resetFormulario() {
     this.nombre = '';

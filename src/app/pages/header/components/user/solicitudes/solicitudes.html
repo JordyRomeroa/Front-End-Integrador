@@ -1,0 +1,83 @@
+<div class="contenedor">
+
+  <h1 class="titulo">
+    📋 Mis Solicitudes
+  </h1>
+
+  @if (loading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      <p>Cargando solicitudes...</p>
+    </div>
+  }
+
+  @else if (asesorias().length === 0) {
+    <p class="empty">
+      No tienes solicitudes registradas aún.
+    </p>
+  }
+
+  @else {
+    <div class="lista">
+
+      @for (asesoria of asesorias(); track asesoria.id) {
+
+        <div
+          class="card"
+          [ngClass]="{
+            'border-pendiente': asesoria.estado === 'pendiente',
+            'border-aceptada': asesoria.estado === 'aceptada',
+            'border-rechazada': asesoria.estado === 'rechazada'
+          }">
+
+          <!-- MENSAJE -->
+          <h1 class="subtitulo">Asunto:</h1>
+          <p class="mensaje">
+            {{ asesoria.mensaje }}
+            
+          </p>
+
+          <!-- INFO -->
+          <div class="info">
+
+            <!-- PROGRAMADOR -->
+            <div class="info-item">
+              👨‍💻
+              <span>{{ asesoria.nombreProgramador }}</span>
+            </div>
+
+            <!-- FECHA -->
+            <div class="fecha">
+              📅
+              <span>
+                {{ asesoria.fecha | date:'EEEE dd MMM yyyy · HH:mm' }}
+              </span>
+            </div>
+
+          </div>
+
+          <!-- ESTADO -->
+          <span
+            class="estado"
+            [ngClass]="estadoClase(asesoria.estado)">
+
+            @if (asesoria.estado === 'pendiente') {
+              ⏳ Pendiente
+            }
+            @else if (asesoria.estado === 'aceptada') {
+              ✅ Aceptada
+            }
+            @else {
+              ❌ Rechazada
+            }
+
+          </span>
+
+        </div>
+
+      }
+
+    </div>
+  }
+
+</div>

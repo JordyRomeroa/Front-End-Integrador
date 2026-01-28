@@ -13,6 +13,7 @@ export interface Asesoria {
   telefono:string;
   correoUsuario?: string;
   nombreUsuario?: string;
+  nombreProgramador: string; 
    
 }
 

@@ -108,6 +108,7 @@ Visitante con acceso limitado a información pública.
 ## 9. *Fragmentos Técnicos Importantes*
 
 *AboutUs Component*
+```ts
 ts
 // Crear usuario nuevo en Firebase Auth
 const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
@@ -116,15 +117,17 @@ uid = cred.user.uid;
 ts
 // Subir imagen a Cloudinary
 fotoURL = await this.subirImagenCloudinary(this.foto);
-
+```
 
 *Register Component*
+```ts
 ts
 // Mensaje dinámico y cerrar modal
 alert(this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
 this.cerrar.emit();
 this.resetFormulario();
-
+```
+```ts
 *Admin Component*
 ts
 // Verificar rol y redirigir si no es admin
@@ -132,9 +135,10 @@ const r = this.authService.userRole();
 this.role.set(r);
 if (!r || r !== 'admin') this.router.navigate(['/login']);
 
-
+```
 *Inicio Component*
-ts
+```ts
+
 // Peticiones simultáneas a GitHub usando forkJoin
 const requests = this.users.map(user => this.githubService.getRepos(user));
 forkJoin(requests).subscribe({
@@ -144,17 +148,18 @@ forkJoin(requests).subscribe({
     this.cd.markForCheck();
   }
 });
-
+```
 *AuthService*
 ts
+```ts
 // Creación de asesoría con timestamps automáticos
 await setDoc(docRef, {
   ...asesoria,
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp()
 });
-
-## 9. *Conclusiones* 
+```
+## 10. *Conclusiones* 
 ### *Logros del proyecto*
  * Se desarrolló una aplicación funcional en Angular que gestiona portafolios, asesorías y roles de usuario. * Integración completa con Firebase para Firestore, Authentication y sincronización en tiempo real. * Implementación de notificaciones, control de acceso y reactividad.
   * Plataforma que optimiza la interacción entre usuarios y programadores. 

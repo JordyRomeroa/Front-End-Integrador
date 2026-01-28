@@ -1,0 +1,141 @@
+/* CONTENEDOR */
+.contenedor {
+  max-width: 900px;
+  margin: auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* TITULO */
+.titulo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #4f46e5;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* LOADING */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #c7d2fe;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* VACIO */
+.empty {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* LISTA */
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 14px;
+  border-left: 6px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* BORDES POR ESTADO */
+.border-pendiente { border-left-color: #facc15; }
+.border-aceptada { border-left-color: #22c55e; }
+.border-rechazada { border-left-color: #ef4444; }
+
+/* MENSAJE */
+.mensaje {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+/* INFO */
+.info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+/* FECHA */
+.fecha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* ESTADO */
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 6px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+/* ESTADO COLORES */
+.bg-yellow {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde047;
+}
+
+.bg-green {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.bg-red {
+  background: #fee2e2;
+  color: #7f1d1d;
+  border: 1px solid #fca5a5;
+}

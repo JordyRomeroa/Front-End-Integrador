@@ -1,127 +1,135 @@
-<div class="min-h-screen flex items-center justify-center bg-linear-to-br from-secondary to-accent p-4">
-    <div class="card w-full max-w-md bg-base-100 shadow-2xl">
-        <div class="card-body">
-            <!-- Header -->
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold text-secondary mb-2">Crear Cuenta</h1>
-                <p class="text-base-content/70">Regístrate para comenzar</p>
-            </div>
+<div
+  class="min-h-screen flex items-center justify-center
+         bg-gradient-to-br from-secondary/80 via-accent/60 to-primary/70
+         p-4"
+>
+  <div
+    class="card w-full max-w-md bg-base-100 shadow-2xl
+           rounded-2xl backdrop-blur-md border border-base-300
+           animate-fadeIn"
+  >
+    <div class="card-body space-y-4">
 
-            <!-- Mensajes de error -->
-            @if (registerResource.error()) {
-            <div class="alert alert-error mb-4">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="stroke-current shrink-0 h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                </svg>
-                <span>{{ errorMessage() }}</span>
-            </div>
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-secondary mb-1">
+          Crear Cuenta
+        </h1>
+        <p class="text-base-content/70 text-sm">
+          Regístrate para comenzar
+        </p>
+      </div>
+
+      @if (registerResource.error()) {
+        <div class="alert alert-error shadow-md">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="stroke-current shrink-0 h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Formulario -->
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="onSubmit()"
+        class="space-y-4"
+      >
+
+        <!-- Email -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Correo electrónico</span>
+          </label>
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="ejemplo@correo.com"
+            class="input input-bordered w-full"
+            [class.input-error]="email?.invalid && email?.touched"
+          />
+          @if (email?.invalid && email?.touched) {
+            <span class="text-red-500 text-sm mt-1">
+              {{ formUtils.getFieldError(registerForm,'email') }}
+            </span>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Contraseña</span>
+          </label>
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            class="input input-bordered w-full"
+            [class.input-error]="password?.invalid && password?.touched"
+          />
+          @if (password?.invalid && password?.touched) {
+            <span class="text-red-500 text-sm mt-1">
+              {{ formUtils.getFieldError(registerForm,'password') }}
+            </span>
+          }
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Confirmar contraseña</span>
+          </label>
+          <input
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="••••••••"
+            class="input input-bordered w-full"
+            [class.input-error]="confirmPassword?.invalid && confirmPassword?.touched"
+          />
+          @if (confirmPassword?.invalid && confirmPassword?.touched) {
+            <span class="text-red-500 text-sm mt-1">
+              {{ formUtils.getFieldError(registerForm,'confirmPassword') }}
+            </span>
+          }
+        </div>
+
+        <div class="form-control pt-2">
+          <button
+            type="submit"
+            class="btn btn-secondary w-full gap-2 text-lg"
+            [disabled]="loading() || registerForm.invalid"
+          >
+            @if (loading()) {
+              <span class="loading loading-spinner loading-sm"></span>
+              Creando cuenta...
+            } @else {
+              Crear Cuenta
             }
+          </button>
+        </div>
+      </form>
 
-            <!-- Formulario -->
-            <form
-                [formGroup]="registerForm"
-                (ngSubmit)="onSubmit()"
-            >
-                <!-- Email -->
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Correo electrónico</span>
-                    </label>
-                    <input
-                        type="email"
-                        formControlName="email"
-                        placeholder="ejemplo@correo.com"
-                        class="input input-bordered w-full"
-                        [class.input-error]="email?.invalid && email?.touched"
-                    />
-                    @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
-                    <span
-                        class="block text-red-500 text-sm mt-1">{{formUtils.getFieldError(registerForm,'email')}}</span>
-                    }
+      <div class="text-center pt-2">
+        <p class="text-sm text-base-content/70">
+          ¿Ya tienes cuenta?
+          <a
+            routerLink="/auth/login"
+            class="link link-secondary font-semibold ml-1"
+          >
+            Inicia sesión aquí
+          </a>
+        </p>
+      </div>
 
-                </div>
-
-                <!-- Password -->
-                <div class="form-control mt-4">
-                    <label class="label">
-                        <span class="label-text">Contraseña</span>
-                    </label>
-                    <input
-                        type="password"
-                        formControlName="password"
-                        placeholder="••••••••"
-                        class="input input-bordered w-full"
-                        [class.input-error]="password?.invalid && password?.touched"
-                    />
-                    @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-                    <span
-                        class="block text-red-500 text-sm mt-1">{{formUtils.getFieldError(registerForm,'password')}}</span>
-                    }
-
-
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="form-control mt-4">
-                    <label class="label">
-                        <span class="label-text">Confirmar Contraseña</span>
-                    </label>
-                    <input
-                        type="password"
-                        formControlName="confirmPassword"
-                        placeholder="••••••••"
-                        class="input input-bordered w-full"
-                        [class.input-error]="confirmPassword?.invalid && confirmPassword?.touched"
-                    />
-                    @if (registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched) {
-                    <span
-                        class="block text-red-500 text-sm mt-1">{{formUtils.getFieldError(registerForm,'confirmPassword')}}</span>
-                    }
-
-
-                </div>
-
-                <!-- Botón Registro -->
-                <div class="form-control mt-6">
-                    <button
-                        type="submit"
-                        class="btn btn-secondary w-full"
-                        [disabled]="loading() || registerForm.invalid"
-                    >
-                        @if (loading()) {
-                        <span class="loading loading-spinner loading-sm"></span>
-                        Creando cuenta...
-                        } @else {
-                        Crear Cuenta
-                        }
-                    </button>
-                </div>
-            </form>
-
-            <!-- Link a Login -->
-            <div class="text-center mt-4">
-                <p class="text-sm text-base-content/70">
-                    ¿Ya tienes cuenta?
-                    <a
-                        routerLink="/auth/login"
-                        routerLink="/auth/login"
-
-                        class="link link-secondary font-semibold"
-                    >
-                        Inicia sesión aquí
-                    </a>
-                </p>
-            </div>
-        </div>a
     </div>
+  </div>
 </div>

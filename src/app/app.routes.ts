@@ -36,6 +36,23 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/header/components/InicioComponent/InicioComponent').then(m => m.InicioComponent)
       },
       {
+  path: 'user',
+  loadComponent: () =>
+    import('./pages/header/components/user/user').then(m => m.User),
+  children: [
+    
+    
+    {
+      path: 'solicitudes',
+      loadComponent: () =>
+        import('./pages/header/components/user/solicitudes/solicitudes')
+          .then(m => m.Solicitudes)
+    }
+  ]
+}
+
+,
+      {
         path: 'about-us',
         loadComponent: () => import('./pages/header/components/admin/AboutUs/AboutUs').then(m => m.AboutUs)
       },

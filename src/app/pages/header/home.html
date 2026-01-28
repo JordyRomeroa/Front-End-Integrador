@@ -4,215 +4,145 @@
   <!-- LOADING -->
   <div class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
     <div class="w-16 h-16 border-4 border-red-900 border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p class="text-white text-xl font-semibold tracking-wide animate-pulse">
+    <p class="text-white text-xl font-semibold animate-pulse">
       Cargando tu experiencia...
     </p>
   </div>
 } @else {
-<!-- Contenedor principal -->
-<div class="min-h-screen w-full flex flex-col overflow-x-hidden">
-  <!-- BOTÓN HAMBURGER SOLO MÓVIL -->
-  <div class="flex justify-between items-center lg:hidden p-4">
+
+<div class="min-h-screen flex flex-col overflow-x-hidden">
+
+  <!-- HEADER MÓVIL -->
+  <header class="flex justify-between items-center lg:hidden p-4">
     <a routerLink="/home/inicio" class="text-2xl font-bold text-white">Portafolio</a>
     <button (click)="sidebarOpen = !sidebarOpen" class="text-white text-3xl">&#9776;</button>
-  </div>
+  </header>
 
-  <!-- SIDEBAR DESLIZABLE SOLO EN MÓVIL -->
+  <!-- TEMPLATE LINKS REUTILIZABLE -->
+  <ng-template #mainLinks>
+    <a routerLink="/home/inicio" class="nav-link">Inicio</a>
+    <a routerLink="/home/proyectos" class="nav-link">Proyectos</a>
+
+    @if (isUser) {
+      <a routerLink="/home/user/solicitudes" class="nav-link">Mis solicitudes</a>
+    }
+
+    @if (isAdmin) {
+      <a routerLink="/home/admin" class="nav-link">Panel Admin</a>
+    }
+
+    @if (isProgrammer) {
+      <a routerLink="/home/programmer" class="nav-link">Dashboard</a>
+    }
+  </ng-template>
+
+  <!-- SIDEBAR MÓVIL -->
   <aside
+    class="fixed inset-y-0 left-0 w-64 bg-black/70 p-6 z-40 transform transition-transform lg:hidden"
     [class.translate-x-0]="sidebarOpen"
-    [class.-translate-x-full]="!sidebarOpen"
-    class="fixed inset-y-0 left-0 w-64 bg-black/70 p-6 space-y-4 z-40 transform transition-transform duration-300 lg:hidden shadow-xl"
-  >
+    [class.-translate-x-full]="!sidebarOpen">
+
     <a routerLink="/home/inicio" class="text-2xl font-bold text-white">Portafolio</a>
-    <nav class="mt-8 flex flex-col space-y-2">
-      <a routerLink="/home/inicio" routerLinkActive="active" class="nav-link">Inicio</a>
-      <a routerLink="/home/proyectos" routerLinkActive="active" class="nav-link">Proyectos</a>
 
-      <!-- Admin -->
-      @if (role === 'admin') {
-        <div class="relative group">
-          <button class="nav-link flex items-center justify-between">Panel de control ▼</button>
-          <div class="absolute left-full top-0 hidden group-hover:block bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-            <a routerLink="/home/admin" [routerLinkActive]="['active']" class="submenu-item">Registrar Programador</a>
-          </div>
-        </div>
-      }
-
-      <!-- Programmer -->
-      @if (role === 'programmer') {
-        <div class="relative group">
-          <button class="nav-link flex items-center justify-between">Dashboard ▼</button>
-          <div class="absolute left-0 top-full hidden group-hover:flex flex-col bg-black/80 text-white rounded-lg shadow-xl py-2 w-56">
-            <a routerLink="/home/programmer/management" class="submenu-item px-4 py-2 hover:bg-red-900">Mis proyectos</a>
-            <a routerLink="/home/programmer" class="submenu-item px-4 py-2 hover:bg-red-900">Solicitudes</a>
-            <a routerLink="/home/programmer/schedules" class="submenu-item px-4 py-2 hover:bg-red-900">Horarios</a>
-            <a routerLink="/home/programmer/editprofile" class="submenu-item px-4 py-2 hover:bg-red-900">Editar Perfil</a>
-          </div>
-        </div>
-      }
+    <nav class="mt-8 flex flex-col gap-2">
+      <ng-container *ngTemplateOutlet="mainLinks"></ng-container>
     </nav>
 
-    <!-- LOGIN / LOGOUT MÓVIL -->
-    <div class="mt-auto flex flex-col items-center space-y-3">
-      @if (authService.currentUser()) {
-        <div class="user-initials">{{ getInitials(authService.currentUser()?.email ?? '') }}</div>
-        <button (click)="logout()" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-          Cerrar sesión
-        </button>
+    <div class="mt-auto flex flex-col items-center gap-3">
+      @if (isLogged) {
+        <div class="user-initials">{{ getInitials(user?.email ?? '') }}</div>
+        <button (click)="logout()" class="logout-btn">Cerrar sesión</button>
       } @else {
-        <button routerLink="/login" class="bg-red-900 text-white px-3 py-1 rounded hover:bg-red-700 transition transform hover:scale-105">
-          Iniciar sesión
-        </button>
+        <button routerLink="/login" class="logout-btn">Iniciar sesión</button>
       }
     </div>
   </aside>
 
-<nav class="hidden lg:flex w-full justify-between items-center
-     px-10 py-4 backdrop-blur-xl bg-black/40 border-b border-white/10 shadow-lg">
+  <!-- NAVBAR DESKTOP -->
+  <nav class="hidden lg:flex justify-between items-center px-10 py-4 bg-black/40 backdrop-blur-xl border-b border-white/10">
 
-  <!-- LOGO -->
-  <a routerLink="/home/inicio"
-     class="text-3xl font-bold tracking-wide text-white drop-shadow-lg">
-    Portafolio
-  </a>
+    <a routerLink="/home/inicio" class="text-3xl font-bold text-white">Portafolio</a>
 
-  <!-- LINKS -->
-  <div class="flex items-center space-x-4">
+    <div class="flex items-center gap-4">
+      <ng-container *ngTemplateOutlet="mainLinks"></ng-container>
 
-    <a routerLink="/home/inicio"
-       routerLinkActive="active-link"
-       class="nav-btn">
-      Inicio
-    </a>
-
-    <a routerLink="/home/proyectos"
-       routerLinkActive="active-link"
-       class="nav-btn">
-      Proyectos
-    </a>
-
-    <!-- ADMIN -->
-    @if (role === 'admin') {
-      <div class="group relative">
-        <button class="nav-btn flex items-center gap-1">
-          Panel Admin ▼
-        </button>
-
-        <div class="dropdown">
-          <a routerLink="/home/admin" class="dropdown-item">Registrar Programador</a>
-        </div>
-      </div>
-    }
-
-    <!-- PROGRAMMER -->
-    @if (role === 'programmer') {
-      <div class="group relative">
-        <button class="nav-btn flex items-center gap-1">
-          Dashboard ▼
-        </button>
-
-        <div class="dropdown">
-          <a routerLink="/home/programmer/management" class="dropdown-item">Mis proyectos</a>
-          <a routerLink="/home/programmer" class="dropdown-item">Solicitudes</a>
-          <a routerLink="/home/programmer/schedules" class="dropdown-item">Horarios</a>
-          <a routerLink="/home/programmer/editprofile" class="dropdown-item">Editar perfil</a>
-        </div>
-      </div>
-    }
-
-    <!-- USER ICON + LOGOUT -->
-    <div class="flex items-center gap-3">
-
-      @if (authService.currentUser()) {
-        <div class="user-chip">
-          {{ getInitials(authService.currentUser()?.email ?? '') }}
-        </div>
-
-        <button (click)="logout()"
-                class="logout-btn">
-          Cerrar sesión
-        </button>
+      @if (isLogged) {
+        <div class="user-chip">{{ getInitials(user?.email ?? '') }}</div>
+        <button (click)="logout()" class="logout-btn">Cerrar sesión</button>
       } @else {
-        <button routerLink="/login" class="logout-btn">
-          Iniciar sesión
+        <button routerLink="/login" class="logout-btn">Iniciar sesión</button>
+      }
+    </div>
+  </nav>
+
+  <!-- CONTENIDO -->
+ <main class="flex-1 p-6 mt-20">
+  <router-outlet></router-outlet>
+
+ <!-- SECCIÓN ASESORÍAS -->
+<div
+  class="mt-16 bg-gradient-to-r from-indigo-500 to-purple-600
+         rounded-2xl p-8 md:p-10 text-white shadow-xl">
+
+  <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+
+    <!-- TEXTO -->
+    <div class="md:w-2/3 text-center md:text-left space-y-4">
+
+      <h2 class="text-2xl md:text-3xl font-extrabold">
+        ¿Necesitas ayuda profesional?
+      </h2>
+
+      <p class="text-base md:text-lg opacity-90">
+        Conecta con programadores expertos, agenda tu asesoría y recibe
+        acompañamiento personalizado para tus proyectos académicos o profesionales.
+      </p>
+
+      @if (isUser) {
+        <button
+          (click)="showAsesoriaModal.set(true)"
+          class="mt-4 inline-flex items-center gap-2
+                 px-6 py-2.5 bg-white text-indigo-600
+                 rounded-xl font-semibold
+                 hover:bg-gray-100 transition-all
+                 shadow-md">
+          💬 Solicitar Asesoría
         </button>
       }
+
+    </div>
+
+    <!-- IMAGEN -->
+    <div class="md:w-1/3
+     flex justify-center">
+      <img
+        src="asesora.png"
+        alt="Asesorías"
+         class="w-40 md:w-52 drop-shadow-2xl">
     </div>
 
   </div>
-</nav>
-
-
-  <!-- HERO / CONTENIDO PRINCIPAL -->
-  <main class="hero-slide flex-1 p-6 mt-20 lg:mt-20"> <!-- mt para no tapar el navbar fijo -->
-    <router-outlet></router-outlet>
-
-    <!-- CTA Asesoría solo para user -->
-    <div class="w-full flex justify-center mt-12"> <div class="relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 shadow-2xl animate-fadeInUp w-full md:w-2/3 lg:w-1/2 transform transition-all duration-500 hover:scale-105 flex flex-col md:flex-row items-center md:items-start gap-6" > <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-3xl animate-pulse-slow"></div> <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl animate-pulse-slow"></div> <div class="w-32 h-32 md:w-40 md:h-40 shrink-0"> <img src="asesora.png" alt="GIF Asesoría" class="w-full h-full object-cover rounded-full shadow-lg" /> </div> <div class="relative z-10 text-white flex-1"> <h3 class="text-3xl md:text-4xl font-extrabold drop-shadow-lg mb-2"> ¿Necesitas <span class="text-yellow-400">asesoría personalizada?</span> </h3> <p class="mt-2 text-lg md:text-xl opacity-90"> Conecta con expertos que pueden ayudarte a impulsar tu proyecto y alcanzar tus metas. </p> <button (click)="showAsesoriaModal.set(true)" [disabled]="role === 'admin' || role === 'programmer'" class="mt-6 px-8 py-3 font-bold rounded-xl shadow-2xl bg-white text-black transition-all duration-300 flex items-center gap-3 animate-bounce hover:bg-gray-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" > <span class="text-xl">💬</span> Solicitar Asesoría </button> </div> </div> </div>
-     <!-- Modal flotante --> @if (showAsesoriaModal()) { <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50"> <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-lg relative"> <button (click)="showAsesoriaModal.set(false)" class="absolute top-2 right-2 text-red-700 font-bold text-2xl" >&times;</button> <app-user></app-user> </div> </div> }
-  </main>
-
-<footer class="footer w-screen flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 py-12 px-8 md:px-12 lg:px-16 bg-black text-white rounded-t-[3rem] shadow-[0_-5px_20px_rgba(0,0,0,0.5)] animate-fadeIn border-t border-white/10" role="contentinfo">
- <div class="flex flex-col gap-4 max-w-sm shrink-0">
- <div class="flex items-center gap-3">
- <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-extrabold text-xl shadow-lg">
- 🚀
 </div>
-<span class="text-xl font-bold">Portafolio App</span>
- </div>
-<p class="text-white/80 text-base">
- Innovando la forma de gestionar tus proyectos y conectarte con expertos.
- </p>
- </div>
 
-    <div class="flex flex-col lg:flex-row lg:justify-between lg:space-x-16 lg:w-3/4">
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-6 text-white text-sm font-medium lg:order-1">
-            <div class="flex flex-col gap-2">
-                <span class="font-bold text-lg text-red-500 mb-1">Explorar</span>
-                <a routerLink="/home/inicio" class="hover:text-red-400 transition duration-300">Inicio</a>
-                <a routerLink="/home/proyectos" class="hover:text-red-400 transition duration-300">Proyectos</a>
-                <a routerLink="/home/about-us" class="hover:text-red-400 transition duration-300">Quiénes somos</a>
-                @if (role === 'admin') {
-                    <a routerLink="/home/admin" class="hover:text-red-400 transition duration-300">Panel Admin</a>
-                }
-            </div>
+  @if (showAsesoriaModal()) {
+    <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div class="bg-white p-6 rounded-lg w-11/12 max-w-lg relative">
+        <button
+          (click)="showAsesoriaModal.set(false)"
+          class="absolute top-2 right-2 text-red-700 text-2xl">
+          &times;
+        </button>
 
-            <div class="flex flex-col gap-2">
-                <span class="font-bold text-lg text-red-500 mb-1">Servicios</span>
-                <span class="hover:text-red-400 transition duration-300">Asesoría personalizada</span>
-                <span class="hover:text-red-400 transition duration-300">Gestión de proyectos</span>
-                <span class="hover:text-red-400 transition duration-300">Consultoría</span>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <span class="font-bold text-lg text-red-500 mb-1">Contacto</span>
-                <span class="text-white/70 text-sm">cajamarcanaye@gmail.com</span>
-                <span class="text-white/70 text-sm">+593 990620997</span>
-                <span class="text-white/70 text-sm">Ecuador, Cuenca</span>
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-4 items-start mt-8 lg:mt-0 lg:items-center lg:order-2">
-            <span class="font-bold text-lg text-red-500">Síguenos</span>
-            <div class="flex gap-6 text-2xl">
-                <a href="https://facebook.com" target="_blank" aria-label="Facebook" class="text-white/80 hover:text-blue-500 transition transform hover:scale-110">
-                    <i class="fa-brands fa-facebook-f"></i>
-                </a>
-                <a href="https://www.instagram.com/jordyromero_?igsh=Z3lpZGRpMnRmNWxh" target="_blank" aria-label="Instagram" class="text-white/80 hover:text-pink-500 transition transform hover:scale-110">
-                    <i class="fa-brands fa-instagram"></i>
-                </a>
-                <a href="https://wa.me/593990620997" target="_blank" aria-label="WhatsApp" class="text-white/80 hover:text-green-500 transition transform hover:scale-110">
-                    <i class="fa-brands fa-whatsapp"></i>
-                </a>
-            </div>
-
-            <div class="text-sm text-white/50 pt-4 mt-auto w-full lg:w-auto lg:text-center border-t border-white/10 lg:border-none">
-                © 2025 MiApp. Todos los derechos reservados.
-            </div>
-        </div>
-
+        <!-- MODAL -->
+        <app-advice></app-advice>
+      </div>
     </div>
- </footer>
+  }
+</main>
+
+
+ <footer class="footer w-screen flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 py-12 px-8 md:px-12 lg:px-16 bg-black text-white rounded-t-[3rem] shadow-[0_-5px_20px_rgba(0,0,0,0.5)] animate-fadeIn border-t border-white/10" role="contentinfo"> <div class="flex flex-col gap-4 max-w-sm shrink-0"> <div class="flex items-center gap-3"> <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-extrabold text-xl shadow-lg"> 🚀 </div> <span class="text-xl font-bold">Portafolio App</span> </div> <p class="text-white/80 text-base"> Innovando la forma de gestionar tus proyectos y conectarte con expertos. </p> </div> <div class="flex flex-col lg:flex-row lg:justify-between lg:space-x-16 lg:w-3/4"> <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-6 text-white text-sm font-medium lg:order-1"> <div class="flex flex-col gap-2"> <span class="font-bold text-lg text-red-500 mb-1">Explorar</span> <a routerLink="/home/inicio" class="hover:text-red-400 transition duration-300">Inicio</a> <a routerLink="/home/proyectos" class="hover:text-red-400 transition duration-300">Proyectos</a> <a routerLink="/home/about-us" class="hover:text-red-400 transition duration-300">Quiénes somos</a> @if (role === 'admin') { <a routerLink="/home/admin" class="hover:text-red-400 transition duration-300">Panel Admin</a> } </div> <div class="flex flex-col gap-2"> <span class="font-bold text-lg text-red-500 mb-1">Servicios</span> <span class="hover:text-red-400 transition duration-300">Asesoría personalizada</span> <span class="hover:text-red-400 transition duration-300">Gestión de proyectos</span> <span class="hover:text-red-400 transition duration-300">Consultoría</span> </div> <div class="flex flex-col gap-2"> <span class="font-bold text-lg text-red-500 mb-1">Contacto</span> <span class="text-white/70 text-sm">cajamarcanaye@gmail.com</span> <span class="text-white/70 text-sm">+593 990620997</span> <span class="text-white/70 text-sm">Ecuador, Cuenca</span> </div> </div> <div class="flex flex-col gap-4 items-start mt-8 lg:mt-0 lg:items-center lg:order-2"> <span class="font-bold text-lg text-red-500">Síguenos</span> <div class="flex gap-6 text-2xl"> <a href="https://facebook.com" target="_blank" aria-label="Facebook" class="text-white/80 hover:text-blue-500 transition transform hover:scale-110"> <i class="fa-brands fa-facebook-f"></i> </a> <a href="https://www.instagram.com/jordyromero_?igsh=Z3lpZGRpMnRmNWxh" target="_blank" aria-label="Instagram" class="text-white/80 hover:text-pink-500 transition transform hover:scale-110"> <i class="fa-brands fa-instagram"></i> </a> <a href="https://wa.me/593990620997" target="_blank" aria-label="WhatsApp" class="text-white/80 hover:text-green-500 transition transform hover:scale-110"> <i class="fa-brands fa-whatsapp"></i> </a> </div> <div class="text-sm text-white/50 pt-4 mt-auto w-full lg:w-auto lg:text-center border-t border-white/10 lg:border-none"> © 2025 MiApp. Todos los derechos reservados. </div> </div> </div> </footer>
+
 </div>
 }
