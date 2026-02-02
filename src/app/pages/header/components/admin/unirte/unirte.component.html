@@ -1,126 +1,219 @@
 <section class="min-h-screen w-full flex items-center justify-center p-4 md:p-8">
-  <div class="max-w-4xl w-full bg-gradient-to-br from-white/60 to-white/30 p-6 md:p-10 rounded-2xl shadow-3xl space-y-8 backdrop-blur-md border border-white/40 transform transition-transform duration-500 hover:shadow-indigo-500/50">
+  <div class="max-w-5xl w-full bg-gradient-to-br from-white/80 to-white/40 p-6 md:p-10 rounded-2xl shadow-2xl backdrop-blur-md border border-white/40">
+    
+    @if (authService.isAdmin()) {
+      <div class="space-y-6">
+        <div class="text-center mb-6">
+          <h1 class="text-3xl font-extrabold text-indigo-900">Panel de Reclutamiento</h1>
+          <div class="flex justify-center mt-4">
+            <div class="bg-gray-200/50 p-1 rounded-xl flex gap-1 border border-gray-300">
+              <button (click)="setAdminTab('pendientes')" 
+                [class]="adminTab() === 'pendientes' ? 'bg-white shadow text-indigo-600' : 'text-gray-500'"
+                class="px-4 py-2 rounded-lg font-bold text-xs transition-all">
+                Pendientes ({{ solicitudesPendientes().length }})
+              </button>
+              <button (click)="setAdminTab('historial')" 
+                [class]="adminTab() === 'historial' ? 'bg-white shadow text-indigo-600' : 'text-gray-500'"
+                class="px-4 py-2 rounded-lg font-bold text-xs transition-all">
+                Historial
+              </button>
+            </div>
+          </div>
+        </div>
 
-    <div class="text-center">
-      <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">
-        Únete a Nuestro Grupo Selecto
-      </h1>
-      <p class="text-gray-700 text-base md:text-lg max-w-2xl mx-auto">
-        Completa el siguiente formulario para postularte como miembro de nuestro equipo de programadores.
-      </p>
-    </div>
-
-    @if (!canPostulate()) {
-      <div class="mt-6 p-4 rounded-lg bg-red-100 border border-red-400 text-red-800 text-center font-medium shadow-md">
-         **No tienes permiso para postularte, necesitas iniciar sesión.** @if (authService.currentUser()) {
+        @if (adminTab() === 'pendientes') {
+          <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm bg-white/50 animate-fade-in">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Candidato</th>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Especialidad</th>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Portafolio</th>
+                  <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                @for (s of solicitudesPendientes(); track s.id) {
+                  <tr class="hover:bg-white/40 transition-colors">
+                    <td class="px-4 py-4 text-sm">
+                      <div class="font-bold text-gray-900">{{ s.nombre }}</div>
+                      <div class="text-gray-500">{{ s.email }}</div>
+                    </td>
+                    <td class="px-4 py-4 text-sm">
+                      <span class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md font-semibold">{{ s.especialidad }}</span>
+                    </td>
+                    <td class="px-4 py-4 text-sm">
+                      <a [href]="s.portafolio" target="_blank" class="text-indigo-600 hover:text-indigo-800 underline font-medium">Link Portafolio</a>
+                    </td>
+                    <td class="px-4 py-4 text-center space-x-2">
+                      <button (click)="actualizarEstado(s.id, 'APROBADO')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md">Aprobar</button>
+                      <button (click)="actualizarEstado(s.id, 'RECHAZADO')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md">Rechazar</button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" class="text-center py-10 text-gray-500 italic">No hay solicitudes nuevas.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } 
+        
+        @else {
+          <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm bg-white/30 grayscale opacity-90 hover:grayscale-0 transition-all animate-fade-in">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-200">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Candidato</th>
+                  <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Resultado</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                @for (h of historialSolicitudes(); track h.id) {
+                  <tr class="bg-white/50">
+                    <td class="px-4 py-4 text-sm">
+                      <div class="font-bold text-gray-800">{{ h.nombre }}</div>
+                      <div class="text-xs text-gray-500">{{ h.email }}</div>
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                      <span [class]="h.estado === 'APROBADO' ? 'text-green-700' : 'text-red-700'" class="text-xs font-black border-b-2">
+                        {{ h.estado }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="2" class="text-center py-10 text-gray-400 italic">Historial vacío.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         }
+      </div>
+    } 
+
+    @else if (authService.isProgrammer()) {
+      <div class="text-center py-16 filter grayscale opacity-80">
+        <div class="text-6xl mb-6">👨‍💻</div>
+        <h1 class="text-3xl font-black text-gray-800 mb-4">Acceso Restringido</h1>
+        <p class="text-gray-600 max-w-md mx-auto mb-8">
+          Ya formas parte del equipo de programadores. No puedes enviar nuevas postulaciones ni acceder al panel de reclutamiento.
+        </p>
+        <div class="inline-block px-8 py-3 border-2 border-gray-400 text-gray-500 font-bold rounded-full uppercase tracking-widest">
+          Perfil Activo
+        </div>
       </div>
     }
 
-    <form [formGroup]="solicitudForm"
-          (ngSubmit)="enviarSolicitud()"
-          class="space-y-6"
-          [attr.aria-disabled]="!canPostulate()">
-
-      <fieldset [disabled]="!canPostulate()"> <div class="bg-gray-50/70 p-6 rounded-xl shadow-inner border border-gray-100">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Datos Personales</h2>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-            <div>
-              <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo <span class="text-red-500">*</span></label>
-              <input id="nombre" type="text" formControlName="nombre" placeholder="Ej: Juan Pérez"
-                    class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500">
-              @if (solicitudForm.get('nombre')?.invalid && (solicitudForm.get('nombre')?.dirty || solicitudForm.get('nombre')?.touched)) {
-                <p class="text-red-500 text-xs mt-1">El nombre es obligatorio.</p>
-              }
-            </div>
-
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
-              <input id="email" type="email" formControlName="email" placeholder="ejemplo@correo.com"
-                    class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500">
-              @if (solicitudForm.get('email')?.invalid && (solicitudForm.get('email')?.dirty || solicitudForm.get('email')?.touched)) {
-                <p class="text-red-500 text-xs mt-1">Debe ser un email válido.</p>
-              }
-            </div>
-          </div>
+    @else {
+      <div class="flex justify-center mb-8">
+        <div class="bg-gray-200/50 p-1 rounded-xl flex gap-1 backdrop-blur-sm border border-white/20">
+          <button (click)="setTab('formulario')" 
+            [class]="activeTab() === 'formulario' ? 'bg-white shadow-md text-indigo-600' : 'text-gray-500 hover:text-gray-700'"
+            class="px-6 py-2 rounded-lg font-bold transition-all duration-300 text-sm">
+            Postularse
+          </button>
+          <button (click)="setTab('estado')" 
+            [class]="activeTab() === 'estado' ? 'bg-white shadow-md text-indigo-600' : 'text-gray-500 hover:text-gray-700'"
+            class="px-6 py-2 rounded-lg font-bold transition-all duration-300 text-sm flex items-center gap-2">
+            Mi Estado
+            @if (miSolicitud()) {
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            }
+          </button>
         </div>
-
-        <div class="bg-gray-50/70 p-6 rounded-xl shadow-inner border border-gray-100">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Experiencia y Perfil</h2>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-
-            <div>
-              <label for="especialidad" class="block text-sm font-medium text-gray-700">Especialidad <span class="text-red-500">*</span></label>
-              <select id="especialidad" formControlName="especialidad"
-                      class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-800 disabled:bg-gray-200 disabled:text-gray-500">
-                <option value="" disabled>Selecciona tu área principal</option>
-                <option value="Frontend">Frontend (UI/UX)</option>
-                <option value="Backend">Backend (Servidores/API)</option>
-                <option value="FullStack">Full-Stack (Ambos)</option>
-                <option value="DevOps">DevOps/Cloud</option>
-                <option value="Otros">Otro</option>
-              </select>
-              @if (solicitudForm.get('especialidad')?.invalid && (solicitudForm.get('especialidad')?.dirty || solicitudForm.get('especialidad')?.touched)) {
-                <p class="text-red-500 text-xs mt-1">Seleccionar una especialidad es obligatorio.</p>
-              }
-            </div>
-
-            <div>
-              <label for="portafolio" class="block text-sm font-medium text-gray-700">URL Portafolio/GitHub <span class="text-red-500">*</span></label>
-              <input id="portafolio" type="url" formControlName="portafolio" placeholder="https://github.com/tu-usuario"
-                    class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500">
-              @if (solicitudForm.get('portafolio')?.invalid && (solicitudForm.get('portafolio')?.dirty || solicitudForm.get('portafolio')?.touched)) {
-                <p class="text-red-500 text-xs mt-1">El enlace es obligatorio y debe ser una URL válida.</p>
-              }
-            </div>
-
-          </div>
-
-          <div>
-            <label for="descripcion" class="block text-sm font-medium text-gray-700">¿Por qué quieres unirte? <span class="text-red-500">*</span></label>
-            <textarea id="descripcion" formControlName="descripcion" rows="4" placeholder="Describe brevemente tu experiencia y motivación..."
-                      class="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:bg-gray-200 disabled:text-gray-500"></textarea>
-            @if (solicitudForm.get('descripcion')?.invalid && (solicitudForm.get('descripcion')?.dirty || solicitudForm.get('descripcion')?.touched)) {
-                <p class="text-red-500 text-xs mt-1">La descripción es obligatoria.</p>
-              }
-          </div>
-        </div>
-      </fieldset>
-
-
-      <div class="pt-4">
-        <button type="submit"
-                [disabled]="solicitudForm.invalid || isSubmitting() || !canPostulate()"
-                class="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-white
-                       bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                       transition-all duration-300 transform hover:scale-[1.01]
-                       disabled:opacity-50 disabled:cursor-not-allowed">
-          @if (isSubmitting()) {
-            <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></span>
-            Enviando...
-          } @else if (!canPostulate()) {
-            Acceso Restringido
-          } @else {
-            Enviar Solicitud de Postulación
-          }
-        </button>
       </div>
 
-      @if (submitSuccess()) {
-        <div class="mt-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-medium">
-           ¡Solicitud enviada con éxito! Nos pondremos en contacto pronto.
-        </div>
-      }
-      @if (submitError()) {
-        <div class="mt-4 p-3 rounded-lg bg-red-100 text-red-800 text-center font-medium">
-           Error al enviar la solicitud. Por favor, inténtalo de nuevo.
-        </div>
+      @if (activeTab() === 'estado') {
+        @if (miSolicitud()) {
+          <div class="max-w-2xl mx-auto space-y-8 animate-fade-in">
+            <div class="text-center">
+              <h1 class="text-3xl font-extrabold text-gray-900">Estado de tu Solicitud</h1>
+              <p class="text-gray-600 mt-2">Aquí puedes ver el progreso de tu postulación al equipo.</p>
+            </div>
+
+            <div class="p-8 rounded-3xl border-2 shadow-xl bg-white/50 backdrop-blur-sm transition-all duration-500"
+                 [ngClass]="{
+                   'border-yellow-400': miSolicitud().estado === 'PENDIENTE',
+                   'border-green-500': miSolicitud().estado === 'APROBADO',
+                   'border-red-500': miSolicitud().estado === 'RECHAZADO'
+                 }">
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 flex items-center justify-center rounded-full text-2xl bg-white shadow-sm">
+                  {{ miSolicitud().estado === 'PENDIENTE' ? '⏳' : miSolicitud().estado === 'APROBADO' ? '✅' : '❌' }}
+                </div>
+                <div>
+                  <h2 class="text-xl font-bold text-gray-800 uppercase tracking-wide">{{ miSolicitud().estado }}</h2>
+                  <p class="text-sm text-gray-500">Actualizado recientemente</p>
+                </div>
+              </div>
+
+              @if (miSolicitud().estado === 'APROBADO') {
+                <div class="space-y-4 animate-fade-in">
+                  <p class="text-green-700 font-semibold text-center">¡Felicidades! Has sido aceptado en el equipo.</p>
+                  <button (click)="activarPerfilYLogin()" 
+                          class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95">
+                    🚀 Reiniciar Sesión como Programador
+                  </button>
+                </div>
+              } @else if (miSolicitud().estado === 'RECHAZADO') {
+                <p class="text-red-700 text-center">Lamentablemente tu perfil no encaja. ¡Gracias por participar!</p>
+              } @else {
+                <p class="text-yellow-800 text-center">Estamos evaluando tu portafolio muy pronto.</p>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="text-center py-20 bg-white/40 rounded-3xl border-2 border-dashed border-gray-300">
+            <p class="text-gray-500 italic">Aún no has enviado ninguna solicitud.</p>
+            <button (click)="setTab('formulario')" class="mt-4 text-indigo-600 font-bold underline cursor-pointer">Ir a postularse</button>
+          </div>
+        }
       }
 
-    </form>
+      @if (activeTab() === 'formulario') {
+        <div class="animate-fade-in">
+          <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">Únete a Nuestro Equipo</h1>
+            <p class="text-gray-700">Completa el formulario para enviarnos tu propuesta de valor.</p>
+          </div>
+
+          <form [formGroup]="solicitudForm" (ngSubmit)="enviarSolicitud()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Nombre Completo</label>
+                <input type="text" formControlName="nombre" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Correo Electrónico</label>
+                <input type="email" formControlName="email" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Especialidad</label>
+                <select formControlName="especialidad" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                  <option value="">Selecciona una...</option>
+                  <option value="Frontend">Frontend</option>
+                  <option value="Backend">Backend</option>
+                  <option value="FullStack">FullStack</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">GitHub / Portafolio (URL)</label>
+                <input type="url" formControlName="portafolio" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">¿Por qué quieres unirte?</label>
+              <textarea formControlName="descripcion" rows="4" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all"></textarea>
+            </div>
+
+            <button type="submit" [disabled]="solicitudForm.invalid || isSubmitting()" 
+                    class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-extrabold text-lg shadow-lg hover:shadow-indigo-500/50 transition-all active:scale-95 disabled:opacity-50">
+              {{ isSubmitting() ? 'Procesando Envío...' : 'Enviar Solicitud de Postulación' }}
+            </button>
+          </form>
+        </div>
+      }
+    }
   </div>
 </section>

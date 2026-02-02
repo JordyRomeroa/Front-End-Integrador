@@ -84,47 +84,65 @@ export class Advice  implements OnInit, OnDestroy {
     this.progService.refrescarTabla().catch(console.error);
   }
  async enviarAsesoria() {
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) return this.showDialog('Debes iniciar sesión para solicitar una asesoría.');
+  const currentUser = this.authService.currentUser();
+  
+  // LOGICA IGUAL A PROYECTOS: Intentar sacar el ID real de la base de datos
+  // En tu sistema, cuando el usuario se loguea en Java, el ID viene como 'id'
+  const idParaJava = currentUser?.id; 
 
-    if (!this.mensaje || !this.programadorId || !this.fecha) 
-      return this.showDialog('Debe ingresar un mensaje, seleccionar un programador y una fecha.');
+  if (!currentUser) {
+    return this.showDialog('Debes iniciar sesión para solicitar una asesoría.');
+  }
 
-    const fechaSeleccionada = new Date(this.fecha);
-    const diaSemana = fechaSeleccionada.getDay();
-    if (diaSemana === 0 || diaSemana === 6)
-      return this.showDialog('La asesoría no puede ser en fin de semana.');
+  // Si idParaJava es undefined o NaN, el backend fallará con error 500
+  if (!idParaJava || isNaN(Number(idParaJava))) {
+    console.error('Detalle del usuario sin ID:', currentUser);
+    return this.showDialog('Error: No se encontró tu ID de base de datos. Por favor, cierra sesión y vuelve a entrar.');
+  }
 
-    const hora = fechaSeleccionada.getHours();
-    if (hora < 7 || hora >= 17)
-      return this.showDialog('La asesoría debe ser entre las 07:00 y las 17:00.');
-const programador = this.programadores()
-    .find(p => p.uid === this.programadorId);
-    const nuevaAsesoria: Asesoria = {
+  if (!this.mensaje || !this.programadorId || !this.fecha) {
+    return this.showDialog('Debe ingresar un mensaje, seleccionar un programador y una fecha.');
+  }
+
+  // Validaciones de fecha...
+  const fechaSeleccionada = new Date(this.fecha);
+  if (fechaSeleccionada.getDay() === 0 || fechaSeleccionada.getDay() === 6) {
+    return this.showDialog('La asesoría no puede ser en fin de semana.');
+  }
+
+  const programador = this.programadores().find(p => p.uid === this.programadorId);
+
+  // En tu método enviarAsesoria()
+// Esto asegura el formato YYYY-MM-DDTHH:mm requerido por tu @JsonFormat
+
+const nuevaAsesoria: any = {
   mensaje: this.mensaje,
   estado: 'pendiente',
   mensajeRespuesta: '',
-  programadorId: this.programadorId,
-  nombreProgramador: programador?.nombre ?? 'Programador', 
-  usuarioId: currentUser.uid,
-  nombreUsuario:
-    currentUser.displayName ||
-    currentUser.email?.split('@')[0] ||
-    'Usuario',
-  fecha: this.fecha,
+  programadorId: Number(this.programadorId),
+  usuarioId: Number(idParaJava),
+  nombreUsuario: currentUser.nombre || currentUser.displayName,
+  fecha: this.fecha, // <--- Enviamos la fecha formateada
   telefono: this.telefono
 };
 
-
-    try {
-      const id = await this.asesoriaService.crearAsesoria(nuevaAsesoria);
-      this.showDialog(`Asesoría enviada `);
-      this.mensaje = '';
-      this.programadorId = this.programadores().length ? this.programadores()[0].uid : '';
-      this.fecha = '';
-    } catch (error) {
-      console.error(error);
-      this.showDialog('Error al enviar la asesoría.');
+  this.asesoriaService.crearAsesoria(nuevaAsesoria).subscribe({
+    next: (res) => {
+      this.showDialog(`Asesoría enviada correctamente a ${programador?.nombre}`);
+      this.limpiarFormulario();
+    },
+    error: (err) => {
+      console.error('Error Backend:', err);
+      this.showDialog('Error al guardar en el servidor. Verifica los datos.');
+    }
+  });
+}
+  private limpiarFormulario() {
+    this.mensaje = '';
+    this.fecha = '';
+    this.telefono = '';
+    if (this.programadores().length) {
+      this.programadorId = this.programadores()[0].uid;
     }
   }
 

@@ -1,347 +1,217 @@
+import { HttpClient } from "@angular/common/http";
 import { inject, Injectable, signal } from "@angular/core";
+import { Router } from "@angular/router";
 import { 
   Auth, 
-  createUserWithEmailAndPassword, 
-  GoogleAuthProvider, 
-  signInWithEmailAndPassword, 
   signInWithPopup, 
-  signOut, 
-  updatePassword, 
-  user, 
-  User ,
-  
+  GoogleAuthProvider, 
+  signOut 
 } from "@angular/fire/auth";
+import { Observable, of, tap, firstValueFrom } from "rxjs";
+import { environment } from "../environments/environment";
 
-import { 
-  Firestore, 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  setDoc, 
-  where ,
-  
-} from "@angular/fire/firestore";
-import { from, Observable } from "rxjs";
-import { Router } from "@angular/router";
-
-export type Role = 'admin' | 'programmer' | 'user';
+export type Role = 'ROLE_ADMIN' | 'ROLE_PROGRAMMER' | 'ROLE_USER' | 'admin' | 'programmer' | 'user';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-
-  private auth: Auth = inject(Auth);
-  private firestore: Firestore = inject(Firestore);
-  private router: Router = inject(Router);
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private auth = inject(Auth); 
+  private API_URL = `${environment.apiUrl}/api/auth`;
 
   // ====== SEÑALES ======
-  firebaseUser = signal<User | null | undefined>(undefined); // Firebase real
-  currentUser = signal<User | null>(null);                   // Local user
+  currentUser = signal<any | null>(null);
   userRole = signal<Role | null>(null);
+  token = signal<string | null>(null);
   roleLoaded = signal(false);
-
-  // Observable oficial de Firebase auth
-  user$ = user(this.auth);
-
-  // alias para Home
-  user = this.currentUser;
+  mustChangePassword = signal(false);
 
   constructor() {
+    this.loadStorage();
+  }
 
-    // ====== LEER LOCAL STORAGE AL ARRANCAR ======
-    const storedUser = localStorage.getItem("authUser");
-    const storedRole = localStorage.getItem("authRole") as Role | null;
+  private loadStorage() {
+  const storedUser = localStorage.getItem("user");
+  const storedToken = localStorage.getItem("auth_token");
+  const storedRole = localStorage.getItem("authRole") as Role | null;
 
-    if (storedUser) {
-      this.currentUser.set(JSON.parse(storedUser));
-    }
-
+  if (storedUser) {
+    const user = JSON.parse(storedUser);
+    // Nos aseguramos de que el id exista en la señal al recargar
+    this.currentUser.set(user);
+    this.mustChangePassword.set(user.mustChangePassword || false);
+  }
+    if (storedToken) this.token.set(storedToken);
     if (storedRole) {
       this.userRole.set(storedRole);
       this.roleLoaded.set(true);
     }
-
-    // ====== ESCUCHAR CAMBIOS DE FIREBASE (reactivo) ======
-    this.user$.subscribe(async (usr) => {
-
-      console.log("🔥 Firebase user$ emitió:", usr);
-
-      // usr puede ser undefined durante inicialización → lo guardamos
-      this.firebaseUser.set(usr);
-
-      if (usr) {
-        // usuario logueado
-        this.currentUser.set(usr);
-        localStorage.setItem("authUser", JSON.stringify(usr));
-
-        // cargar rol solo una vez
-        if (!this.roleLoaded()) {
-          await this.loadUserRole(usr.uid);
-        }
-
-      } else {
-        // no logueado
-        this.clearStorage();
-      }
-    });
   }
 
-  // ===========================================
-  // GETTERS
-  // ===========================================
-  getUserRole(): Role | null {
-    return this.userRole();
+  // ====== MÉTODOS DE COMPROBACIÓN ======
+  getUserRole(): Role | null { return this.userRole(); }
+  
+  isAdmin(): boolean {
+    const r = this.userRole();
+    // Agregamos verificación de seguridad para ignorar mayúsculas/minúsculas
+    return r?.toUpperCase() === 'ROLE_ADMIN' || r?.toLowerCase() === 'admin';
   }
 
-  isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+  isProgrammer(): boolean {
+    const r = this.userRole();
+    // Modificado para aceptar tanto el formato de DB como el normalizado
+    return r === 'ROLE_PROGRAMMER' || r === 'programmer' || r === 'ROLE_PROGRAMMER'.toLowerCase();
   }
 
-  // ===========================================
-  // LOGIN Y REGISTRO
-  // ===========================================
+  // ====== LOGIN Y REGISTRO ======
+
   register(email: string, password: string): Observable<any> {
-    return from(createUserWithEmailAndPassword(this.auth, email, password));
+    return this.http.post(`${this.API_URL}/register`, { contacto: email, password });
   }
 
-// dentro de AuthService
-mustChangePassword = signal(false);
-
-login(email: string, password: string): Observable<any> {
-  return from(
-    signInWithEmailAndPassword(this.auth, email, password).then(async (cred) => {
-      const uid = cred.user.uid;
-      const docRef = doc(this.firestore, `usuarios/${uid}`);
-      const docSnap = await getDoc(docRef);
-
-      const mustChange = docSnap.exists() ? !!docSnap.data()['mustChangePassword'] : false;
-      this.mustChangePassword.set(mustChange);
-
-      // 🔹 Devuelve un objeto simple
-      return {
-        uid: cred.user.uid,
-        email: cred.user.email,
-        displayName: cred.user.displayName,
-        mustChangePassword: mustChange
-      };
-    })
-  );
-
-
-
-
-
-}
-async changePassword(newPassword: string): Promise<void> {
-  const user = this.auth.currentUser;
-  if (!user) throw new Error('Usuario no logueado');
-
-  await updatePassword(user, newPassword);  // ⚡ correcto
-
-  // Quitar flag mustChangePassword en Firestore
-  const docRef = doc(this.firestore, `usuarios/${user.uid}`);
-  await setDoc(docRef, { mustChangePassword: false }, { merge: true });
-}
-
+  login(contacto: string, password: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/login`, { contacto, password }).pipe(
+      tap((res: any) => this.handleAuthSuccess(res))
+    );
+  }
+  
 
   async loginWithGoogle(): Promise<any> {
-  const cred = await signInWithPopup(this.auth, new GoogleAuthProvider());
-  const uid = cred.user.uid;
-  const docRef = doc(this.firestore, `usuarios/${uid}`);
-  const docSnap = await getDoc(docRef);
-
-  const mustChange = docSnap.exists() ? !!docSnap.data()['mustChangePassword'] : false;
-  this.mustChangePassword.set(mustChange);
-
-  return {
-    uid: cred.user.uid,
-    email: cred.user.email,
-    displayName: cred.user.displayName,
-    mustChangePassword: mustChange
-  };
-}
-async refreshCurrentUser() {
-  const user = this.auth.currentUser;
-  if (!user) return null;
-
-  await user.reload(); // ⚡ recarga datos de Firebase
-  this.currentUser.set(user); // ⚡ actualiza señal local
-  await this.loadUserRole(user.uid);
-  return user;
-}
-
-
-
-  logout(): Observable<void> {
-    this.clearStorage();
-    return from(signOut(this.auth));
-  }
-
-  // ===========================================
-  // MÉTODOS INTERNOS
-  // ===========================================
-  private clearStorage() {
-    localStorage.removeItem("authUser");
-    localStorage.removeItem("authRole");
-    this.currentUser.set(null);
-    this.userRole.set(null);
-    this.roleLoaded.set(false);
-  }
-
-  // ===========================================
-  // CARGAR ROL DEL USUARIO
-  // ===========================================
- async loadUserRole(uid: string) {
-  try {
-    const docRef = doc(this.firestore, `usuarios/${uid}`);
-    const docSnap = await getDoc(docRef);
-
-    let role: Role = 'user'; // valor por defecto
-
-    if (docSnap.exists()) {
-      let roleFromDb = docSnap.data()['role'];
-
-      console.log("📂 Rol en Firestore:", roleFromDb);
-
-      // Normalizar a minúsculas y validar
-      if (typeof roleFromDb === 'string') {
-        roleFromDb = roleFromDb.trim().toLowerCase();
-      }
-
-      if (roleFromDb === 'admin' || roleFromDb === 'programmer' || roleFromDb === 'user') {
-        role = roleFromDb as Role;
-      } else {
-        console.warn("⚠ Rol inválido en Firestore, se usará 'user'");
-        await setDoc(docRef, { role: 'user' }, { merge: true });
-      }
-    } else {
-      console.log("📂 Documento de usuario no existe, creando con rol 'user'");
-      await setDoc(docRef, { role: 'user' });
-    }
-
-    this.userRole.set(role);
-    this.roleLoaded.set(true);
-    localStorage.setItem("authRole", role);
-
-    console.log("🔥 Rol cargado correctamente:", role);
-
-  } catch (err) {
-    console.error("❌ Error al cargar rol:", err);
-    this.userRole.set('user');
-    this.roleLoaded.set(true);
-    localStorage.setItem("authRole", 'user');
-  }
-}
-
-
-
-
-  // ===========================================
-  // ASIGNAR ROL (ADMIN)
-  // ===========================================
-  async setUserRole(uid: string, role: Role) {
-    const ref = doc(this.firestore, `usuarios/${uid}`);
-    await setDoc(ref, { role }, { merge: true });
-
-    if (uid === this.currentUser()?.uid) {
-      this.userRole.set(role);
-      localStorage.setItem("authRole", role);
-    }
-  }
-
-  // ===========================================
-  // OBTENER PROGRAMADORES
-  // ===========================================
-  async getProgramadores(): Promise<{ uid: string; email: string }[]> {
-    const q = query(
-      collection(this.firestore, 'usuarios'),
-      where('role', '==', 'programmer')
-    );
-
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(doc => ({
-      uid: doc.id,
-      email: doc.data()['contacto'] || doc.id
-    }));
-  }
- waitForFirebaseUser(): Promise<User | null> {
-  return new Promise(resolve => {
-    const check = setInterval(() => {
-      const u = this.firebaseUser();
-
-      // Esperamos a que Firebase deje de estar en undefined
-      if (u !== undefined) {
-        clearInterval(check);
-        resolve(u);  // u puede ser null (no logueado)
-      }
-    }, 20);
-  });
-
-}
-
-// async getProgramadoresConNombre(): Promise<{ uid: string; nombre: string; foto?: string }[]> {
-//   const q = query(
-//     collection(this.firestore, 'usuarios'),
-//     where('role', '==', 'programmer')
-//   );
-
-//   const snapshot = await getDocs(q);
-
-//   return snapshot.docs.map(doc => ({
-//     uid: doc.id,
-//     nombre: doc.data()['nombre'] || 'Sin nombre',
-//     foto: doc.data()['foto'] || 'https://via.placeholder.com/40'
-//   }));
-// }
-async getProgramadoresConNombre(): Promise<{ uid: string; nombre: string }[]> {
-  const q = query(
-    collection(this.firestore, 'usuarios'),
-    where('role', '==', 'programmer')
-  );
-
-  const snapshot = await getDocs(q);
-
-  return snapshot.docs.map(doc => ({
-    uid: doc.id,
-    nombre: doc.data()['nombre'] || 'Sin nombre'
-  }));
-}
-async getNombreProgramador(uid: string): Promise<string> {
     try {
-      const docRef = doc(this.firestore, `usuarios/${uid}`);
-      const docSnap = await getDoc(docRef);
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(this.auth, provider);
+      
+      const res: any = await firstValueFrom(
+        this.http.post(`${this.API_URL}/google-login`, { 
+          contacto: cred.user.email,
+          nombre: cred.user.displayName 
+        })
+      );
 
-      // Si existe el documento y tiene nombre, lo retornamos
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        return (data && data['nombre']) ? data['nombre'] : 'Sin nombre';
-      }
-
-      // Si no existe, devolvemos 'Sin nombre'
-      return 'Sin nombre';
-
-    } catch (err) {
-      // Captura cualquier error, incluidos problemas de permisos
-      console.warn(`No se pudo obtener el nombre del programador ${uid}:`, err);
-      return 'Sin nombre';
+      if (res) this.handleAuthSuccess(res);
+      return res;
+    } catch (error) {
+      console.error("Error en Google Login:", error);
+      throw error;
     }
   }
 
+  private handleAuthSuccess(res: any) {
+  // 1. Extraemos el rol
+  const rawRole = res.roles && res.roles.length > 0 ? res.roles[0] : 'ROLE_USER';
+  let normalizedRole = rawRole.replace("ROLE_", "").toLowerCase() as Role;
+  
+  // 2. IMPORTANTE: Sincronizar ID para evitar el 'undefined'
+  // Si Java envía 'id', nos aseguramos de que Angular lo reconozca.
+  const userToStore = {
+    ...res,
+    id: res.userId, // ID numérico de Neon
+    uid: res.id?.toString() // Mantenemos uid como string del ID para no romper componentes viejos
+  };
 
+  // 3. Persistencia
+  localStorage.setItem("auth_token", res.token);
+  localStorage.setItem("authRole", normalizedRole);
+  localStorage.setItem("user", JSON.stringify(userToStore));
 
-waitForRoleLoaded(): Promise<void> {
-  return new Promise(resolve => {
-    const t = setInterval(() => {
-      if (this.roleLoaded()) {
-        clearInterval(t);
-        resolve();
-      }
-    }, 50);
-  });
+  // 4. Actualización de señales
+  this.token.set(res.token);
+  this.userRole.set(normalizedRole);
+  this.currentUser.set(userToStore); // Seteamos el objeto con el ID asegurado
+  this.mustChangePassword.set(res.mustChangePassword || false);
+  this.roleLoaded.set(true);
+
+  console.log("Login exitoso. ID de Usuario Java:", userToStore.id);
 }
+
+  // ====== ACTUALIZACIÓN DE CONTRASEÑA ======
+
+  async changePassword(newPassword: string): Promise<any> {
+    const user = this.currentUser();
+    const contacto = user?.email || user?.contacto || user?.username;
+    
+    if (!contacto) {
+      throw new Error("No se encontró el identificador del usuario.");
+    }
+    return this.updatePassword(contacto, newPassword);
+  }
+// En auth.service.ts añadir:
+
+updateProfile(userData: any): Observable<any> {
+  // Enviamos los datos al nuevo endpoint de actualización propia
+  return this.http.put(`http://localhost:8080/api/users/profile/update`, userData).pipe(
+    tap((res: any) => {
+      // Actualizamos la señal del usuario actual con los nuevos datos
+      this.currentUser.set(res);
+      localStorage.setItem("user", JSON.stringify(res));
+    })
+  );
+}
+  async updatePassword(contacto: string, newPassword: string): Promise<any> {
+    const body = { contacto, newPassword };
+    return firstValueFrom(
+      this.http.put(`${this.API_URL}/update-password`, body, { 
+        responseType: 'text' 
+      })
+    );
+  }
+
+  // ====== OTROS MÉTODOS ======
+
+  // En auth.service.ts
+async refreshCurrentUser() {
+  // Cambiamos la URL para apuntar al controlador de usuarios, no al de auth
+  const res = await firstValueFrom(
+    this.http.get(`http://localhost:8080/api/users/me`)
+  );
+  this.currentUser.set(res);
+  localStorage.setItem("user", JSON.stringify(res)); // Actualizamos el storage también
+  return res;
+}
+
+ logout(): Observable<void> {
+    // EN LUGAR DE: localStorage.clear();
+    // USAMOS:
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("authRole");
+    localStorage.removeItem("user");
+    
+    // Al NO borrar "app_welcome_v1_...", la marca de bienvenida persistirá.
+
+    this.token.set(null);
+    this.userRole.set(null);
+    this.currentUser.set(null);
+    this.roleLoaded.set(false);
+    signOut(this.auth);
+    this.router.navigate(['/login']);
+    return of(undefined);
+  }
+  async getNombreProgramador(uid: string): Promise<string> {
+    try {
+      const res: any = await firstValueFrom(
+        this.http.get(`${this.API_URL}/users/${uid}`)
+      );
+      return res?.nombre || 'Sin nombre';
+    } catch (error) {
+      console.error("Error al obtener nombre del programador:", error);
+      return 'Sin nombre';
+    }
+  }
+  // En auth-service.ts añade este método:
+isUser(): boolean {
+  const r = this.userRole();
+  // Solo es usuario si no es admin ni programador y está logueado
+  return this.token() !== null && !this.isAdmin() && !this.isProgrammer();
+}
+// Dentro de ec.edu.ups.icc.proyectofinal.services.AuthService
+
+// ... otros métodos existentes
+
+isLogged(): boolean {
+  return this.token() !== null;
+}
+
 
 }

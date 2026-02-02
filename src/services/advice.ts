@@ -1,5 +1,8 @@
-import { Injectable } from '@angular/core';
-import { collection, doc, setDoc, updateDoc, serverTimestamp, Firestore } from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AsesoriaConId } from '../app/pages/interface/asesoria';
+import { environment } from '../environments/environment';
 
 export interface Asesoria {
   mensaje: string;
@@ -7,53 +10,37 @@ export interface Asesoria {
   mensajeRespuesta: string;
   programadorId: string;
   usuarioId: string;
-  createdAt?: any;
-  updatedAt?: any;
   fecha?: string;
-  telefono:string;
-  correoUsuario?: string;
+  telefono: string;
   nombreUsuario?: string;
-  nombreProgramador: string; 
-   
+  nombreProgramador: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AsesoriaService {
+  private http = inject(HttpClient);
+  // URL de tu controlador en Java
+private API_URL = `${environment.apiUrl}/api/asesorias`;
+  constructor() {}
 
-  private asesoriasRef;
-
-  constructor(private firestore: Firestore) {
-    this.asesoriasRef = collection(this.firestore, 'asesorias');
+  
+  // Creación vía Backend
+  crearAsesoria(asesoria: Asesoria): Observable<any> {
+    return this.http.post(this.API_URL, asesoria);
   }
-
-  async crearAsesoria(asesoria: Asesoria) {
-    const docRef = doc(this.asesoriasRef);
-    await setDoc(docRef, {
-      ...asesoria,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-    return docRef.id;
-  }
-
-  async actualizarAsesoria(id: string, data: Partial<Asesoria>) {
-  const docRef = doc(this.asesoriasRef, id);
-
-  const allowedKeys = ['estado', 'mensaje', 'mensajeRespuesta', 'fecha', 'telefono'];
-  const filteredData: any = {};
-
-  Object.keys(data).forEach(key => {
-    if (allowedKeys.includes(key)) {
-      filteredData[key] = (data as any)[key];
-    }
-  });
-
-  await updateDoc(docRef, {
-    ...filteredData,
-    updatedAt: serverTimestamp()
-  });
+// En tu AsesoriaService (usualmente advice.ts o asesoria.service.ts)
+// En advice.ts (Servicio)
+obtenerAsesoriasPorUsuario(userId: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.API_URL}/usuario/${userId}`);
 }
-
+obtenerAsesoriasPorProgramador(id: number): Observable<any[]> {
+  // Asegúrate de que la URL coincida con tu AdviceController de Java
+  return this.http.get<any[]>(`http://localhost:8080/api/asesorias/programador/${id}`);
+}
+  // Actualización vía Backend (PUT)
+  actualizarAsesoria(id: string, data: Partial<Asesoria>): Observable<any> {
+    return this.http.put(`${this.API_URL}/${id}`, data);
+  }
 }

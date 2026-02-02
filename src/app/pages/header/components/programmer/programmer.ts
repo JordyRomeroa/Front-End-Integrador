@@ -1,14 +1,16 @@
 import { Component, effect, signal, inject } from '@angular/core';
-import { NgIf, NgFor, CommonModule } from '@angular/common';
-import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService, Role } from '../../../../../services/auth-service';
-import { collection, getDocs, query, where, Firestore } from '@angular/fire/firestore';
+import { ProyectoService } from '../../../../../services/proyecto-service'; 
 import { AsesoriaService } from '../../../../../services/advice';
 import { AsesoriaConId } from '../../../interface/asesoria';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
+// Definimos la interfaz aquí o impórtala si ya existe
 interface Proyecto {
-  id: string;
+  id: string | number;
   nombre: string;
   descripcion: string;
   tipo: string;
@@ -22,131 +24,92 @@ interface Proyecto {
   templateUrl: './programmer.html',
   styleUrls: ['./programmer.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule,RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
 })
 export class Programmer {
   role: Role | null = null;
   proyectos = signal<Proyecto[]>([]);
-  asesorias = signal<AsesoriaConId[]>([]); // <-- señal con AsesoriaConId
-  private firestore = inject(Firestore);
+  asesorias = signal<AsesoriaConId[]>([]);
+  
+  // SOLUCIÓN AL ERROR TS2300: Solo usamos inject O constructor, no ambos.
+  private proyectoService = inject(ProyectoService);
+  private asesoriaService = inject(AsesoriaService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(
-    public authService: AuthService,
-    private router: Router,
-    private asesoriaService: AsesoriaService
-  ) {
+  constructor() {
+    // 1. FORZAR REFRESCO: Igual que en Mi Perfil para obtener el ID real de Java
+    this.authService.refreshCurrentUser().then((user: any) => {
+      console.log('🔄 Usuario sincronizado:', user?.id);
+    });
+
     effect(() => {
-      if (this.authService.roleLoaded()) {
-        this.role = this.authService.getUserRole();
-        console.log('Programmer - Rol actualizado:', this.role);
-        if (this.role === 'programmer') {
-          this.cargarProyectos();
-          this.cargarAsesorias();
-        }
+      // SOLUCIÓN AL ERROR TS2339: Casteamos a 'any' para que TS no chille por el .id
+      const user = this.authService.currentUser() as any;
+      const role = this.authService.getUserRole();
+
+      // 2. VALIDACIÓN: Esperamos a que el ID exista
+      if (!user || !user.id) {
+        console.warn('⏳ Esperando ID del programador...');
+        return;
+      }
+
+      if (this.authService.roleLoaded() && (role === 'programmer' || role === 'ROLE_PROGRAMMER')) {
+        this.role = role;
+        this.cargarProyectos(user.id);
+        this.cargarAsesorias(user.id);
       }
     });
   }
 
-  async cargarProyectos() {
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) return;
-
+ async cargarProyectos(userId: number | string) {
     try {
-      const proyectosCol = collection(this.firestore, 'proyectos');
-      const q = query(proyectosCol, where('assignedTo', '==', currentUser.uid));
-      const snapshot = await getDocs(q);
-
-      const lista: Proyecto[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        nombre: doc.data()['nombre'] || '',
-        descripcion: doc.data()['descripcion'] || '',
-        tipo: doc.data()['tipo'] || '',
-        tecnologias: doc.data()['tecnologias'] || [],
-        repo: doc.data()['repo'] || '#',
-        deploy: doc.data()['deploy'] || '#',
-      }));
-
-      this.proyectos.set(lista);
-      console.log('Proyectos cargados:', lista);
-
+      // Convertimos explícitamente a número para que el servicio no de error
+      const idNumerico = Number(userId); 
+      const lista = await this.proyectoService.obtenerProyectos(idNumerico);
+      this.proyectos.set(lista as any);
+      console.log('✅ Proyectos cargados:', lista);
     } catch (err) {
-      console.error('Error al cargar proyectos:', err);
+      console.error('❌ Error proyectos:', err);
     }
   }
 
-  async cargarAsesorias() {
-    const currentUser = this.authService.currentUser();
-    if (!currentUser) return;
-
+  async cargarAsesorias(userId: number | string) {
     try {
-      const asesoriasCol = collection(this.firestore, 'asesorias');
-      const q = query(asesoriasCol, where('programadorId', '==', currentUser.uid));
-      const snapshot = await getDocs(q);
-
-      const lista: AsesoriaConId[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as AsesoriaConId));
-
+      // Convertimos explícitamente a número aquí también
+      const idNumerico = Number(userId);
+      const lista = await firstValueFrom(this.asesoriaService.obtenerAsesoriasPorProgramador(idNumerico));
       this.asesorias.set(lista);
-      console.log('Asesorías cargadas:', lista);
-
+      console.log('✅ Asesorías cargadas:', lista);
     } catch (err) {
-      console.error('Error al cargar asesorías:', err);
+      console.error('❌ Error asesorías:', err);
     }
   }
-// Dentro de la clase Programmer
-motivosRechazo: { [asesoriaId: string]: string } = {}; // para guardar temporalmente cada motivo
-showRechazo: { [asesoriaId: string]: boolean } = {};
 
-async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
-  try {
-    const mensajeRespuesta = this.motivosRechazo[asesoriaId]?.trim() || '';
+  // --- MÉTODOS DE LÓGICA MANTENIDOS ---
 
-    if (nuevoEstado === 'rechazada' && !mensajeRespuesta) {
-      alert('Debe proporcionar un motivo para rechazar la asesoría.');
-      return;
+  motivosRechazo: { [asesoriaId: string]: string } = {}; 
+  showRechazo: { [asesoriaId: string]: boolean } = {};
+
+  async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
+    try {
+      const mensajeRespuesta = this.motivosRechazo[asesoriaId]?.trim() || '';
+      if (nuevoEstado === 'rechazada' && !mensajeRespuesta) {
+        alert('Debe proporcionar un motivo para rechazar la asesoría.');
+        return;
+      }
+      const datosActualizar = { estado: nuevoEstado, mensajeRespuesta };
+      await firstValueFrom(this.asesoriaService.actualizarAsesoria(asesoriaId, datosActualizar));
+      
+      this.asesorias.update(list => list.map(a => a.id === asesoriaId ? { ...a, ...datosActualizar } : a));
+      delete this.motivosRechazo[asesoriaId];
+      delete this.showRechazo[asesoriaId];
+    } catch (err) {
+      console.error('Error al actualizar estado:', err);
     }
-
-    const datosActualizar = { 
-      estado: nuevoEstado,
-      mensajeRespuesta
-    };
-
-    await this.asesoriaService.actualizarAsesoria(asesoriaId, datosActualizar);
-
-    // Actualizamos la señal local
-    const updatedList = this.asesorias().map(a => 
-      a.id === asesoriaId ? { ...a, ...datosActualizar } : a
-    );
-    this.asesorias.set(updatedList);
-
-    // Limpiamos el campo
-    delete this.motivosRechazo[asesoriaId];
-    // Ocultamos el textarea
-delete this.showRechazo[asesoriaId];
-
-
-  } catch (err) {
-    console.error('Error al actualizar estado de la asesoría:', err);
   }
-}
-
-
-
-
-
 
   logout() {
-    this.authService.logout().subscribe({
-      next: () => {
-        console.log('Sesión cerrada');
-        this.authService.currentUser.set(null);
-        this.authService.userRole.set(null);
-        this.authService.roleLoaded.set(false);
-        this.router.navigate(['/login']);
-      },
-      error: (err) => console.error('Error al cerrar sesión:', err),
-    });
+    this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }

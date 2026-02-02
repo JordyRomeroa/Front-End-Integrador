@@ -1,44 +1,29 @@
-import { CanActivate, Router } from "@angular/router";
-import { Injectable } from "@angular/core";
+import { CanActivate, CanActivateFn, Router } from "@angular/router";
+import { inject, Injectable } from "@angular/core";
 import { AuthService } from "../../services/auth-service";
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AdminGuard implements CanActivate {
+export const adminGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-  constructor(
-    private auth: AuthService,
-    private router: Router
-  ) {}
+  console.log("🛡️ [AdminGuard] Verificando acceso...");
 
-  async canActivate(): Promise<boolean> {
-
-    console.log("🛡️ [AdminGuard] Verificando acceso...");
-
-    // Esperamos al usuario autenticado real
-    const user = await this.auth.waitForFirebaseUser();
-
-    if (!user) {
-      console.log("❌ No hay usuario. Redirigiendo a login...");
-      this.router.navigate(['/login']);
-      return false;
-    }
-
-    // Esperamos a que el rol esté completamente cargado
-    await this.auth.waitForRoleLoaded();
-
-    const role = this.auth.getUserRole();
-    console.log("🛡️ Rol detectado:", role);
-
-    // PERMITIR SOLO ADMIN
-    if (role === 'admin') {
-      console.log("🟩 Acceso autorizado como ADMIN");
-      return true;
-    }
-
-    console.log("⛔ Acceso DENEGADO. No es admin.");
-    this.router.navigate(['/home']);
+  if (!authService.token()) {
+    console.log("❌ No hay token. Redirigiendo a login...");
+    router.navigate(['/login']);
     return false;
   }
-}
+
+  const role = authService.userRole();
+  console.log("🛡️ Rol detectado en señal:", role);
+
+  // === CAMBIO AQUÍ: Aceptar 'admin' o 'ROLE_ADMIN' ===
+  if (role === 'ROLE_ADMIN' || role === 'admin') {
+    console.log("🟩 Acceso autorizado como ADMIN");
+    return true;
+  }
+
+  console.log("⛔ Acceso DENEGADO. No es admin.");
+  router.navigate(['/home']);
+  return false;
+};

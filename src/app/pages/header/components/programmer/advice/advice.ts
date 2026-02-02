@@ -8,7 +8,7 @@ import { AuthService, Role } from '../../../../../../services/auth-service';
 import { AsesoriaService } from '../../../../../../services/advice';
 
 @Component({
-  selector: 'app-advice',
+  selector: 'app-programmer-advice',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './advice.html',
@@ -48,41 +48,68 @@ export class Advice {
     }
   }
 
-  async cargarAsesorias() {
+ async cargarAsesorias() {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
-    try {
-      const asesoriasCol = collection(this.firestore, 'asesorias');
-      let q;
+    // Obtener el ID numérico (en Java los IDs suelen ser números)
+    // Si tu uid de AuthService es el ID de la base de datos Java:
+    const userId = currentUser.id || currentUser.uid; 
 
-      if (this.role === 'programmer') {
-        q = query(asesoriasCol, where('programadorId', '==', currentUser.uid));
-      } else if (this.role === 'user') {
-        q = query(asesoriasCol, where('usuarioId', '==', currentUser.uid));
-      } else {
-        return;
+    // LLAMADA AL BACKEND JAVA EN LUGAR DE FIREBASE
+    this.asesoriaService.obtenerAsesoriasPorProgramador(userId).subscribe({
+      next: (lista: AsesoriaConId[]) => {
+        this.asesorias.set(lista);
+
+        // Separar pendientes y revisadas
+        this.pendientes.set(lista.filter(a => a.estado === 'pendiente'));
+        this.historial.set(lista.filter(a => a.estado !== 'pendiente'));
+
+        if (this.role === 'user') {
+          this.mostrarNotificacionesPendientesUsuario(lista);
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar asesorías desde Java:', err);
       }
+    });
+  }
 
-      const snapshot = await getDocs(q);
-      const lista: AsesoriaConId[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as AsesoriaConId));
+  // Cambiar enviarRespuesta para usar el Observable de Angular
+  async enviarRespuesta(estado: 'aceptada' | 'rechazada') {
+    const asesoria = this.asesorSeleccionado();
+    if (!asesoria) return;
 
-      this.asesorias.set(lista);
-
-      // separar pendientes y revisadas
-      this.pendientes.set(lista.filter(a => a.estado === 'pendiente'));
-      this.historial.set(lista.filter(a => a.estado !== 'pendiente'));
-
-      if (this.role === 'user') {
-        this.mostrarNotificacionesPendientesUsuario(lista);
-      }
-
-    } catch (err) {
-      console.error('Error al cargar asesorías:', err);
+    const msj = this.mensajeRespuesta().trim();
+    if (!msj) {
+      alert('Escribe un mensaje para el usuario.');
+      return;
     }
+
+    const datosActualizar = {
+      estado,
+      mensajeRespuesta: msj
+    };
+
+    // Usar subscribe porque el servicio devuelve un Observable
+    this.asesoriaService.actualizarAsesoria(asesoria.id, datosActualizar).subscribe({
+      next: (res) => {
+        const actualizada = this.asesorias().map(a =>
+          a.id === asesoria.id ? { ...a, ...datosActualizar } : a
+        );
+
+        this.asesorias.set(actualizada);
+        this.pendientes.set(actualizada.filter(a => a.estado === 'pendiente'));
+        this.historial.set(actualizada.filter(a => a.estado !== 'pendiente'));
+
+        alert(estado === 'aceptada' ? 'Solicitud aceptada.' : 'Solicitud rechazada.');
+        this.asesorSeleccionado.set(null);
+      },
+      error: (err) => {
+        console.error('Error en el PUT:', err);
+        alert('Error al actualizar en el servidor Java');
+      }
+    });
   }
 
   private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
@@ -101,46 +128,7 @@ export class Advice {
   }
 
 
-  async enviarRespuesta(estado: 'aceptada' | 'rechazada') {
-    const asesoria = this.asesorSeleccionado();
-    if (!asesoria) return;
-
-    const msj = this.mensajeRespuesta().trim();
-    if (!msj) {
-      alert('Escribe un mensaje para el usuario.');
-      return;
-    }
-
-    const datosActualizar = {
-      estado,
-      mensajeRespuesta: msj
-    };
-
-    try {
-      await this.asesoriaService.actualizarAsesoria(asesoria.id, datosActualizar);
-
-      // actualizar en memoria
-      const actualizada = this.asesorias().map(a =>
-        a.id === asesoria.id ? { ...a, ...datosActualizar } : a
-      );
-
-      this.asesorias.set(actualizada);
-      this.pendientes.set(actualizada.filter(a => a.estado === 'pendiente'));
-      this.historial.set(actualizada.filter(a => a.estado !== 'pendiente'));
-
-      if (estado === 'aceptada') {
-        alert('Solicitud aceptada. Ahora puedes contactar al cliente.');
-      } else {
-        alert('Solicitud rechazada.');
-      }
-
-      this.asesorSeleccionado.set(null);
-
-    } catch (err) {
-      console.error(err);
-      alert('Error al actualizar');
-    }
-  }
+  
 
 
   getWhatsAppLink(data: AsesoriaConId): string {

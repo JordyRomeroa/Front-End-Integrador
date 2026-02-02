@@ -1,6 +1,6 @@
 
 export interface Proyecto {
-  id?: string;
+  id?: number;
   nombre: string;
   descripcion: string;
   tipo: string;
@@ -8,5 +8,6 @@ export interface Proyecto {
   tecnologias: string[];
   repo: string;
   deploy: string;
-  assignedTo: string; // uid del programador
+  assignedTo?: string;   // Opcional para que no de error al crear el objeto de envío
+  assignedToId?: number; // Añade este para el Backend
 }

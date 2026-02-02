@@ -1,11 +1,12 @@
-import { Component, effect, signal } from '@angular/core';
+import { Component, effect, signal, OnInit } from '@angular/core';
 import { AuthService, Role } from '../../../services/auth-service';
 import { Router, RouterLinkActive, RouterModule, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 // Componentes internos
 import { User } from './components/user/user';
-import { Advice } from './components/user/advice/advice';
+import { Advice as UserAdviceModal } from './components/user/advice/advice';
+import { Advice } from './components/programmer/advice/advice';
 
 @Component({
   selector: 'app-home',
@@ -18,20 +19,20 @@ import { Advice } from './components/user/advice/advice';
     CommonModule,
     User,
     RouterLinkActive,
+    UserAdviceModal,
     Advice
-    
-]
+  ]
 })
-export class Home {
+export class Home implements OnInit {
+  showWelcomeBanner = signal(false);
+  private bannerCheckDone = false; // Evita que el banner reaparezca en la misma sesión
 
   // UI
   sidebarOpen = false;
   currentRoute = '';
 
-
   role: Role | null = null;
-user: any = null;
-
+  user: any = null;
 
   isLogged = false;
   isUser = false;
@@ -46,42 +47,57 @@ user: any = null;
     public authService: AuthService,
     private router: Router
   ) {
-
     this.currentRoute = this.router.url;
     this.router.events.subscribe(() => {
       this.currentRoute = this.router.url;
     });
 
-   effect(() => {
-  const firebaseUser = this.authService.currentUser();
-  const loaded = this.authService.roleLoaded();
+    effect(() => {
+      const currentUser = this.authService.currentUser();
+      const loaded = this.authService.roleLoaded();
 
+      // SI NO HAY USUARIO
+      if (!currentUser) {
+        this.resetRoles();
+        this.loading.set(false);
+        return;
+      }
 
-  this.resetRoles();
+      // SI LOS ROLES AÚN NO CARGAN
+      if (!loaded) return;
 
-  if (!firebaseUser) {
-    this.loading.set(false);
-    return;
+      // MAPEO DE USUARIO
+      this.user = {
+        ...currentUser,
+        email: currentUser.email || currentUser.contacto,
+        nombre: currentUser.nombre || 'Usuario'
+      };
+
+      const roleName = this.authService.getUserRole();
+
+      this.isAdmin = roleName === 'admin' || roleName === 'ROLE_ADMIN';
+      this.isProgrammer = roleName === 'programmer' || roleName === 'ROLE_PROGRAMMER';
+      this.isUser = !this.isAdmin && !this.isProgrammer && (roleName === 'user' || roleName === 'ROLE_USER');
+
+      // --- LÓGICA DE BIENVENIDA REFORZADA ---
+      // Solo entra si es programador, tiene email y NO hemos hecho el chequeo ya
+      if (this.isProgrammer && this.user?.email && !this.bannerCheckDone) {
+        const hasSeenWelcome = localStorage.getItem(`welcome_seen_${this.user.email}`);
+        
+        if (!hasSeenWelcome) {
+          this.showWelcomeBanner.set(true);
+        }
+        // Bloqueamos futuras ejecuciones del banner en esta carga de página
+        this.bannerCheckDone = true; 
+      }
+
+      this.isLogged = true;
+      this.loading.set(false);
+    });
   }
 
-
-  this.user = firebaseUser;
-
-  this.isLogged = true;
-
-  if (!loaded) return;
-
-  const role = this.authService.getUserRole();
-  if (!role) return;
-
-  this.role = role;
-
-  this.isUser = role === 'user';
-  this.isAdmin = role === 'admin';
-  this.isProgrammer = role === 'programmer';
-
-  this.loading.set(false);
-});
+  ngOnInit() {
+    // Ya no es necesario llamar a checkFirstTimeProgrammer aquí, el effect lo hace mejor
   }
 
   private resetRoles() {
@@ -90,6 +106,8 @@ user: any = null;
     this.isUser = false;
     this.isAdmin = false;
     this.isProgrammer = false;
+    this.showWelcomeBanner.set(false);
+    this.bannerCheckDone = false;
   }
 
   toggleSidebar() {
@@ -117,5 +135,36 @@ user: any = null;
 
   get showAsesoria(): boolean {
     return this.currentRoute === '/home/inicio';
+  }
+
+  // Se mantiene por compatibilidad, corregido para usar email
+  checkFirstTimeProgrammer() {
+    if (this.isProgrammer && this.user?.email && !this.bannerCheckDone) {
+      const hasSeenWelcome = localStorage.getItem(`welcome_seen_${this.user.email}`);
+      if (!hasSeenWelcome) {
+        this.showWelcomeBanner.set(true);
+      }
+      this.bannerCheckDone = true;
+    }
+  }
+
+  dismissWelcome() {
+    if (this.user?.email) {
+      // Guardamos la marca permanente
+      localStorage.setItem(`welcome_seen_${this.user.email}`, 'true');
+    }
+    this.showWelcomeBanner.set(false);
+    this.bannerCheckDone = true; // Bloqueo extra
+  }
+
+  activarPerfilYLogin() {
+    // Borramos datos de sesión, pero respetamos las marcas de bienvenida
+    localStorage.removeItem('token'); 
+    localStorage.removeItem('currentUser'); 
+    sessionStorage.clear();
+
+    this.router.navigate(['/login']).then(() => {
+      window.location.reload();
+    });
   }
 }

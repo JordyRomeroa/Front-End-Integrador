@@ -8,48 +8,65 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './mustChangePassword.html',
   styleUrls: ['./mustChangePassword.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports:[FormsModule]
+  standalone: true, // Asegúrate de que sea standalone si lo usas así
+  imports: [FormsModule]
 })
 export class MustChangePassword {
-  // Señal para enlazar el input de la nueva contraseña
   newPassword = signal('');
   confirmPassword = signal('');
-
   mensaje = signal('');
 
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // Método para cambiar la contraseña
- async cambiarContrasena() {
-  const pwd = this.newPassword();
-  const confirm = this.confirmPassword();
+  async cambiarContrasena() {
+    const pwd = this.newPassword();
+    const confirm = this.confirmPassword();
 
-  if (!pwd || !confirm) {
-    this.mensaje.set('Debe ingresar ambas contraseñas');
+    // 1. Validaciones básicas
+    if (!pwd || !confirm) {
+      this.mensaje.set('Debe ingresar ambas contraseñas');
+      return;
+    }
+
+    if (pwd !== confirm) {
+      this.mensaje.set('Las contraseñas no coinciden');
+      return;
+    }
+
+    // 2. Obtener el contacto del localStorage
+    const userJson = localStorage.getItem('user');
+    if (!userJson) {
+      this.mensaje.set('Sesión expirada. Inicie sesión de nuevo.');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const user = JSON.parse(userJson);
+// CAMBIO AQUÍ: Usar email o contacto según lo que exista
+const contacto = user.email || user.contacto; 
+
+if (!contacto) {
+    this.mensaje.set('No se pudo identificar al usuario.');
     return;
-  }
-
-  if (pwd !== confirm) {
-    this.mensaje.set('Las contraseñas no coinciden');
-    return;
-  }
-
-  try {
-    // 1️⃣ Cambiar la contraseña en Firebase
-    await this.authService.changePassword(pwd);
-
-    // 2️⃣ Refrescar el usuario para actualizar la señal currentUser
-    await this.authService.refreshCurrentUser();
-
-    // 3️⃣ Redirigir a Home
-    this.router.navigate(['/home']);
-    this.mensaje.set('Contraseña cambiada con éxito');
-
-  } catch (err: any) {
-    console.error(err);
-    this.mensaje.set('Error al cambiar la contraseña. Intente nuevamente.');
-  }
 }
 
+try {
+    // Es mejor llamar a la función genérica del servicio que ya maneja la lógica
+    await this.authService.updatePassword(contacto, pwd);
+
+      // 4. Actualizar el estado local para que el Guard nos deje pasar
+      user.mustChangePassword = false;
+      localStorage.setItem('user', JSON.stringify(user));
+
+      this.mensaje.set('Contraseña cambiada con éxito');
+      
+      // 5. Redirigir según el rol
+      this.router.navigate(['/home']);
+
+    } catch (err: any) {
+      console.error("Error en el componente:", err);
+      this.mensaje.set('Error al conectar con el servidor.');
+    }
+  }
 }

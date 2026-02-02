@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { of } from 'rxjs';
+import { from, of } from 'rxjs';
 import { FormUtils } from '../../../../shared/form-utils';
-import { AuthService } from '../../../../../services/auth-service';
+import { ProgramadorService } from '../../../../../services/programmer-service';
 
 @Component({
   selector: 'app-register-page',
@@ -16,55 +16,60 @@ import { AuthService } from '../../../../../services/auth-service';
 })
 export class RegisterPage {
   private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
+  private programadorService = inject(ProgramadorService); // Inyectamos el servicio del Backend
   private router = inject(Router);
 
   registerForm: FormGroup;
-
-  // Signal para disparar el registro
-  private registerTrigger = signal<{ email: string; password: string } | null>(null);
-
-  // rxResource para manejar el proceso de registro (Angular 20+)
-  registerResource = rxResource({
-    params: () => this.registerTrigger(),
-    stream: ({ params }) => {
-      if (!params) return of(null);
-      return this.authService.register(params.email, params.password);
-    }
-  });
-
   formUtils = FormUtils;
 
+  // Signal para disparar el registro (mantenemos tu lógica)
+  private registerTrigger = signal<{ email: string; password: string } | null>(null);
 
-  constructor() {
-  this.registerForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    confirmPassword: ['', [Validators.required]]
-  }, {
-    validators: this.passwordMatchValidator
-  });
+  // rxResource adaptado para llamar a Java/Neon
+  registerResource = rxResource({
+    params: () => this.registerTrigger(),
+  stream: ({ params }) => {
+    if (!params) return of(null);
+    
+    const dto = {
+      contacto: params.email,
+      password: params.password,
+      nombre: 'Nuevo Usuario',
+      especialidad: 'Programador'
+    };
 
-  // Effect para navegar cuando el registro sea exitoso
-  effect(() => {
-    if (this.registerResource.hasValue() && this.registerResource.value()) {
-      console.log('Registro exitoso, navegando a /home');
-      this.router.navigate(['/home']);
+    // 💡 Convertimos la Promise del servicio a un Observable usando from()
+    return from(this.programadorService.registrarProgramador(dto as any));
+  
     }
   });
 
-  // --- NUEVO: debug de AuthService ---
-  effect(() => {
-    console.log('DEBUG: currentUser ->', this.authService.currentUser());
-    console.log('DEBUG: userRole ->', this.authService.userRole());
-    console.log('DEBUG: roleLoaded ->', this.authService.roleLoaded());
-  });
-}
+  constructor() {
+    this.registerForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    }, {
+      validators: this.passwordMatchValidator
+    });
+
+    // Mantenemos tu efecto de navegación
+    effect(() => {
+      if (this.registerResource.hasValue() && this.registerResource.value()) {
+        console.log('Registro exitoso en Backend, navegando a /home');
+        this.router.navigate(['/home']);
+      }
+    });
+
+    // Debug opcional (puedes comentar authService si ya no lo usas)
+    effect(() => {
+      console.log('Estado del registro:', this.registerResource.value());
+    });
+  }
 
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password');
     const confirmPassword = form.get('confirmPassword');
-
     if (password && confirmPassword && password.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
       return { passwordMismatch: true };
@@ -77,40 +82,28 @@ export class RegisterPage {
       this.registerForm.markAllAsTouched();
       return;
     }
-
     const { email, password } = this.registerForm.value;
-
-    // Disparar el registro actualizando el signal
+    // Disparar el registro actualizando el signal (Tal cual lo tenías)
     this.registerTrigger.set({ email, password });
   }
 
-  // Computed signal para el estado de carga
   loading = this.registerResource.isLoading;
 
-  // Computed signal para el mensaje de error
+  // Actualizamos los mensajes de error para que vengan del Backend
   errorMessage = () => {
     const error = this.registerResource.error();
     if (!error) return '';
 
-    const code = (error as any).code || '';
-    const errorMessages: { [key: string]: string } = {
-      'auth/email-already-in-use': 'Este correo ya está registrado',
-      'auth/invalid-email': 'El correo electrónico no es válido',
-      'auth/operation-not-allowed': 'Operación no permitida',
-      'auth/weak-password': 'La contraseña es muy débil'
-    };
-    return errorMessages[code] || 'Error al registrar usuario';
+    // Manejamos errores HTTP en lugar de códigos de Firebase
+    const status = (error as any).status;
+    if (status === 409 || status === 400) {
+      return 'Este correo ya está registrado en el sistema';
+    }
+    
+    return 'Error al conectar con el servidor de registro';
   }
 
-  get email() {
-    return this.registerForm.get('email');
-  }
-
-  get password() {
-    return this.registerForm.get('password');
-  }
-
-  get confirmPassword() {
-    return this.registerForm.get('confirmPassword');
-  }
+  get email() { return this.registerForm.get('email'); }
+  get password() { return this.registerForm.get('password'); }
+  get confirmPassword() { return this.registerForm.get('confirmPassword'); }
 }

@@ -1,11 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, doc, setDoc, getDocs, query, where, deleteDoc, updateDoc } from '@angular/fire/firestore';
+import { HttpClient } from '@angular/common/http'; // Inyectamos HttpClient
 import { Proyecto } from '../app/pages/interface/proyecto';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { environment } from '../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ProyectoService {
-  private firestore = inject(Firestore);
+  private http = inject(HttpClient);
+  // URL de tu controlador de Proyectos en Spring Boot
+  private API_URL = `${environment.apiUrl}/api/proyectos`;
 
   // 🟣 Proyectos del programador (vista del programador)
   private proyectosProgramadorSubject = new BehaviorSubject<Proyecto[]>([]);
@@ -16,88 +19,94 @@ export class ProyectoService {
   todosProyectos$ = this.todosProyectosSubject.asObservable();
 
   // ============================================================
-  // 📌 1. OBTENER PROYECTOS DEL PROGRAMADOR
+  // 📌 1. OBTENER PROYECTOS DEL PROGRAMADOR (MIGRADO)
   // ============================================================
-  async obtenerProyectos(uidProgramador: string): Promise<Proyecto[]> {
-    const proyectosCol = collection(this.firestore, 'proyectos');
-    const q = query(proyectosCol, where('assignedTo', '==', uidProgramador));
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }) as Proyecto);
+  // Cambia esto
+async obtenerProyectos(uidProgramador: string | number): Promise<Proyecto[]> {
+  // 1. Validar que el ID sea un número válido y no "undefined"
+  if (!uidProgramador || uidProgramador === 'undefined') {
+    console.warn('ID de programador no válido, abortando petición.');
+    return [];
   }
 
-  // Cargar y emitir los proyectos del programador
-  async cargarProyectosProgramador(uid: string) {
-    const lista = await this.obtenerProyectos(uid);
-    this.proyectosProgramadorSubject.next(lista);
+  try {
+    const res = await firstValueFrom(
+      this.http.get<Proyecto[]>(`${this.API_URL}/programador/${uidProgramador}`)
+    );
+    return res || [];
+  } catch (error) {
+    console.error('Error obteniendo proyectos del programador:', error);
+    return [];
   }
+}
 
+// Cambia esto también
+async cargarProyectosProgramador(uid: string | number) {
+  const lista = await this.obtenerProyectos(uid);
+  this.proyectosProgramadorSubject.next(lista);
+}
   // ============================================================
-  // 📌 2. OBTENER TODOS LOS PROYECTOS
+  // 📌 2. OBTENER TODOS LOS PROYECTOS (MIGRADO)
   // ============================================================
   async obtenerTodosLosProyectos(): Promise<Proyecto[]> {
-    const proyectosCol = collection(this.firestore, 'proyectos');
-    const snapshot = await getDocs(proyectosCol);
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }) as Proyecto);
+    try {
+      const res = await firstValueFrom(this.http.get<Proyecto[]>(this.API_URL));
+      return res || [];
+    } catch (error) {
+      console.error('Error obteniendo todos los proyectos:', error);
+      return [];
+    }
   }
 
-  // Cargar todos los proyectos y emitirlos
   async cargarTodosLosProyectos() {
     const lista = await this.obtenerTodosLosProyectos();
     this.todosProyectosSubject.next(lista);
   }
 
   // ============================================================
-  // 📌 3. CREAR PROYECTO
+  // 📌 3. CREAR PROYECTO (MIGRADO)
   // ============================================================
-  async crearProyecto(proyecto: Proyecto): Promise<Proyecto> {
-    const proyectosCol = collection(this.firestore, 'proyectos');
-    const nuevoDoc = doc(proyectosCol);
-    await setDoc(nuevoDoc, proyecto);
+  // En crearProyecto
+async crearProyecto(proyecto: any): Promise<any> {
+  const nuevoProyecto = await firstValueFrom(
+    this.http.post<any>(this.API_URL, proyecto)
+  );
 
-    // Actualiza las dos vistas
-    await this.cargarProyectosProgramador(proyecto.assignedTo);
-    await this.cargarTodosLosProyectos();
+  // El operador ?? '' garantiza que nunca sea undefined
+  const programadorId = proyecto.assignedToId ?? proyecto.assignedTo ?? '';
+  await this.cargarProyectosProgramador(programadorId);
+  await this.cargarTodosLosProyectos();
 
-    return { id: nuevoDoc.id, ...proyecto };
-  }
+  return nuevoProyecto;
+}
 
+// En actualizarProyecto
+async actualizarProyecto(proyecto: any): Promise<void> {
+  const id = proyecto.id;
+  if (!id) throw new Error('El proyecto debe tener un ID para actualizar');
+
+  await firstValueFrom(
+    this.http.put(`${this.API_URL}/${id}`, proyecto)
+  );
+
+  // Aquí también usamos el respaldo para evitar el undefined
+  const programadorId = proyecto.assignedToId ?? proyecto.assignedTo ?? '';
+  await this.cargarProyectosProgramador(programadorId);
+  await this.cargarTodosLosProyectos();
+}
   // ============================================================
-  // 📌 4. ACTUALIZAR PROYECTO
+  // 📌 4. ACTUALIZAR PROYECTO (MIGRADO)
   // ============================================================
-  async actualizarProyecto(proyecto: Proyecto): Promise<void> {
-    if (!proyecto.id) throw new Error('El proyecto debe tener un ID para actualizar');
-
-    const docRef = doc(this.firestore, `proyectos/${proyecto.id}`);
-    await updateDoc(docRef, {
-      nombre: proyecto.nombre,
-      descripcion: proyecto.descripcion,
-      tipo: proyecto.tipo,
-      tecnologias: proyecto.tecnologias,
-      repo: proyecto.repo,
-      deploy: proyecto.deploy,
-      assignedTo: proyecto.assignedTo
-    });
-
-    // Actualizar ambas listas
-    await this.cargarProyectosProgramador(proyecto.assignedTo);
-    await this.cargarTodosLosProyectos();
-  }
-
   
+
+  // ============================================================
+  // 📌 5. ELIMINAR PROYECTO (MIGRADO)
+  // ============================================================
   async eliminarProyecto(id: string, uidProgramador: string): Promise<void> {
-    const docRef = doc(this.firestore, `proyectos/${id}`);
-    await deleteDoc(docRef);
+    // Llamada DELETE al backend
+    await firstValueFrom(this.http.delete(`${this.API_URL}/${id}`));
 
     await this.cargarProyectosProgramador(uidProgramador);
     await this.cargarTodosLosProyectos();
   }
-  
 }

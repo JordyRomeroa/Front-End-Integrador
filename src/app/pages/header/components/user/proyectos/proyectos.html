@@ -1,154 +1,106 @@
 <section class="projects relative px-6 py-16 min-h-screen overflow-hidden">
-
-
+  
   <div class="absolute inset-0 -z-10 pointer-events-none">
     <div class="absolute top-0 left-0 w-[55%] h-[55%] bg-blue-500/40 blur-[120px] rounded-full"></div>
     <div class="absolute bottom-0 right-0 w-[55%] h-[55%] bg-purple-600/40 blur-[140px] rounded-full"></div>
     <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/60"></div>
   </div>
 
-  <h2 class="text-4xl font-extrabold text-white drop-shadow-lg mb-12 text-center">
+  <h2 class="text-4xl font-extrabold text-white drop-shadow-lg mb-8 text-center uppercase tracking-widest">
     Portafolios de Colaboradores
   </h2>
 
-  <div class="flex justify-center gap-4 mb-10">
-    <button
-      class="btn px-6 rounded-xl transition-all backdrop-blur-md shadow-lg"
-      [ngClass]="activeFilter === 'category'
-        ? 'bg-yellow-400 text-black shadow-yellow-500/40'
-        : 'bg-white/10 text-white hover:bg-white/20' "
-      (click)="setActiveFilter('category')">
-      Categorías
-    </button>
-
-    <button
-      class="btn px-6 rounded-xl transition-all backdrop-blur-md shadow-lg"
-      [ngClass]="activeFilter === 'collaborator'
-        ? 'bg-yellow-400 text-black shadow-yellow-500/40'
-        : 'bg-white/10 text-white hover:bg-white/20' "
-      (click)="setActiveFilter('collaborator')">
-      Colaboradores
-    </button>
+  <div class="grid grid-cols-3 gap-4 max-w-4xl mx-auto mb-16 text-white text-center">
+    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-xl">
+      <p class="text-3xl font-black text-yellow-400">{{ stats.totalProjects }}</p>
+      <p class="text-[10px] uppercase font-bold tracking-tighter opacity-60">Proyectos Totales</p>
+    </div>
+    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-xl">
+      <p class="text-3xl font-black text-blue-400">{{ stats.totalCollaborators }}</p>
+      <p class="text-[10px] uppercase font-bold tracking-tighter opacity-60">Programadores</p>
+    </div>
+    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-xl">
+      <p class="text-3xl font-black text-purple-400">{{ stats.totalCategories }}</p>
+      <p class="text-[10px] uppercase font-bold tracking-tighter opacity-60">Categorías</p>
+    </div>
   </div>
 
+  <div class="flex justify-center gap-4 mb-10">
+    <button class="btn px-6 py-2 rounded-xl transition-all backdrop-blur-md shadow-lg font-bold"
+      [ngClass]="activeFilter === 'category' ? 'bg-yellow-400 text-black shadow-yellow-500/40' : 'bg-white/10 text-white hover:bg-white/20'"
+      (click)="setActiveFilter('category')">Categorías</button>
+    <button class="btn px-6 py-2 rounded-xl transition-all backdrop-blur-md shadow-lg font-bold"
+      [ngClass]="activeFilter === 'collaborator' ? 'bg-yellow-400 text-black shadow-yellow-500/40' : 'bg-white/10 text-white hover:bg-white/20'"
+      (click)="setActiveFilter('collaborator')">Colaboradores</button>
+  </div>
 
   @if (activeFilter === 'category') {
-    <div class="flex flex-wrap justify-center gap-4 mb-10">
-      <button
-        class="px-4 py-2 rounded-lg backdrop-blur-md transition-all shadow"
-        [ngClass]="selectedCategory === ''
-          ? 'bg-yellow-400 text-black'
-          : 'bg-white/10 text-white hover:bg-white/20'"
+    <div class="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in">
+      <button class="px-4 py-2 rounded-lg backdrop-blur-md transition-all text-sm font-medium"
+        [ngClass]="selectedCategory === '' ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'"
         (click)="showAllCategories()">Todas</button>
-
       @for (cat of getCategories(repos); track cat) {
-        <button
-          class="px-4 py-2 rounded-lg backdrop-blur-md transition-all shadow"
-          [ngClass]="selectedCategory === cat
-            ? 'bg-yellow-400 text-black'
-            : 'bg-white/10 text-white hover:bg-white/20'"
+        <button class="px-4 py-2 rounded-lg backdrop-blur-md transition-all text-sm font-medium"
+          [ngClass]="selectedCategory === cat ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'"
           (click)="filterByCategory(cat)">{{ cat }}</button>
       }
     </div>
   }
 
   @if (activeFilter === 'collaborator') {
-    <div class="flex flex-wrap justify-center gap-4 mb-10">
-      <button
-        class="px-4 py-2 rounded-lg backdrop-blur-md transition-all shadow"
-        [ngClass]="selectedCollaborator === ''
-          ? 'bg-yellow-400 text-black'
-          : 'bg-white/10 text-white hover:bg-white/20'"
+    <div class="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in">
+      <button class="px-4 py-2 rounded-lg backdrop-blur-md transition-all text-sm font-medium"
+        [ngClass]="selectedCollaborator === '' ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'"
         (click)="showAllCollaborators()">Todos</button>
-
       @for (user of collaborators; track user) {
-        <button
-          class="px-4 py-2 rounded-lg backdrop-blur-md transition-all shadow"
-          [ngClass]="selectedCollaborator === user
-            ? 'bg-yellow-400 text-black'
-            : 'bg-white/10 text-white hover:bg-white/20'"
+        <button class="px-4 py-2 rounded-lg backdrop-blur-md transition-all text-sm font-medium"
+          [ngClass]="selectedCollaborator === user ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'"
           (click)="filterByCollaborator(user)">{{ user }}</button>
       }
     </div>
   }
 
-
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
     @for (project of filteredRepos; track project.name) {
-
-      <div
-        class="card p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10
-        shadow-[0_0_25px_rgba(0,200,255,0.25)] text-white transition-all duration-300
-        hover:scale-[1.03] hover:shadow-[0_0_35px_rgba(0,200,255,0.45)]">
-
-
-        <div class="flex items-center mb-4">
-          <img [src]="project.owner.avatar_url"
-               alt="Avatar"
-               class="w-12 h-12 rounded-full mr-3 border-2 border-yellow-400 shadow-md">
-          <span class="font-semibold text-lg">{{ project.owner.login }}</span>
-        </div>
-
-        <!-- Nombre del proyecto -->
-        <h3 class="text-2xl font-bold mb-3">
-          @if (project.repoLink) {
-            <a
-              [href]="project.repoLink"
-              target="_blank"
-              class="hover:text-yellow-400 transition-colors">
-              {{ project.name }}
-            </a>
-          } @else {
-            <span>{{ project.name }}</span>
-          }
-        </h3>
-
-
-        <p class="text-white/80 mb-4 leading-relaxed">
-          {{ project.description || 'Sin descripción disponible' }}
-        </p>
-
-
-        <div class="flex items-center gap-2 text-white/80 mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg"
-               class="h-5 w-5 text-yellow-400"
-               fill="currentColor"
-               viewBox="0 0 20 20">
-            <path d="M13 7H7v6h6V7z"/>
-          </svg>
-          <span class="font-medium">
-            {{ project.role || 'No especificado' }}
-          </span>
-        </div>
-
-
-        <div class="flex flex-wrap gap-2 mb-4">
-          @for (tech of project.techs; track tech) {
-            <span class="px-2 py-1 bg-yellow-400 text-black rounded-md text-sm font-semibold shadow">
-              {{ tech }}
-            </span>
-          }
-        </div>
-
+      <div class="card p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-[0_0_25px_rgba(0,200,255,0.1)] text-white transition-all duration-500 hover:scale-[1.03] flex flex-col">
         
-        <div class="flex gap-3 mt-4">
-          @if (project.repoLink) {
-            <a [href]="project.repoLink" target="_blank"
-               class="px-3 py-1 rounded bg-white/10 hover:bg-white/20 transition text-sm">
-              Repo
-            </a>
-          }
+        <div class="flex items-center mb-5">
+          <img [src]="project.owner.avatar_url" class="w-14 h-14 rounded-full mr-4 border-2 border-yellow-400 object-cover shadow-lg">
+          <div class="flex flex-col overflow-hidden">
+            <span class="font-bold text-xl leading-tight truncate">{{ project.owner.login }}</span>
+            <span class="text-xs text-white/40 italic">{{ project.owner.bio || 'Desarrollador' }}</span>
+          </div>
+        </div>
 
+        <h3 class="text-2xl font-black mb-3">{{ project.name }}</h3>
+        <p class="text-white/80 mb-6 leading-relaxed text-sm flex-grow italic">{{ project.description }}</p>
+
+        <div class="flex items-center gap-2 text-white/70 mb-5 py-2 border-y border-white/5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-yellow-400/90">Categoría: {{ project.category }}</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-6">
+          @for (tech of project.techs; track tech) {
+            <span class="px-2.5 py-0.5 bg-yellow-400/90 text-black rounded-md text-[10px] font-black uppercase">{{ tech }}</span>
+          }
+        </div>
+
+        <div class="flex gap-3 mt-auto">
+          @if (project.repoLink) {
+            <a [href]="project.repoLink" target="_blank" class="flex-1 text-center py-2.5 rounded-lg bg-white/5 hover:bg-yellow-400 hover:text-black transition-all font-bold text-xs uppercase border border-white/10">Repo</a>
+          }
           @if (project.deployLink) {
-            <a [href]="project.deployLink" target="_blank"
-               class="px-3 py-1 rounded bg-white/10 hover:bg-white/20 transition text-sm">
-              Demo
-            </a>
+            <a [href]="project.deployLink" target="_blank" class="flex-1 text-center py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-all font-bold text-xs uppercase shadow-lg">Live Demo</a>
           }
         </div>
       </div>
-
+    } @empty {
+      <div class="col-span-full text-center py-20 bg-white/5 rounded-3xl border border-white/5 backdrop-blur-sm">
+        <p class="text-white/40 italic text-xl">Sin proyectos para este filtro.</p>
+      </div>
     }
   </div>
-
 </section>

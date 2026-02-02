@@ -1,10 +1,10 @@
-import { AdminGuard } from './core/admin-guard';
 import { ProgrammerGuard } from './core/programmer-guard';
 import { MustChangePasswordGuard } from './core/MustChangePasswordGuard';
 import { Routes } from '@angular/router';
 import { User } from './pages/header/components/user/user';
 import { EquipoComponent } from './pages/header/components/InicioComponent/equipo/equipo.component';
 import { UnirteComponent } from './pages/header/components/admin/unirte/unirte.component';
+import { adminGuard } from './core/admin-guard';
 
 export const routes: Routes = [
   {
@@ -65,16 +65,18 @@ export const routes: Routes = [
       {path: 'unirte', component:UnirteComponent },
       {
         path: 'admin',
-        loadComponent: () => import('./pages/header/components/admin/admin').then(m => m.Admin),
-        canActivate: [AdminGuard],
-        children: [
-          {
-            path: 'register-programmer',
-            canActivate: [AdminGuard],
-            loadComponent: () => import('./pages/header/components/admin/register-programmer/register').then(m => m.RegisterProgrammer)
-          }
-        ]
-      },
+  loadComponent: () => import('./pages/header/components/admin/admin').then(m => m.Admin),
+  canActivate: [adminGuard], // <--- Aquí se aplica
+  children: [
+    {
+      path: 'register-programmer',
+      // No hace falta repetirlo aquí si el padre ya lo tiene, 
+      // pero puedes dejarlo por seguridad.
+      canActivate: [adminGuard], 
+      loadComponent: () => import('./pages/header/components/admin/register-programmer/register').then(m => m.RegisterProgrammer)
+    }
+  ]
+},
       {
         path: 'programmer',
         canActivate: [ProgrammerGuard],
@@ -93,7 +95,7 @@ export const routes: Routes = [
             loadComponent: () => import('./pages/header/components/programmer/editprofile/editprofile').then(m => m.EditProfileProgrammerComponent)
           },
         {
-          path: 'advice',        // ← nueva ruta para solicitudes
+          path: 'solicitudes',        // ← nueva ruta para solicitudes
       loadComponent: () => import('./pages/header/components/programmer/advice/advice').then(m => m.Advice)
         },
           {

@@ -1,11 +1,9 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../../../services/auth-service';
-
-
-import { Firestore, collection, addDoc } from '@angular/fire/firestore';
-
+import { PostulacionService } from '../../../../../../services/postulacion-service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-unirte',
@@ -14,97 +12,153 @@ import { Firestore, collection, addDoc } from '@angular/fire/firestore';
   templateUrl: './unirte.component.html',
   styleUrl: './unirte.component.css',
 })
-export class UnirteComponent {
-
+export class UnirteComponent implements OnInit {
   private fb = inject(FormBuilder);
-
-
-  private firestore: Firestore = inject(Firestore);
-
   public authService = inject(AuthService);
-
+  private postuService = inject(PostulacionService);
+  activeTab = signal<'formulario' | 'estado'>('formulario');
   solicitudForm: FormGroup;
   isSubmitting = signal(false);
   submitSuccess = signal(false);
   submitError = signal(false);
-
+  private router = inject(Router);
+  // Estados de vista
+  isAdmin = signal(false);
   canPostulate = signal(false);
+  // 1. Nueva señal para controlar las pestañas del admin
+adminTab = signal<'pendientes' | 'historial'>('pendientes');
 
+// 2. Señales para los datos (Backend debe separar o filtrar por estado)
+solicitudesPendientes = signal<any[]>([]); 
+historialSolicitudes = signal<any[]>([]);
 
+setAdminTab(tab: 'pendientes' | 'historial') {
+  this.adminTab.set(tab);
+}
+
+// 3. Al actualizar el estado, recarga ambas listas
+
+  miSolicitud = signal<any | null>(null);    // Para el Usuario
 
   constructor() {
-    this.solicitudForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]],
-      especialidad: ['', [Validators.required]],
-      portafolio: ['', [Validators.required, Validators.pattern(/https?:\/\/.+/)]],
-      descripcion: ['', [Validators.required, Validators.minLength(20)]],
-    });
+    
+   // unirte.component.ts
+this.solicitudForm = this.fb.group({
+  nombre: ['', [Validators.required]],
+  email: ['', [Validators.required, Validators.email]], // <-- Debe decir 'email'
+  especialidad: ['', [Validators.required]],
+  portafolio: ['', [Validators.required]],
+  descripcion: ['', [Validators.required]]
+
+});
 
     effect(() => {
-        this.checkUserRole();
+      this.checkRoles();
     });
-
-    this.checkUserRole();
   }
 
-  checkUserRole() {
-      const role = this.authService.getUserRole();
-
-      if (role === 'user') {
-          this.canPostulate.set(true);
-      } else {
-          this.canPostulate.set(false);
-      }
-      console.log(`Rol: ${role}. ¿Puede postularse?: ${this.canPostulate()}`);
+  ngOnInit() {
+    this.checkRoles();
   }
 
+  checkRoles() {
+    const role = this.authService.getUserRole();
+    const isLogged = this.authService.isLogged();
 
-  async enviarSolicitud() {
-    if (!this.canPostulate()) {
-        alert('Acceso denegado: Solo usuarios con rol "User" pueden enviar esta solicitud.');
-        return;
+    this.isAdmin.set(role === 'admin' || role === 'ROLE_ADMIN');
+    this.canPostulate.set(role === 'user' || role === 'ROLE_USER');
+    
+    if (this.isAdmin()) {
+      this.cargarSolicitudes();
+    } else if (isLogged) {
+      this.cargarMiEstado();
     }
+  }
+activarPerfilYLogin() {
+  // 1. Limpiamos cualquier rastro de la sesión vieja (ROLE_USER)
+  localStorage.clear(); 
+  sessionStorage.clear();
 
-    this.solicitudForm.markAllAsTouched();
+  // 2. Redirigimos a la raíz /login 
+  // Usamos ['/login'] con la barra inicial para que sea ruta absoluta
+  this.router.navigate(['/login']).then(() => {
+    // 3. Forzamos un refresco rápido para asegurar que los Guards 
+    // y el AuthService se reinicien de cero
+    window.location.reload();
+  });
+}
+  
+cargarMiEstado() {
+    this.postuService.obtenerMiSolicitud().subscribe({
+      next: (data) => {
+        if (data) {
+          this.miSolicitud.set(data);
+          this.activeTab.set('estado'); // Cambia a la vista de estado automáticamente
+          if (data.estado === 'APROBADO') {
+            alert('¡Felicidades! Tu postulación ha sido aprobada. Nos pondremos en contacto contigo pronto.');
+          }
+        }
+      },
+      error: (err) => console.log('Sin postulación previa')
+    });
+  }
+  
+  setTab(tab: 'formulario' | 'estado') {
+    this.activeTab.set(tab);
+  }
+  cargarSolicitudes() {
+    this.postuService.obtenerTodas().subscribe({
+      next: (data: any[]) => {
+        // Filtramos las solicitudes que están en espera
+        this.solicitudesPendientes.set(
+          data.filter(s => s.estado === 'PENDIENTE')
+        );
+        
+        // Movemos las ACEPTADAS o RECHAZADAS al historial
+        this.historialSolicitudes.set(
+          data.filter(s => s.estado === 'APROBADO' || s.estado === 'RECHAZADO')
+        );
+      },
+      error: (err) => console.error('Error cargando solicitudes', err)
+    });
+  }
 
-    if (this.solicitudForm.invalid) {
-      console.warn('Formulario inválido. No se puede enviar.');
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    this.submitSuccess.set(false);
-    this.submitError.set(false);
-
-    try {
-      const data = {
-        ...this.solicitudForm.value,
-        fechaSolicitud: new Date().toISOString(),
-        estado: 'Pendiente'
-      };
-
-
-      const coleccionRef = collection(this.firestore, 'notificaciones');
-      await addDoc(coleccionRef, data);
-
-      console.log(' Documento guardado exitosamente en la colección "notificaciones".');
-
-
+ enviarSolicitud() {
+  if (this.solicitudForm.invalid) {
+    console.warn("Formulario inválido. Revisa los campos:", this.solicitudForm.controls);
+    alert("Por favor, completa todos los campos correctamente.");
+    return;
+  }
+  
+  console.log("Enviando datos...", this.solicitudForm.value);
+  this.isSubmitting.set(true);
+  
+  this.postuService.enviarPostulacion(this.solicitudForm.value).subscribe({
+    next: () => {
       this.submitSuccess.set(true);
-      this.solicitudForm.reset({ especialidad: '' });
-
-    } catch (error) {
-   
-      console.error('Error REAL al enviar la solicitud a Firestore:', error);
-      this.submitError.set(true);
-
-    } finally {
       this.isSubmitting.set(false);
-      setTimeout(() => {
-        this.submitSuccess.set(false);
-        this.submitError.set(false);
-      }, 7000);
+      this.cargarMiEstado(); 
+    },
+    error: (err) => {
+      console.error("Error en el servidor:", err);
+      this.submitError.set(true);
+      this.isSubmitting.set(false);
+      alert("Error del servidor: " + (err.error?.message || "No se pudo enviar"));
     }
+  });
+}
+
+  actualizarEstado(id: number, nuevoEstado: string) {
+    this.postuService.actualizarEstado(id, nuevoEstado).subscribe({
+      next: () => {
+        this.cargarSolicitudes(); // Esto moverá la solicitud al historial automáticamente
+      },
+      error: (err) => console.error('Error al actualizar', err)
+    });
+  }
+
+  copiarClave(clave: string) {
+    navigator.clipboard.writeText(clave);
+    alert('Contraseña copiada al portapapeles');
   }
 }

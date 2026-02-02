@@ -5,6 +5,7 @@ import { AuthService } from '../../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../../services/programmer-service';
 import { ProgramadorData } from '../../../../interface/programador';
 import axios from 'axios';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-edit-profile-programmer',
@@ -38,13 +39,21 @@ export class EditProfileProgrammerComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
+ ngOnInit() {
     const user = this.authService.currentUser();
-    if (!user) return;
+    if (!this.authService.token()) {
+    // Si no hay token en la señal, intentamos cargar storage otra vez por si acaso
+    const storedToken = localStorage.getItem("auth_token");
+    if (!storedToken) {
+      this.showMessage('No hay sesión activa', 'error');
+      return;
+    }
+  }
 
     this.loading = true;
 
-    this.programadorService.getProgramadorByUid(user.uid)
+    // Añadimos <any> para que TypeScript no se queje de las propiedades
+    (this.authService.refreshCurrentUser() as Promise<any>)
       .then(programmer => {
         if (programmer) {
           this.programmer = programmer;
@@ -52,11 +61,16 @@ export class EditProfileProgrammerComponent implements OnInit {
           this.especialidad = programmer.especialidad || '';
           this.descripcion = programmer.descripcion || '';
           this.contacto = programmer.contacto || '';
+          
+          // Java envía List<String>, llega como Array a Angular
           this.redes = programmer.redes?.length ? [...programmer.redes] : [''];
           this.fotoPreview = programmer.foto || 'https://via.placeholder.com/150';
         }
       })
-      .catch(err => this.showMessage('Error al cargar perfil', 'error'))
+      .catch(err => {
+        console.error(err);
+        this.showMessage('Error al cargar perfil', 'error');
+      })
       .finally(() => {
         this.loading = false;
         this.cdr.detectChanges();
@@ -89,52 +103,41 @@ export class EditProfileProgrammerComponent implements OnInit {
   }
 
   async actualizarPerfil() {
-    if (!this.programmer) return;
+  if (!this.programmer) return;
+  this.loading = true;
 
-    this.loading = true;
-
-    try {
-      const currentUser = this.authService.currentUser();
-      if (!currentUser) {
-        this.showMessage('Debes iniciar sesión para actualizar tu perfil', 'error');
-        return;
-      }
-
-      let fotoURL = this.programmer.foto || 'https://via.placeholder.com/150';
-      if (this.foto) {
-        fotoURL = await this.subirImagenCloudinary(this.foto);
-      }
-
-      const actualizado: ProgramadorData = {
-        ...this.programmer,
-        nombre: this.nombre,
-        especialidad: this.especialidad,
-        descripcion: this.descripcion,
-        contacto: this.contacto,
-        redes: this.redes,
-        foto: fotoURL
-      };
-
-      await this.programadorService.registrarProgramador(
-        actualizado,
-        currentUser,
-        actualizado.uid
-      );
-
-      this.showMessage('Perfil actualizado correctamente', 'success');
-      this.updated.emit();
-      this.foto = null;
-      this.fotoPreview = fotoURL;
-
-    } catch (err: any) {
-      console.error(err);
-      this.showMessage('Error al actualizar perfil: ' + err.message, 'error');
-    } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
+  try {
+    let fotoURL = this.fotoPreview; // Usar la que ya tenemos
+    if (this.foto) {
+      fotoURL = await this.subirImagenCloudinary(this.foto);
     }
-  }
 
+    // CONSTRUIR EL OBJETO EXACTO: Ni más, ni menos campos.
+    const dtoParaActualizar = {
+      nombre: this.nombre,
+      especialidad: this.especialidad,
+      descripcion: this.descripcion,
+      contacto: this.contacto,
+      // Filtramos redes vacías para no ensuciar la BD
+      redes: this.redes.filter(r => r && r.trim() !== ''),
+      foto: fotoURL
+    };
+
+    console.log("Enviando a Java:", dtoParaActualizar);
+
+    await firstValueFrom(this.authService.updateProfile(dtoParaActualizar));
+    
+    this.showMessage('¡Perfil actualizado con éxito!', 'success');
+    this.updated.emit();
+  } catch (err: any) {
+    // Si el error persiste, el mensaje de error del backend nos dirá qué campo falla
+    const errorMsg = err.error?.message || 'Error interno del servidor';
+    this.showMessage('Error: ' + errorMsg, 'error');
+  } finally {
+    this.loading = false;
+    this.cdr.detectChanges();
+  }
+}
   private showMessage(msg: string, type: 'success' | 'error' = 'success') {
     this.messageType.set(type);
     this.message.set(msg);

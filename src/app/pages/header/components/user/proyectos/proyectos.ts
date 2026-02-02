@@ -3,20 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ProyectoService } from '../../../../../../services/proyecto-service';
 import { AuthService } from '../../../../../../services/auth-service';
 
-interface Collaborator {
-  login: string; // Nombre del programador
-  avatar_url: string; // URL del avatar
-}
-
 interface Project {
   name: string;
   description?: string;
-  role?: string;
   techs?: string[];
   repoLink?: string;
   deployLink?: string;
   category?: string;
-  owner: { login: string, avatar_url: string };
+  owner: { 
+    login: string, 
+    avatar_url: string,
+    bio?: string
+  };
 }
 
 @Component({
@@ -27,17 +25,19 @@ interface Project {
   imports: [CommonModule],
 })
 export class Proyectos implements OnInit {
-
   repos: Project[] = [];
   filteredRepos: Project[] = [];
-
-
   selectedCategory: string = '';
   selectedCollaborator: string = '';
   collaborators: string[] = [];
-
-
   activeFilter: 'category' | 'collaborator' = 'category';
+  
+  // Nueva propiedad para las estadísticas llamativas
+  stats = {
+    totalProjects: 0,
+    totalCollaborators: 0,
+    totalCategories: 0
+  };
 
   constructor(
     private proyectoService: ProyectoService,
@@ -46,60 +46,63 @@ export class Proyectos implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
-
     this.proyectoService.cargarTodosLosProyectos();
 
-
     this.proyectoService.todosProyectos$.subscribe(async (proyectos) => {
+      const dataPromises = proyectos.map(p => 
+        this.authService.getNombreProgramador(p.assignedTo ?? '')
+      );
+      
+      const resGitHub: any[] = await Promise.all(dataPromises);
 
-  // Mapear todas las promesas de nombres
-  const nombresPromises = proyectos.map(p => this.authService.getNombreProgramador(p.assignedTo));
+      this.repos = proyectos.map((p, i) => {
+        const info = resGitHub[i];
+        const githubUserFromUrl = p.repo?.split('github.com/')[1]?.split('/')[0];
+        
+        let nombreFinal = 'Colaborador';
+        if (info && typeof info === 'object') {
+          nombreFinal = info.name || info.login || githubUserFromUrl || p.assignedTo || 'Colaborador';
+        } else if (typeof info === 'string' && info.trim() !== '' && info !== 'Sin nombre') {
+          nombreFinal = info;
+        } else {
+          nombreFinal = githubUserFromUrl || p.assignedTo || 'Colaborador';
+        }
 
-  // Esperar todos los nombres al mismo tiempo
-  const nombres = await Promise.all(nombresPromises);
+        const avatarFinal = (info && info.avatar_url) 
+          ? info.avatar_url 
+          : (githubUserFromUrl 
+              ? `https://avatars.githubusercontent.com/${githubUserFromUrl}` 
+              : `https://ui-avatars.com/api/?name=${nombreFinal}&background=random`);
 
-  // Construir los proyectos actualizados
-  const updatedRepos: Project[] = proyectos.map((p, i) => ({
-    name: p.nombre,
-    description: p.descripcion,
-    role: 'Programador',
-    techs: p.tecnologias || [],
-    repoLink: p.repo,
-    deployLink: p.deploy,
-    category: p.categoria || 'Laboral',
-    owner: {
-      login: nombres[i],
-      avatar_url:
-        'https://avatars.githubusercontent.com/' +
-          p.repo?.split('github.com/')[1]?.split('/')[0] ||
-        'https://via.placeholder.com/40'
-    }
-  }));
+        return {
+          name: p.nombre || 'Proyecto sin título',
+          description: p.descripcion || 'Este proyecto es una muestra del talento de nuestro equipo.',
+          techs: p.tecnologias || [],
+          repoLink: p.repo,
+          deployLink: p.deploy,
+          category: p.categoria || 'Laboral',
+          owner: {
+            login: nombreFinal,
+            avatar_url: avatarFinal,
+            bio: (info && info.bio) ? info.bio : ''
+          }
+        };
+      });
 
-  this.repos = updatedRepos;
-
-  // Colaboradores únicos
-  this.collaborators = Array.from(new Set(this.repos.map(r => r.owner.login))).sort();
-
-  this.applyFilters();
-  this.cdr.detectChanges();
-});
-
+      // Cálculo de estadísticas
+      this.collaborators = Array.from(new Set(this.repos.map(r => r.owner.login))).sort();
+      this.stats.totalProjects = this.repos.length;
+      this.stats.totalCollaborators = this.collaborators.length;
+      this.stats.totalCategories = new Set(this.repos.map(r => r.category)).size;
+      
+      this.applyFilters();
+      this.cdr.detectChanges();
+    });
   }
 
-
-
   getCategories(projects: Project[]): string[] {
-  return Array.from(
-    new Set(
-      projects
-        .map(p => p.category || 'Laboral')
-        .filter(cat => cat !== 'Personal') // <-- Excluir "Personal"
-    )
-  ).sort();
-}
-
+    return Array.from(new Set(projects.map(p => p.category || 'Laboral').filter(cat => cat !== 'Personal'))).sort();
+  }
 
   setActiveFilter(filter: 'category' | 'collaborator') {
     this.activeFilter = filter;
@@ -108,25 +111,10 @@ export class Proyectos implements OnInit {
     this.applyFilters();
   }
 
-  filterByCategory(cat: string) {
-    this.selectedCategory = cat;
-    this.applyFilters();
-  }
-
-  filterByCollaborator(user: string) {
-    this.selectedCollaborator = user;
-    this.applyFilters();
-  }
-
-  showAllCategories() {
-    this.selectedCategory = '';
-    this.applyFilters();
-  }
-
-  showAllCollaborators() {
-    this.selectedCollaborator = '';
-    this.applyFilters();
-  }
+  filterByCategory(cat: string) { this.selectedCategory = cat; this.applyFilters(); }
+  filterByCollaborator(user: string) { this.selectedCollaborator = user; this.applyFilters(); }
+  showAllCategories() { this.selectedCategory = ''; this.applyFilters(); }
+  showAllCollaborators() { this.selectedCollaborator = ''; this.applyFilters(); }
 
   private applyFilters() {
     this.filteredRepos = this.repos.filter(p => {
@@ -134,7 +122,6 @@ export class Proyectos implements OnInit {
       const matchCollaborator = this.selectedCollaborator ? p.owner.login === this.selectedCollaborator : true;
       return matchCategory && matchCollaborator;
     });
-
     this.cdr.detectChanges();
   }
 }

@@ -18,23 +18,44 @@
     <button (click)="sidebarOpen = !sidebarOpen" class="text-white text-3xl">&#9776;</button>
   </header>
 
-  <!-- TEMPLATE LINKS REUTILIZABLE -->
-  <ng-template #mainLinks>
-    <a routerLink="/home/inicio" class="nav-link">Inicio</a>
-    <a routerLink="/home/proyectos" class="nav-link">Proyectos</a>
+ <ng-template #mainLinks>
+  <a routerLink="/home/inicio" class="nav-link">Inicio</a>
+  <a routerLink="/home/proyectos" class="nav-link">Proyectos</a>
 
-    @if (isUser) {
-      <a routerLink="/home/user/solicitudes" class="nav-link">Mis solicitudes</a>
-    }
+  @if (authService.isUser()) {
+    <a routerLink="/home/user/solicitudes" class="nav-link">Mis solicitudes</a>
+    <a routerLink="/home/unirte" class="nav-link text-amber-400" routerLinkActive="active-link">Mis postulaciones</a>  
 
-    @if (isAdmin) {
-      <a routerLink="/home/admin" class="nav-link">Panel Admin</a>
-    }
+  }
 
-    @if (isProgrammer) {
-      <a routerLink="/home/programmer" class="nav-link">Dashboard</a>
-    }
-  </ng-template>
+  @if (authService.isAdmin()) {
+    <a routerLink="/home/admin" class="nav-link">Panel Admin</a>
+<a routerLink="/home/unirte" class="nav-link text-amber-400" routerLinkActive="active-link">Nuevas Postulaciones</a>  }
+
+  @if (authService.isProgrammer()) {
+    <div class="flex flex-col lg:flex-row items-center gap-2 border-l border-white/20 lg:pl-4">
+      <span class="text-xs font-bold text-red-500 uppercase tracking-widest hidden lg:block mr-2">
+        Panel:
+      </span>
+      
+      <a routerLink="/home/programmer/solicitudes" 
+         class="nav-link" 
+         routerLinkActive="active-link">Solicitudes</a>
+         
+      <a routerLink="/home/programmer/management" 
+         class="nav-link" 
+         routerLinkActive="active-link">Mis Proyectos</a>
+         
+      <a routerLink="/home/programmer/schedules" 
+         class="nav-link" 
+         routerLinkActive="active-link">Horarios</a>
+         
+      <a routerLink="/home/programmer/editprofile" 
+         class="nav-link" 
+         routerLinkActive="active-link">Perfil</a>
+    </div>
+  }
+</ng-template>
 
   <!-- SIDEBAR MÓVIL -->
   <aside
@@ -77,51 +98,70 @@
 
   <!-- CONTENIDO -->
  <main class="flex-1 p-6 mt-20">
+  @if (showWelcomeBanner()) {
+  <div class="mb-8 animate-bounce-in">
+    <div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-black border-2 border-indigo-500/50 rounded-2xl p-6 shadow-[0_0_30px_rgba(79,70,229,0.3)] backdrop-blur-md relative overflow-hidden">
+      
+      <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+
+      <div class="flex flex-col md:flex-row items-center gap-6 relative z-10">
+        <div class="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center text-3xl shadow-lg border border-indigo-400/30">
+          🚀
+        </div>
+        
+        <div class="flex-1 text-center md:text-left">
+          <h2 class="text-2xl font-black text-white tracking-tight">¡Bienvenido al equipo, Programador!</h2>
+          <p class="text-indigo-100/80 mt-1 max-w-2xl">
+            Tu perfil ha sido elevado. Ahora tienes acceso a herramientas exclusivas para gestionar proyectos y asesorías. ¡Empecemos a construir!
+          </p>
+        </div>
+
+        <button (click)="dismissWelcome()" 
+                class="px-6 py-3 bg-white text-indigo-900 rounded-xl font-bold hover:bg-indigo-50 transition-all active:scale-95 shadow-xl">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+}
   <router-outlet></router-outlet>
 
- <!-- SECCIÓN ASESORÍAS -->
-<div
-  class="mt-16 bg-gradient-to-r from-indigo-500 to-purple-600
-         rounded-2xl p-8 md:p-10 text-white shadow-xl">
-
+ <div class="mt-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 md:p-10 text-white shadow-xl">
   <div class="flex flex-col md:flex-row items-center justify-between gap-8">
-
-    <!-- TEXTO -->
+    
     <div class="md:w-2/3 text-center md:text-left space-y-4">
-
-      <h2 class="text-2xl md:text-3xl font-extrabold">
-        ¿Necesitas ayuda profesional?
-      </h2>
-
+      <h2 class="text-2xl md:text-3xl font-extrabold">¿Necesitas ayuda profesional?</h2>
       <p class="text-base md:text-lg opacity-90">
         Conecta con programadores expertos, agenda tu asesoría y recibe
         acompañamiento personalizado para tus proyectos académicos o profesionales.
       </p>
 
-      @if (isUser) {
+      @if (!isLogged) {
         <button
-          (click)="showAsesoriaModal.set(true)"
-          class="mt-4 inline-flex items-center gap-2
-                 px-6 py-2.5 bg-white text-indigo-600
-                 rounded-xl font-semibold
-                 hover:bg-gray-100 transition-all
-                 shadow-md">
-          💬 Solicitar Asesoría
+          routerLink="/login"
+          class="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-amber-400 text-black rounded-xl font-bold hover:bg-amber-500 transition-all shadow-md">
+          🔑 Inicia sesión para solicitar asesoría
         </button>
       }
 
+      @if (isLogged && isUser) {
+        <button
+          (click)="showAsesoriaModal.set(true)"
+          class="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-md">
+          💬 Solicitar Asesoría
+        </button>
+      }
     </div>
 
-    <!-- IMAGEN -->
-    <div class="md:w-1/3
-     flex justify-center">
-      <img
-        src="asesora.png"
-        alt="Asesorías"
-         class="w-40 md:w-52 drop-shadow-2xl">
+    <div class="md:w-1/3 flex justify-center">
+      <img src="asesora.png" alt="Asesorías" class="w-40 md:w-52 drop-shadow-2xl">
     </div>
-
   </div>
+
+      
+
+    
+  
 </div>
 
 
