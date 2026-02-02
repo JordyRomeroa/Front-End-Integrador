@@ -86,11 +86,42 @@ async obtenerProgramadores(): Promise<ProgramadorData[]> {
     return this.registrarProgramador(data, adminUser, uid);
   }
 
-  /** Elimina un registro en el Backend */
+  /** Elimina un registro en el Backend con Token de Seguridad */
   async eliminarProgramador(uid: string) {
-    if (!uid) throw new Error('ID no proporcionado');
-    await firstValueFrom(this.http.delete(`${this.API_URL}/${uid}`));
-    await this.refrescarTabla();
+    if (!uid) {
+      console.error('Error: El ID del programador es indefinido');
+      return;
+    }
+
+    try {
+      // 1. Recuperamos el token del storage (como lo guardas en AuthService)
+      const token = localStorage.getItem('auth_token');
+
+      // 2. Si no hay token, ni siquiera intentamos la petición
+      if (!token) {
+        throw new Error('No tienes permisos (Token faltante). Inicia sesión de nuevo.');
+      }
+
+      // 3. Ejecutamos el DELETE enviando el Header de Authorization
+      await firstValueFrom(
+        this.http.delete(`${this.API_URL}/${uid}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      );
+
+      console.log(`Programador con ID ${uid} eliminado exitosamente.`);
+      
+      // 4. Refrescamos la lista para que desaparezca de la tabla inmediatamente
+      await this.refrescarTabla();
+
+    } catch (error: any) {
+      console.error("Error al eliminar programador:", error);
+      // Si el error es 500, el problema está en las relaciones de Java (Cascade)
+      // Si el error es 403 o 401, el problema es el Token/Roles
+      throw error;
+    }
   }
 
   /** Mapeo simplificado para vistas públicas */
