@@ -8,7 +8,6 @@ import {
   signOut 
 } from "@angular/fire/auth";
 import { Observable, of, tap, firstValueFrom } from "rxjs";
-import { environment } from "../environments/environment";
 
 export type Role = 'ROLE_ADMIN' | 'ROLE_PROGRAMMER' | 'ROLE_USER' | 'admin' | 'programmer' | 'user';
 
@@ -17,9 +16,8 @@ export type Role = 'ROLE_ADMIN' | 'ROLE_PROGRAMMER' | 'ROLE_USER' | 'admin' | 'p
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private router = inject(Router);
-  private auth = inject(Auth); 
-  private API_URL = `${environment.apiUrl}/api/auth`;
+private router = inject(Router) as Router;  private auth = inject(Auth); 
+  private API_URL = 'http://localhost:8080/auth';
 
   // ====== SEÑALES ======
   currentUser = signal<any | null>(null);
