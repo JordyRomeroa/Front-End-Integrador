@@ -8,6 +8,7 @@ import {
   signOut 
 } from "@angular/fire/auth";
 import { Observable, of, tap, firstValueFrom } from "rxjs";
+import { environment } from "../environments/environment";
 
 export type Role = 'ROLE_ADMIN' | 'ROLE_PROGRAMMER' | 'ROLE_USER' | 'admin' | 'programmer' | 'user';
 
@@ -17,7 +18,7 @@ export type Role = 'ROLE_ADMIN' | 'ROLE_PROGRAMMER' | 'ROLE_USER' | 'admin' | 'p
 export class AuthService {
   private http = inject(HttpClient);
 private router = inject(Router) as Router;  private auth = inject(Auth); 
-  private API_URL = 'http://localhost:8080/auth';
+  private API_URL = `${environment.apiUrl}/auth`;
 
   // ====== SEÑALES ======
   currentUser = signal<any | null>(null);
@@ -139,7 +140,7 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
 
 updateProfile(userData: any): Observable<any> {
   // Enviamos los datos al nuevo endpoint de actualización propia
-  return this.http.put(`http://localhost:8080/api/users/profile/update`, userData).pipe(
+  return this.http.put(`${environment.apiUrl}/api/users/profile/update`, userData).pipe(
     tap((res: any) => {
       // Actualizamos la señal del usuario actual con los nuevos datos
       this.currentUser.set(res);
@@ -162,7 +163,7 @@ updateProfile(userData: any): Observable<any> {
 async refreshCurrentUser() {
   // Cambiamos la URL para apuntar al controlador de usuarios, no al de auth
   const res = await firstValueFrom(
-    this.http.get(`http://localhost:8080/api/users/me`)
+    this.http.get(`${environment.apiUrl}/api/users/me`)
   );
   this.currentUser.set(res);
   localStorage.setItem("user", JSON.stringify(res)); // Actualizamos el storage también

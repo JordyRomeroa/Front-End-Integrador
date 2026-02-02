@@ -37,7 +37,7 @@ obtenerAsesoriasPorUsuario(userId: number): Observable<any[]> {
 }
 obtenerAsesoriasPorProgramador(id: number): Observable<any[]> {
   // Asegúrate de que la URL coincida con tu AdviceController de Java
-  return this.http.get<any[]>(`http://localhost:8080/api/asesorias/programador/${id}`);
+  return this.http.get<any[]>(`${environment.apiUrl}/api/asesorias/programador/${id}`);
 }
   // Actualización vía Backend (PUT)
   actualizarAsesoria(id: string, data: Partial<Asesoria>): Observable<any> {
