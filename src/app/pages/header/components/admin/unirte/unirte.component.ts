@@ -1,9 +1,9 @@
 import { Component, inject, signal, effect, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../../../services/auth-service';
 import { PostulacionService } from '../../../../../../services/postulacion-service';
 import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-unirte',
