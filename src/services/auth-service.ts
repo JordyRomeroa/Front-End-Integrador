@@ -7,8 +7,8 @@ import {
   GoogleAuthProvider, 
   signOut 
 } from "@angular/fire/auth";
-import { Observable, of, tap, firstValueFrom } from "rxjs";
-import { environment } from "../environments/environment";
+import { Observable, of, tap, firstValueFrom, catchError } from "rxjs";
+import { environment } from "../environments/environment.prod";
 
 export type Role = 'ROLE_ADMIN' | 'ROLE_PROGRAMMER' | 'ROLE_USER' | 'admin' | 'programmer' | 'user';
 
@@ -66,9 +66,7 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
 
   // ====== LOGIN Y REGISTRO ======
 
-  register(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/register`, { contacto: email, password });
-  }
+ 
 
   login(contacto: string, password: string): Observable<any> {
     return this.http.post(`${this.API_URL}/login`, { contacto, password }).pipe(
@@ -212,5 +210,24 @@ isLogged(): boolean {
   return this.token() !== null;
 }
 
-
+// En auth.service.ts
+// En auth.service.ts
+// En AuthService
+register(email: string, password: string): Observable<any> {
+  const body = { 
+    contacto: email, 
+    password: password,
+    nombre: email.split('@')[0], 
+    role: 'user' // Asegúrate de que tu backend acepte este nombre de campo
+  };
+  
+  return this.http.post(`${this.API_URL}/register`, body).pipe(
+    tap((res: any) => this.handleAuthSuccess(res)),
+    catchError(err => {
+      // Devolvemos el error para que rxResource lo capture sin "morir"
+      console.error("Error en el registro de usuario:", err);
+      throw err; 
+    })
+  );
+}
 }

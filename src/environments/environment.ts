@@ -1,4 +1,5 @@
+// src/environments/environment.ts
 export const environment = {
-  production: true,
-  apiUrl: 'https://proyectofinalbackend-88xp.onrender.com'
+  production: false,
+  apiUrl: 'http://localhost:8080' // Tu Spring Boot local
 };

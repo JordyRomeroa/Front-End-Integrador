@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { catchError, from, of } from 'rxjs';
+import { catchError, from, of, take } from 'rxjs'; // Añadido take
 
 import { FormUtils } from '../../shared/form-utils';
 import { AuthService } from '../../../services/auth-service';
@@ -19,11 +19,13 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  
+  showPassword = false;
   mostrarNuevoPassword = signal(false);
   loginForm: FormGroup;
 
-  // Signal para disparar el login
+  // Señal para el error visual amigable (reemplaza al alert)
+  errorVisible = signal<string | null>(null);
+
   private loginTrigger = signal<{ email: string; password: string } | null>(null);
 
   loginResource = rxResource({
@@ -48,82 +50,91 @@ export class Login {
       newPassword: [''] 
     });
 
-    // EFFECT: Maneja la respuesta del login automático de rxResource
     effect(() => {
       const result = this.loginResource.value();
       if (!result) return;
 
-      // 1. Manejo de Errores
+      // 1. Manejo de Errores SIN ALERT
       if ((result as any).error) {
-        console.log('❌ Error de login:', (result as any).error);
-        alert('Error al iniciar sesión: ' + ((result as any).error.message || 'Credenciales inválidas'));
+        const errorData = (result as any).error;
+        console.log('❌ Error de login:', errorData);
+        
+        // Seteamos el mensaje amigable
+        this.errorVisible.set(this.getFriendlyError(errorData));
+        
+        // Reseteamos el campo password para que lo reintente limpiamente
+        this.loginForm.get('password')?.reset();
+
+        // Limpia el mensaje de error automáticamente cuando el usuario empiece a escribir de nuevo
+        this.loginForm.get('password')?.valueChanges.pipe(take(1)).subscribe(() => {
+          this.errorVisible.set(null);
+        });
         return;
       }
 
-      // 2. GUARDAR EN STORAGE (Vital para que el Guard funcione)
+      // 2. GUARDAR EN STORAGE
       localStorage.setItem('user', JSON.stringify(result));
-      console.log('💾 Usuario guardado en LocalStorage:', result);
+      this.errorVisible.set(null);
 
       // 3. Redirección lógica
       if (result.mustChangePassword) {
-        console.log('➡️ Debe cambiar contraseña: redirigiendo a /must-change-password');
         this.router.navigate(['/must-change-password']);
       } else {
-        console.log('✅ Login exitoso: redirigiendo a /home');
         this.router.navigate(['/home']);
       }
     });
   }
 
-  onSubmit() {
-  if (this.loginForm.invalid) {
-    this.loginForm.markAllAsTouched();
-    return;
+  // Traductor de errores técnicos a mensajes profesionales
+  private getFriendlyError(error: any): string {
+    // Si el error viene del backend o de Firebase, mapeamos el código
+    const code = error.code || error.error?.code || error.status || '';
+    const errorMessages: { [key: string]: string } = {
+      'auth/invalid-email': 'El correo electrónico no es válido.',
+      'auth/user-not-found': 'No existe una cuenta con este correo.',
+      'auth/wrong-password': 'La contraseña es incorrecta.',
+      'auth/invalid-credential': 'Credenciales incorrectas. Verifica tus datos.',
+      '401': 'Usuario o contraseña no válidos.'
+    };
+    return errorMessages[code] || 'Credenciales inválidas. Inténtalo de nuevo.';
   }
 
-  const { email, password } = this.loginForm.value;
-
-  // El .trim() elimina espacios al inicio y al final
-  this.loginTrigger.set({ 
-    email: email.trim(), 
-    password: password.trim() 
-  });
-}
+  onSubmit() {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+    this.errorVisible.set(null); // Limpiar error previo al intentar
+    const { email, password } = this.loginForm.value;
+    this.loginTrigger.set({ 
+      email: email.trim(), 
+      password: password.trim() 
+    });
+  }
 
   async loginWithGoogle() {
     try {
       const result = await this.authService.loginWithGoogle();
-      
-      // GUARDAR EN STORAGE para Google también
       localStorage.setItem('user', JSON.stringify(result));
-      console.log("Google login OK, usuario persistido.");
-
       if (result.mustChangePassword) {
         this.router.navigate(['/must-change-password']);
       } else {
         this.router.navigate(['/home']);
       }
-    } catch (error) {
-      console.error(error);
-      alert("Error con Google: " + (error as any).message);
+    } catch (error: any) {
+      console.error("Error en Google Login:", error);
+      this.errorVisible.set('No se pudo conectar con Google.');
     }
   }
 
   loading = this.loginResource.isLoading;
 
   errorMessage = () => {
+    // Mantenemos este método por si lo usas en otros inputs, 
+    // pero el error principal ahora lo maneja errorVisible()
     const error = this.loginResource.error();
     if (!error) return '';
-
-    const code = (error as any).code || '';
-    const errorMessages: { [key: string]: string } = {
-      'auth/invalid-email': 'El correo electrónico no es válido',
-      'auth/user-disabled': 'El usuario ha sido deshabilitado',
-      'auth/user-not-found': 'No existe un usuario con este correo',
-      'auth/wrong-password': 'Contraseña incorrecta',
-      'auth/invalid-credential': 'Credenciales inválidas'
-    };
-    return errorMessages[code] || 'Error al iniciar sesión';
+    return 'Error al iniciar sesión';
   }
 
   get email() { return this.loginForm.get('email'); }

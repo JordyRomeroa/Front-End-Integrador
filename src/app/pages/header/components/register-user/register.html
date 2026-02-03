@@ -1,133 +1,127 @@
-<div
-  class="min-h-screen flex items-center justify-center
-         bg-gradient-to-br from-secondary/80 via-accent/60 to-primary/70
-         p-4"
->
-  <div
-    class="card w-full max-w-md bg-base-100 shadow-2xl
-           rounded-2xl backdrop-blur-md border border-base-300
-           animate-fadeIn"
-  >
-    <div class="card-body space-y-4">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary/90 via-accent/70 to-primary/80 p-6 relative overflow-hidden">
+  
+  <div class="absolute top-[-10%] left-[-10%] w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-secondary/20 rounded-full blur-3xl"></div>
 
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-secondary mb-1">
-          Crear Cuenta
-        </h1>
-        <p class="text-base-content/70 text-sm">
-          Regístrate para comenzar
-        </p>
+  <div class="card w-full max-w-md bg-base-100/90 shadow-[0_20px_50px_rgba(0,0,0,0.2)] rounded-[2.5rem] border border-white/40 backdrop-blur-xl animate-fadeIn relative z-10">
+    
+    <div class="card-body p-10 space-y-8">
+
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-tr from-secondary to-accent shadow-lg shadow-secondary/20 rotate-3 hover:rotate-0 transition-transform duration-300 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+        </div>
+        <h1 class="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-secondary to-primary tracking-tight">Únete ahora</h1>
+        <p class="text-base-content/50 font-medium italic text-sm">Tu próxima gran oportunidad comienza aquí</p>
       </div>
 
-      @if (registerResource.error()) {
-        <div class="alert alert-error shadow-md">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+      @if (errorVisible()) {
+        <div class="alert bg-error/10 border-none text-error py-4 rounded-2xl flex items-start gap-3 animate-shake">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <span>{{ errorMessage() }}</span>
+          <span class="text-xs font-bold leading-tight">{{ errorVisible() }}</span>
         </div>
       }
 
-      <!-- Formulario -->
-      <form
-        [formGroup]="registerForm"
-        (ngSubmit)="onSubmit()"
-        class="space-y-4"
-      >
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
 
-        <!-- Email -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-medium">Correo electrónico</span>
+        <div class="form-control group">
+          <label class="label pb-1">
+            <span class="label-text font-bold text-xs text-secondary/70 uppercase tracking-widest ml-1">Email</span>
           </label>
-          <input
-            type="email"
-            formControlName="email"
-            placeholder="ejemplo@correo.com"
-            class="input input-bordered w-full"
-            [class.input-error]="email?.invalid && email?.touched"
-          />
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-base-content/30 group-focus-within:text-secondary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+            </span>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="tu@correo.com"
+              class="input input-bordered w-full pl-12 h-14 bg-base-200/30 border-base-content/5 focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all rounded-2xl font-medium"
+              [class.border-error]="email?.invalid && email?.touched"
+            />
+          </div>
           @if (email?.invalid && email?.touched) {
-            <span class="text-red-500 text-sm mt-1">
-              {{ formUtils.getFieldError(registerForm,'email') }}
-            </span>
+            <span class="text-error text-[10px] font-bold mt-1 ml-2">Email no válido</span>
           }
         </div>
 
-        <!-- Password -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-medium">Contraseña</span>
+        <div class="form-control group">
+          <label class="label pb-1">
+            <span class="label-text font-bold text-xs text-secondary/70 uppercase tracking-widest ml-1">Contraseña</span>
           </label>
-          <input
-            type="password"
-            formControlName="password"
-            placeholder="••••••••"
-            class="input input-bordered w-full"
-            [class.input-error]="password?.invalid && password?.touched"
-          />
-          @if (password?.invalid && password?.touched) {
-            <span class="text-red-500 text-sm mt-1">
-              {{ formUtils.getFieldError(registerForm,'password') }}
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-base-content/30 group-focus-within:text-secondary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             </span>
+            <input
+              type="password"
+              formControlName="password"
+              placeholder="••••••••"
+              class="input input-bordered w-full pl-12 h-14 bg-base-200/30 border-base-content/5 focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all rounded-2xl font-medium"
+              [class.border-error]="password?.invalid && password?.touched"
+            />
+          </div>
+          @if (password?.touched) {
+            @if (password?.hasError('required')) {
+              <span class="text-error text-[10px] font-bold mt-1 ml-2">Requerido</span>
+            } @else if (password?.hasError('minlength')) {
+              <span class="text-error text-[10px] font-bold mt-1 ml-2">Mínimo 6 caracteres</span>
+            } @else if (password?.hasError('pattern')) {
+              <span class="text-error text-[10px] font-bold mt-1 ml-2 block leading-tight">Usa: Mayúscula, minúscula y número</span>
+            }
           }
         </div>
 
-        <!-- Confirm Password -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-medium">Confirmar contraseña</span>
+        <div class="form-control group">
+          <label class="label pb-1">
+            <span class="label-text font-bold text-xs text-secondary/70 uppercase tracking-widest ml-1">Confirmar Contraseña</span>
           </label>
-          <input
-            type="password"
-            formControlName="confirmPassword"
-            placeholder="••••••••"
-            class="input input-bordered w-full"
-            [class.input-error]="confirmPassword?.invalid && confirmPassword?.touched"
-          />
-          @if (confirmPassword?.invalid && confirmPassword?.touched) {
-            <span class="text-red-500 text-sm mt-1">
-              {{ formUtils.getFieldError(registerForm,'confirmPassword') }}
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-base-content/30 group-focus-within:text-secondary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
             </span>
+            <input
+              type="password"
+              formControlName="confirmPassword"
+              placeholder="••••••••"
+              class="input input-bordered w-full pl-12 h-14 bg-base-200/30 border-base-content/5 focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all rounded-2xl font-medium"
+              [class.border-error]="confirmPassword?.invalid && confirmPassword?.touched"
+            />
+          </div>
+          @if (confirmPassword?.hasError('passwordMismatch') && confirmPassword?.touched) {
+            <span class="text-error text-[10px] font-bold mt-1 ml-2">Las contraseñas no coinciden</span>
           }
         </div>
 
-        <div class="form-control pt-2">
+        <div class="pt-4">
           <button
             type="submit"
-            class="btn btn-secondary w-full gap-2 text-lg"
+            class="btn btn-secondary w-full h-14 rounded-2xl text-white shadow-xl shadow-secondary/30 border-none hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:bg-base-300"
             [disabled]="loading() || registerForm.invalid"
           >
             @if (loading()) {
-              <span class="loading loading-spinner loading-sm"></span>
-              Creando cuenta...
+              <span class="loading loading-dots loading-md"></span>
             } @else {
-              Crear Cuenta
+              <span class="text-md font-black uppercase tracking-widest">Crear mi perfil</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             }
           </button>
         </div>
       </form>
 
-      <div class="text-center pt-2">
-        <p class="text-sm text-base-content/70">
-          ¿Ya tienes cuenta?
-          <a
-            routerLink="/auth/login"
-            class="link link-secondary font-semibold ml-1"
-          >
-            Inicia sesión aquí
-          </a>
-        </p>
+      <div class="pt-4">
+        <div class="relative mb-8">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-base-content/5"></div></div>
+            <div class="relative flex justify-center text-xs uppercase"><span class="bg-base-100 px-4 text-base-content/30 font-bold">¿Ya eres miembro?</span></div>
+        </div>
+
+        <a routerLink="/login" class="btn btn-ghost btn-block h-14 rounded-2xl border-2 border-base-200 hover:border-secondary/20 hover:bg-secondary/5 transition-all group">
+            <span class="text-base-content/60 group-hover:text-secondary transition-colors font-bold">Inicia Sesión</span>
+        </a>
       </div>
 
     </div>

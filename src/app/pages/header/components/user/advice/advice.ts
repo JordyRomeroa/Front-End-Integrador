@@ -128,7 +128,7 @@ const nuevaAsesoria: any = {
 
   this.asesoriaService.crearAsesoria(nuevaAsesoria).subscribe({
     next: (res) => {
-      this.showDialog(`Asesoría enviada correctamente a ${programador?.nombre}`);
+      this.showDialog(`Asesoría enviada correctamente }`);
       this.limpiarFormulario();
     },
     error: (err) => {

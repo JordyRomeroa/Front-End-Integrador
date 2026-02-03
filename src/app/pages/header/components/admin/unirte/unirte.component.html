@@ -93,17 +93,31 @@
     } 
 
     @else if (authService.isProgrammer()) {
-      <div class="text-center py-16 filter grayscale opacity-80">
-        <div class="text-6xl mb-6">👨‍💻</div>
-        <h1 class="text-3xl font-black text-gray-800 mb-4">Acceso Restringido</h1>
-        <p class="text-gray-600 max-w-md mx-auto mb-8">
-          Ya formas parte del equipo de programadores. No puedes enviar nuevas postulaciones ni acceder al panel de reclutamiento.
-        </p>
-        <div class="inline-block px-8 py-3 border-2 border-gray-400 text-gray-500 font-bold rounded-full uppercase tracking-widest">
-          Perfil Activo
-        </div>
+  <div class="text-center py-16 animate-fade-in flex flex-col items-center">
+    <div class="relative mb-6">
+      <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse"></div>
+      <div class="text-7xl relative">🚀</div>
+    </div>
+
+    <h1 class="text-4xl font-black text-indigo-950 mb-4 tracking-tight">¡Bienvenido al Equipo!</h1>
+    
+    <p class="text-gray-600 max-w-md mx-auto mb-10 text-lg leading-relaxed">
+      Tu perfil ha sido aprobado con éxito. Ahora tienes acceso total al panel de gestión y herramientas de desarrollo.
+    </p>
+
+    <div class="space-y-6 w-full max-w-xs">
+      <div class="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 font-bold rounded-2xl border border-emerald-100 shadow-sm">
+        <span class="relative flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+        </span>
+        Estado del Perfil: Activo
       </div>
-    }
+
+      
+    </div>
+  </div>
+}
 
     @else {
       <div class="flex justify-center mb-8">

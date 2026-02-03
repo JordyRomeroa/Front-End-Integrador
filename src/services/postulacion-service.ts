@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../environments/environment';
+import { environment } from "../environments/environment.prod";
 
 @Injectable({ providedIn: 'root' })
 export class PostulacionService {
@@ -22,7 +22,13 @@ export class PostulacionService {
   }
 
   // Admin cambia estado
-  actualizarEstado(id: number, estado: string): Observable<void> {
-    return this.http.patch<void>(`${this.apiUrl}/solicitudes-postulacion/${id}/estado`, estado);
-  }
+ // En postulacion-service.ts
+actualizarEstado(id: number, estado: string): Observable<void> {
+  // Envolvemos el string en comillas para que sea un JSON válido o enviamos texto plano
+  return this.http.patch<void>(
+    `${this.apiUrl}/solicitudes-postulacion/${id}/estado`, 
+    `"${estado}"`, // Enviamos el string con comillas para que el backend lo reciba bien
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+}
 }

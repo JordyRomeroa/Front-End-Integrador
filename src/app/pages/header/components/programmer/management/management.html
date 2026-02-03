@@ -1,63 +1,121 @@
-<div class="p-4">
-  <button class="btn btn-blue mb-4" (click)="crearProyecto()">+ Nuevo Proyecto</button>
+<div class="p-6 min-h-screen">
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-2xl font-extrabold text-white tracking-tight">Mis Proyectos</h2>
+    <button (click)="crearProyecto()" 
+            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+      <span>+ Nuevo Proyecto</span>
+    </button>
+  </div>
 
   @if (!cargando()) {
     @if (proyectos().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
         @for (proyecto of proyectos(); track proyecto.nombre) {
-          <div class="border p-4 rounded shadow">
-            <h3 class="font-bold text-lg">{{ proyecto.nombre }}</h3>
-            <p class="text-cyan-200">{{ proyecto.descripcion }}</p>
-            <p class="text-sm text-cyan-200">Tipo: {{ proyecto.tipo || 'Sin categoría' }}</p>
-            <p class="text-sm text-cyan-200">Tecnologías: {{ proyecto.tecnologias.join(', ') }}</p>
+          <div class="bg-slate-800/40 backdrop-blur-md border border-white/10 p-6 rounded-3xl shadow-xl hover:border-blue-500/50 transition-all duration-300 group">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-black text-xl text-white group-hover:text-blue-400 transition-colors">{{ proyecto.nombre }}</h3>
+              <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-1 rounded-lg uppercase font-bold tracking-wider">
+                {{ proyecto.tipo || 'Sin categoría' }}
+              </span>
+            </div>
+            
+            <p class="text-slate-300 text-sm leading-relaxed mb-4 line-clamp-2">{{ proyecto.descripcion }}</p>
+            
+            <div class="flex flex-wrap gap-2 mb-6">
+              @for (tech of proyecto.tecnologias; track tech) {
+                <span class="text-[11px] bg-slate-700/50 text-cyan-200 px-2 py-1 rounded-md border border-white/5 italic">
+                  #{{ tech.trim() }}
+                </span>
+              }
+            </div>
 
-            <div class="mt-2 flex gap-2">
-              <button class="btn btn-green" (click)="editarProyecto(proyecto)">Editar</button>
-              <button class="btn btn-red" (click)="eliminarProyecto(proyecto)">Eliminar</button>
+            <div class="flex gap-3 pt-4 border-t border-white/5">
+              <button (click)="editarProyecto(proyecto)" 
+                      class="flex-1 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white font-bold py-2 rounded-xl transition-all border border-emerald-500/20">
+                Editar
+              </button>
+              <button (click)="eliminarProyecto(proyecto)" 
+                      class="flex-1 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold py-2 rounded-xl transition-all border border-rose-500/20">
+                Eliminar
+              </button>
             </div>
           </div>
         }
       </div>
     } @else {
-      <div class="text-cyan-200">
-        No tienes proyectos aún. Usa el botón "Nuevo Proyecto" para crear uno.
+      <div class="flex flex-col items-center justify-center p-20 bg-slate-800/20 rounded-3xl border-2 border-dashed border-white/10">
+        <p class="text-cyan-200 font-medium italic text-lg">No tienes proyectos aún. Usa el botón "Nuevo Proyecto" para crear uno.</p>
       </div>
     }
   }
 </div>
 
-<!-- Modal -->
 @if (showModal()) {
-  <div class="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-    <div class="bg-white p-6 rounded shadow-lg w-full max-w-lg text-black relative">
-      <button class="absolute top-2 right-2 btn btn-ghost" (click)="showModal.set(false)">✕</button>
+  <div class="fixed inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm z-50 p-4 animate-fadeIn">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-bounceIn relative">
+      
+      <button (click)="showModal.set(false)" 
+              class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+        ✕
+      </button>
 
-      <h3 class="text-xl font-bold mb-4">
-        {{ proyectoSelected() ? 'Editar Proyecto' : 'Nuevo Proyecto' }}
-      </h3>
+      <div class="p-10">
+        <h3 class="text-2xl font-black text-slate-800 mb-6">
+          {{ proyectoSelected() ? 'Editar Proyecto' : 'Nuevo Proyecto' }}
+        </h3>
 
-      <input [(ngModel)]="proyectoForm.nombre" placeholder="Nombre" class="input mb-2 w-full"/>
-      <textarea [(ngModel)]="proyectoForm.descripcion" placeholder="Descripción" class="input mb-2 w-full"></textarea>
+        <div class="space-y-3">
+          <div class="group">
+            <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Nombre</label>
+            <input [(ngModel)]="proyectoForm.nombre" placeholder="Ej: Sistema de Gestión" 
+                   class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700"/>
+          </div>
 
-      <select [(ngModel)]="proyectoForm.tipo" class="input mb-2 w-full">
-        <option value="" disabled>Selecciona el tipo</option>
-        <option value="Frontend">Frontend</option>
-        <option value="Backend">Backend</option>
-        <option value="Fullstack">Fullstack</option>
-      </select>
-      <select [(ngModel)]="proyectoForm.categoria" class="input mb-2 w-full">
-  <option value="" disabled>Selecciona la categoría</option>
-  <option value="Laboral">Laboral</option>
-  <option value="Académico">Académico</option>
-  <option value="Educativo">Educativo</option>
-  <option value="Personal">Personal</option>
-</select>
+          <div>
+            <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Descripción</label>
+            <textarea [(ngModel)]="proyectoForm.descripcion" placeholder="¿De qué trata el proyecto?" 
+                      class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700 h-24"></textarea>
+          </div>
 
-      <input [(ngModel)]="tecnologiasInput" placeholder="Tecnologías (separadas por coma)" class="input mb-2 w-full"/>
-      <input [(ngModel)]="proyectoForm.repo" placeholder="Repo URL" class="input mb-2 w-full"/>
-      <input [(ngModel)]="proyectoForm.deploy" placeholder="Deploy URL" class="input mb-2 w-full"/>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Tipo</label>
+              <select [(ngModel)]="proyectoForm.tipo" class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700 cursor-pointer">
+                <option value="" disabled>Selecciona tipo</option>
+                <option value="Frontend">Frontend</option>
+                <option value="Backend">Backend</option>
+                <option value="Fullstack">Fullstack</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Categoría</label>
+              <select [(ngModel)]="proyectoForm.categoria" class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700 cursor-pointer">
+                <option value="" disabled>Selecciona categoría</option>
+                <option value="Laboral">Laboral</option>
+                <option value="Académico">Académico</option>
+                <option value="Educativo">Educativo</option>
+                <option value="Personal">Personal</option>
+              </select>
+            </div>
+          </div>
 
-      <button class="btn btn-blue mt-2" (click)="guardarProyecto()">Guardar</button>
+          <div>
+            <label class="text-[10px] font-bold uppercase text-slate-400 ml-2">Tecnologías</label>
+            <input [(ngModel)]="tecnologiasInput" placeholder="Java, Angular, Spring..." 
+                   class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <input [(ngModel)]="proyectoForm.repo" placeholder="URL Repositorio" class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700"/>
+            <input [(ngModel)]="proyectoForm.deploy" placeholder="URL Deploy" class="w-full p-3.5 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all text-slate-700"/>
+          </div>
+        </div>
+
+        <button (click)="guardarProyecto()" 
+                class="w-full bg-slate-900 hover:bg-blue-600 text-white p-4 rounded-2xl font-bold mt-8 transition-all shadow-xl shadow-slate-200 active:scale-[0.98]">
+          Guardar Cambios
+        </button>
+      </div>
     </div>
   </div>
 }

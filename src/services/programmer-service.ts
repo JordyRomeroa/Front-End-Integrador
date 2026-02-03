@@ -1,15 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http'; 
+import { HttpClient, HttpHeaders } from '@angular/common/http'; 
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ProgramadorData } from '../app/pages/interface/programador';
 import { ProgramadorInfo } from '../app/pages/interface/programadorInfo';
-import { environment } from '../environments/environment';
+import { environment } from "../environments/environment.prod";
 
 @Injectable({ providedIn: 'root' })
 export class ProgramadorService {
   private http = inject(HttpClient);
-  
-  // URL para desarrollo local. En Render solo cambiarás esta cadena.
   private API_URL = `${environment.apiUrl}/api/users`;
 
   private programadoresSubject = new BehaviorSubject<ProgramadorData[]>([]);
@@ -19,30 +17,41 @@ export class ProgramadorService {
     this.refrescarTabla(); 
   }
 
-  /** * Registra o actualiza en la DB a través de Spring Boot.
-   * Se mantiene adminUser por compatibilidad de firma, pero no se usa.
+  /**
+   * MÉTODO REGISTRAR: Ahora 100% independiente de Firebase.
+   * Se eliminó el uso de adminUser interno y se enfoca en el backend.
    */
-  async registrarProgramador(data: ProgramadorData, adminUser?: any, uid?: string) {
+  async registrarProgramador(data: ProgramadorData, uid?: string) {
+    const token = localStorage.getItem('auth_token');
+    
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+
     const body = {
-      nombre: data.nombre,
-      especialidad: data.especialidad,
+      nombre: data.nombre || '',
+      contacto: data.contacto || '',
       descripcion: data.descripcion || '',
-      contacto: data.contacto, // Este es el email/identificador en tu Java
-      redes: Array.isArray(data.redes) ? data.redes.join(',') : data.redes,
-      foto: data.foto || 'https://via.placeholder.com/40',
-      mustChangePassword: true,
+      especialidad: data.especialidad || 'General',
+      redes: Array.isArray(data.redes) ? data.redes : [],
+      foto: data.foto || 'https://via.placeholder.com/40'
     };
 
-    console.log("LOG: Procesando en Backend. ID:", uid || 'Nuevo Registro');
-
     try {
-      // Si el uid existe y es numérico (Neon DB ID), actualizamos
-      if (uid && !isNaN(Number(uid))) { 
-        return await firstValueFrom(this.http.put(`${this.API_URL}/${uid}`, body));
-      } else {
-        // Registro de nuevo programador
+      // Si recibimos un UID (numérico o string de la DB), actualizamos
+      if (uid && uid !== 'undefined') { 
+        console.log("Ejecutando PUT a backend:", `${this.API_URL}/${uid}`);
         const response = await firstValueFrom(
-          this.http.post(`${this.API_URL}/create-programmer`, body)
+          this.http.put(`${this.API_URL}/${uid}`, body, { headers })
+        );
+        await this.refrescarTabla();
+        return response;
+      } else {
+        // MODO CREAR DIRECTO EN BACKEND
+        console.log("Ejecutando POST a backend: /create-programmer");
+        const response = await firstValueFrom(
+          this.http.post(`${this.API_URL}/create-programmer`, body, { headers })
         );
         await this.refrescarTabla();
         return response;
@@ -53,78 +62,52 @@ export class ProgramadorService {
     }
   }
 
- // En tu ProgramadorService.ts
-async obtenerProgramadores(): Promise<ProgramadorData[]> {
-  try {
-    const res = await firstValueFrom(this.http.get<any[]>(`${this.API_URL}/programadores`));
-    console.log(">>> Datos crudos de Java:", res); 
+  // --- LO DEMÁS SE MANTIENE IGUAL ---
 
-    return res.map(p => ({
-      // Intentamos obtener el ID de cualquier forma que venga de Java
-      uid: p.id || p.uid || p.idUsuario, 
-      nombre: p.nombre || 'Sin nombre',
-      especialidad: p.especialidad || 'General',
-      descripcion: p.descripcion || '',
-      contacto: p.contacto || '',
-      // Si Java envía una lista de roles en lugar de un string de redes, 
-      // esto evita que el split() rompa el código
-      redes: p.redes ? (typeof p.redes === 'string' ? p.redes.split(',') : p.redes) : [],
-      foto: p.foto || 'https://via.placeholder.com/40'
-    }));
-  } catch (error) {
-    console.error('Error al obtener programadores:', error);
-    return [];
+  async obtenerProgramadores(): Promise<ProgramadorData[]> {
+    try {
+      const res = await firstValueFrom(this.http.get<any[]>(`${this.API_URL}/programadores`));
+      return res.map(p => ({
+        uid: p.id || p.uid || p.idUsuario, 
+        nombre: p.nombre || 'Sin nombre',
+        especialidad: p.especialidad || 'General',
+        descripcion: p.descripcion || '',
+        contacto: p.contacto || '',
+        redes: p.redes ? (typeof p.redes === 'string' ? p.redes.split(',') : p.redes) : [],
+        foto: p.foto || 'https://via.placeholder.com/40'
+      }));
+    } catch (error) {
+      console.error('Error al obtener programadores:', error);
+      return [];
+    }
   }
-}
+
   async refrescarTabla() {
     const lista = await this.obtenerProgramadores();
     this.programadoresSubject.next(lista);
   }
 
-  /** Método puente para mantener compatibilidad con tus formularios */
-  guardarProgramador(data: ProgramadorData, adminUser: any, uid?: string) {
-    return this.registrarProgramador(data, adminUser, uid);
+  // Se quitó el parámetro adminUser aquí también para limpiar la cadena de llamadas
+  guardarProgramador(data: ProgramadorData, uid?: string) {
+    return this.registrarProgramador(data, uid);
   }
 
-  /** Elimina un registro en el Backend con Token de Seguridad */
   async eliminarProgramador(uid: string) {
-    if (!uid) {
-      console.error('Error: El ID del programador es indefinido');
-      return;
-    }
-
+    if (!uid) return;
     try {
-      // 1. Recuperamos el token del storage (como lo guardas en AuthService)
       const token = localStorage.getItem('auth_token');
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-      // 2. Si no hay token, ni siquiera intentamos la petición
-      if (!token) {
-        throw new Error('No tienes permisos (Token faltante). Inicia sesión de nuevo.');
-      }
-
-      // 3. Ejecutamos el DELETE enviando el Header de Authorization
       await firstValueFrom(
-        this.http.delete(`${this.API_URL}/${uid}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        this.http.delete(`${this.API_URL}/${uid}`, { headers })
       );
-
-      console.log(`Programador con ID ${uid} eliminado exitosamente.`);
-      
-      // 4. Refrescamos la lista para que desaparezca de la tabla inmediatamente
       await this.refrescarTabla();
-
-    } catch (error: any) {
-      console.error("Error al eliminar programador:", error);
-      // Si el error es 500, el problema está en las relaciones de Java (Cascade)
-      // Si el error es 403 o 401, el problema es el Token/Roles
+    } catch (error) {
+      console.error("Error al eliminar:", error);
       throw error;
     }
   }
 
-  /** Mapeo simplificado para vistas públicas */
   async camposEspecificosProgramadores(): Promise<ProgramadorInfo[]> {
     try {
       const lista = await this.obtenerProgramadores();
@@ -140,7 +123,6 @@ async obtenerProgramadores(): Promise<ProgramadorData[]> {
     }
   }
 
-  /** Obtiene un programador específico por ID numérico */
   async getProgramadorByUid(uid: string): Promise<ProgramadorData | null> {
     if (!uid) return null;
     try {
@@ -151,12 +133,12 @@ async obtenerProgramadores(): Promise<ProgramadorData[]> {
         especialidad: p.especialidad,
         descripcion: p.descripcion,
         contacto: p.contacto,
-        redes: p.redes ? p.redes.split(',') : [],
+        redes: p.redes ? (typeof p.redes === 'string' ? p.redes.split(',') : p.redes) : [],
         foto: p.foto,
         mustChangePassword: p.mustChangePassword
       };
     } catch (err) {
-      console.error("Error buscando programador:", err);
+      console.error("Error buscando:", err);
       return null;
     }
   }

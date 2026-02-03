@@ -1,98 +1,137 @@
-<div class="min-h-screen flex flex-col items-center justify-center p-4
-            bg-gradient-to-br from-black to-purple-900
-            animate-gradient-bg">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-purple-950 to-secondary/40 p-6 relative overflow-hidden">
+  
+  <div class="absolute top-[-15%] right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
+  <div class="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] bg-secondary/15 rounded-full blur-[120px]"></div>
 
-  <!-- Espacio para Logo -->
+  <div class="card w-full max-w-md bg-white/[0.07] backdrop-blur-3xl shadow-[0_0_50px_-12px_rgba(139,92,246,0.3)] rounded-[3rem] border border-white/10 animate-fadeIn relative z-10 overflow-hidden">
+    
+    <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
-  <div class="card w-full max-w-md bg-white/90 backdrop-blur-md shadow-2xl rounded-3xl
-              transform transition-all duration-500 hover:scale-105
-              animate-fade-in-up">
-    <div class="card-body">
+    <div class="card-body p-10 space-y-8">
 
-      <!-- Banner animado de bienvenida -->
-      <div class="text-center mb-6">
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-2 animate-pulse">¡Bienvenido!</h1>
-        <p class="text-gray-600 text-base animate-fade-in-up">
-          Inicia sesión para continuar y desbloquea todas las funciones
-        </p>
+      <div class="text-center space-y-3">
+        <div class="relative inline-flex mb-2">
+            <div class="absolute inset-0 bg-primary/40 blur-xl rounded-full"></div>
+            <div class="relative inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-be from-white/10 to-white/5 border border-white/20 shadow-2xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+            </div>
+        </div>
+        <h1 class="text-5xl font-black tracking-tighter text-white">
+            <span class="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">Bienvenido</span>
+        </h1>
+        <p class="text-primary-content/40 font-medium tracking-wide text-xs uppercase">Introduce tus datos para continuar</p>
       </div>
 
-      <!-- Mensajes de error -->
-      @if (loginResource.error()) {
-        <div class="alert alert-error mb-4 animate-shake">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      @if (errorVisible()) {
+        <div class="alert bg-red-500/10 border border-red-500/20 backdrop-blur-md text-red-400 py-4 rounded-2xl flex items-center gap-3 animate-shake overflow-hidden relative">
+          <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <span>{{ errorMessage() }}</span>
+          <div class="flex flex-col text-left">
+            <span class="text-[10px] uppercase font-black opacity-50 tracking-widest">Acceso Denegado</span>
+            <span class="text-xs font-bold">{{ errorVisible() }}</span>
+          </div>
         </div>
       }
 
-      <!-- Formulario -->
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
 
-        <!-- Email -->
-        <div class="form-control mb-6">
-          <label class="label"><span class="label-text">Correo electrónico</span></label>
-          <input type="email" formControlName="email" placeholder="ejemplo@correo.com"
-                 class="input input-bordered w-full placeholder-gray-400/50
-                        transition-all duration-300 focus:ring-2 focus:ring-purple-500"
-                 [class.input-error]="email?.invalid && email?.touched"/>
-          @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-            <span class="block text-red-500 text-sm mt-1">{{formUtils.getFieldError(loginForm,'email')}}</span>
+        <div class="form-control group">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-white/20 group-focus-within:text-primary transition-all duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+            </span>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="Correo electrónico"
+              class="input w-full pl-12 h-16 bg-white/[0.03] border-white/10 focus:border-primary/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-primary/10 transition-all rounded-2xl text-white placeholder:text-white/20"
+              [class.border-error]="email?.invalid && email?.touched"
+            />
+          </div>
+          @if (email?.invalid && email?.touched) {
+            <span class="text-error text-[11px] font-bold mt-2 ml-2 flex items-center gap-1 animate-fadeIn">
+              <span class="w-1 h-1 bg-error rounded-full"></span>
+              {{formUtils.getFieldError(loginForm, 'email')}}
+            </span>
           }
         </div>
 
-        <!-- Password -->
-        <div class="form-control mb-6">
-          <label class="label"><span class="label-text">Contraseña</span></label>
-          <input type="password" formControlName="password" placeholder="••••••••"
-                 class="input input-bordered w-full placeholder-gray-400/50
-                        transition-all duration-300 focus:ring-2 focus:ring-purple-500"
-                 [class.input-error]="password?.invalid && password?.touched"/>
-          @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-            <span class="block text-red-500 text-sm mt-1">{{formUtils.getFieldError(loginForm,'password')}}</span>
+        <div class="form-control group">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-white/20 group-focus-within:text-primary transition-all duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </span>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Contraseña"
+              class="input w-full pl-12 pr-12 h-16 bg-white/[0.03] border-white/10 focus:border-primary/50 focus:bg-white/[0.07] focus:ring-4 focus:ring-primary/10 transition-all rounded-2xl text-white placeholder:text-white/20"
+              [class.border-error]="password?.invalid && password?.touched"
+            />
+            <button 
+              type="button"
+              (click)="showPassword = !showPassword"
+              class="absolute inset-y-0 right-0 pr-4 flex items-center text-white/20 hover:text-white transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="showPassword ? 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18' : 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'" />
+              </svg>
+            </button>
+          </div>
+          @if (password?.invalid && password?.touched) {
+            <span class="text-error text-[11px] font-bold mt-2 ml-2 flex items-center gap-1 animate-fadeIn">
+              <span class="w-1 h-1 bg-error rounded-full"></span>
+              {{formUtils.getFieldError(loginForm, 'password')}}
+            </span>
           }
         </div>
 
-        <!-- Botón Login -->
-        <div class="form-control mt-6">
-          <button type="submit"
-                  class="btn btn-primary w-full py-3 font-semibold
-                         transition-transform duration-300 transform hover:scale-105 hover:shadow-xl animate-bounce"
-                  [disabled]="loading() || loginForm.invalid">
+        <div class="pt-2">
+          <button
+            type="submit"
+            class="btn btn-primary w-full h-16 rounded-2xl text-white border-none bg-gradient-to-r from-primary to-secondary shadow-[0_10px_30px_-10px_rgba(124,58,237,0.5)] hover:shadow-[0_15px_40px_-10px_rgba(124,58,237,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="loading() || loginForm.invalid"
+          >
             @if (loading()) {
-              <span class="loading loading-spinner loading-sm"></span>
-              Iniciando sesión...
+              <span class="loading loading-ring loading-md"></span>
             } @else {
-              Iniciar Sesión
+              <span class="text-lg font-black uppercase tracking-widest">Comenzar</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
             }
           </button>
         </div>
       </form>
 
-      <!-- Divider -->
-      <div class="divider">O</div>
+      <div class="flex items-center gap-4">
+        <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/10"></div>
+        <span class="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Otras opciones</span>
+        <div class="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/10"></div>
+      </div>
 
-      <!-- Google Login -->
-      <button type="button" (click)="loginWithGoogle()"
-              class="btn btn-outline w-full py-3 flex items-center justify-center gap-2
-                     transition-transform duration-300 transform hover:scale-105"
-              [disabled]="loading()">
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      <button
+        type="button"
+        (click)="loginWithGoogle()"
+        class="btn btn-block h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white flex items-center justify-center gap-4 transition-all group"
+        [disabled]="loading()"
+      >
+        <svg class="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
         </svg>
-        Continuar con Google
+        <span class="font-bold tracking-wide">Continuar con Google</span>
       </button>
 
-      <!-- Link a Registro -->
-      <div class="text-center mt-4">
-        <p class="text-sm text-gray-600">
-          ¿No tienes cuenta?
-          <a routerLink="/register" class="link link-primary font-semibold">Regístrate aquí</a>
-        </p>
+      <div class="text-center pt-2">
+        <a routerLink="/register" class="group text-sm font-medium text-white/40 hover:text-white transition-colors">
+          ¿No tienes una cuenta? 
+          <span class="text-primary group-hover:text-secondary font-black ml-1 transition-colors underline underline-offset-8 decoration-primary/30 group-hover:decoration-secondary">Regístrate gratis</span>
+        </a>
       </div>
 
     </div>

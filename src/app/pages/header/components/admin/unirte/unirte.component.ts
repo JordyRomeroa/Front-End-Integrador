@@ -61,30 +61,38 @@ this.solicitudForm = this.fb.group({
     this.checkRoles();
   }
 
-  checkRoles() {
-    const role = this.authService.getUserRole();
-    const isLogged = this.authService.isLogged();
+ checkRoles() {
+  const role = this.authService.getUserRole();
+  const isLogged = this.authService.isLogged();
 
-    this.isAdmin.set(role === 'admin' || role === 'ROLE_ADMIN');
-    this.canPostulate.set(role === 'user' || role === 'ROLE_USER');
-    
-    if (this.isAdmin()) {
-      this.cargarSolicitudes();
-    } else if (isLogged) {
-      this.cargarMiEstado();
-    }
+  // 1. Definimos quién es quién
+  const esAdmin = role === 'admin' || role === 'ROLE_ADMIN';
+  const esProgramador = role === 'programmer' || role === 'ROLE_PROGRAMMER';
+  const esUsuarioNormal = !esAdmin && !esProgramador;
+
+  // 2. Seteamos las señales de estado
+  this.isAdmin.set(esAdmin);
+  this.canPostulate.set(esUsuarioNormal && isLogged);
+
+  // 3. ¡ACTUALIZACIÓN CRÍTICA!: Cargar los datos según el rol
+  if (esAdmin) {
+    // Si es admin, traemos TODAS las postulaciones para el panel
+    this.cargarSolicitudes();
+  } else if (isLogged) {
+    // Si es usuario o programador, traemos su estado personal
+    this.cargarMiEstado();
   }
+}
 activarPerfilYLogin() {
-  // 1. Limpiamos cualquier rastro de la sesión vieja (ROLE_USER)
-  localStorage.clear(); 
+  // Limpia TODO el almacenamiento para que el nuevo login genere un token fresco
+  localStorage.clear();
   sessionStorage.clear();
 
-  // 2. Redirigimos a la raíz /login 
-  // Usamos ['/login'] con la barra inicial para que sea ruta absoluta
+  alert('¡Configuración completada! Inicia sesión para entrar con tu nuevo rol.');
+
   this.router.navigate(['/login']).then(() => {
-    // 3. Forzamos un refresco rápido para asegurar que los Guards 
-    // y el AuthService se reinicien de cero
-    window.location.reload();
+    // El reload es vital para resetear el estado de los servicios (AuthService)
+    window.location.reload(); 
   });
 }
   
@@ -148,14 +156,20 @@ cargarMiEstado() {
   });
 }
 
-  actualizarEstado(id: number, nuevoEstado: string) {
-    this.postuService.actualizarEstado(id, nuevoEstado).subscribe({
-      next: () => {
-        this.cargarSolicitudes(); // Esto moverá la solicitud al historial automáticamente
-      },
-      error: (err) => console.error('Error al actualizar', err)
-    });
-  }
+ actualizarEstado(id: number, nuevoEstado: string) {
+  console.log("BOTÓN PRESIONADO - ID:", id, "ESTADO:", nuevoEstado); // <--- ESTO DEBE SALIR EN F12
+  
+  this.postuService.actualizarEstado(id, nuevoEstado).subscribe({
+    next: () => {
+      console.log("Respuesta del servidor OK");
+      this.cargarSolicitudes(); 
+    },
+    error: (err) => {
+      console.error('ERROR EN LA PETICIÓN:', err);
+      alert("Error: El servidor no respondió.");
+    }
+  });
+}
 
   copiarClave(clave: string) {
     navigator.clipboard.writeText(clave);

@@ -1,11 +1,10 @@
+import { Component, EventEmitter, Input, OnChanges, Output, signal, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Auth, setPersistence, createUserWithEmailAndPassword, getAuth, inMemoryPersistence } from 'firebase/auth';
+// Eliminadas las importaciones de Firebase Auth y Firebase Secondary
 import { ProgramadorService } from '../../../../../../services/programmer-service';
 import { AuthService } from '../../../../../../services/auth-service';
-import { getSecondaryApp } from '../../../../../../services/firebase-secondary';
 import { ProgramadorData } from '../../../../interface/programador';
 import axios from 'axios';
 
@@ -24,11 +23,12 @@ export class RegisterProgrammer implements OnChanges {
   especialidad = '';
   descripcion = '';
   contacto = '';
-  password = '';
+  password = ''; // Se enviará al backend para que él cree la cuenta
   redes: string[] = [''];
   foto: File | null = null;
+  fotoPreview: string = 'https://via.placeholder.com/150';
+  loading = false;
 
-  // Señales para el diálogo
   dialogVisible = signal(false);
   dialogMessage = signal('');
   dialogTitle = signal('');
@@ -41,23 +41,73 @@ export class RegisterProgrammer implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['programmer'] && this.programmer) {
+      console.log("Modo Edición para:", this.programmer.uid);
       this.nombre = this.programmer.nombre || '';
       this.especialidad = this.programmer.especialidad || '';
       this.descripcion = this.programmer.descripcion || '';
       this.contacto = this.programmer.contacto || '';
       this.redes = this.programmer.redes?.length ? [...this.programmer.redes] : [''];
-      this.foto = null;
-      this.password = '';
-    } else if (!this.programmer) {
+      this.fotoPreview = this.programmer.foto || 'https://via.placeholder.com/150';
+      this.password = ''; 
+    } else if (changes['programmer'] && !this.programmer) {
       this.resetFormulario();
     }
   }
 
-  private async createTemporaryAuth(): Promise<Auth> {
-    const secondaryApp = getSecondaryApp();
-    const auth2 = getAuth(secondaryApp);
-    await setPersistence(auth2, inMemoryPersistence);
-    return auth2;
+  async registrarProgramador() {
+    const esEdicion = !!(this.programmer?.uid || this.programmer?.id);
+
+    // Validaciones básicas
+    if (!this.nombre || !this.especialidad || !this.contacto) {
+      this.showDialog("Campos incompletos", "Nombre, especialidad y contacto son obligatorios.");
+      return;
+    }
+
+    if (!esEdicion && !this.password) {
+      this.showDialog("Contraseña obligatoria", "Debes asignar una contraseña para el nuevo registro.");
+      return;
+    }
+
+    this.loading = true;
+
+    try {
+      // 1. Subida de imagen a Cloudinary (si hay una nueva)
+      let fotoURL = this.fotoPreview;
+      if (this.foto) {
+        fotoURL = await this.subirImagenCloudinary(this.foto);
+      }
+
+      // 2. Construcción del Payload
+      // Nota: Incluimos la password para que el Backend cree el usuario de Spring Security/Auth
+      const payload: any = {
+        nombre: this.nombre,
+        especialidad: this.especialidad,
+        descripcion: this.descripcion,
+        contacto: this.contacto, // Usado como email/username
+        password: this.password, 
+        redes: this.redes.filter(r => r.trim() !== ''),
+        foto: fotoURL,
+        mustChangePassword: !esEdicion 
+      };
+
+      // 3. Llamada única al Backend
+      const uidExistente = this.programmer?.uid || this.programmer?.id?.toString();
+      
+      await this.programadorService.registrarProgramador(payload, uidExistente);
+
+      this.showDialog("Éxito", esEdicion ? "Programador actualizado correctamente" : "Programador registrado en el sistema");
+      
+      this.cerrar.emit();
+      this.resetFormulario();
+
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      // Captura el error de tu API (ej: Correo duplicado 400 Bad Request)
+      const errorMsg = error.error?.message || "No se pudo conectar con el servidor.";
+      this.showDialog("Error de Registro", errorMsg);
+    } finally {
+      this.loading = false;
+    }
   }
 
   private async subirImagenCloudinary(file: File): Promise<string> {
@@ -65,95 +115,34 @@ export class RegisterProgrammer implements OnChanges {
     formData.append('file', file);
     formData.append('upload_preset', 'preset_angular');
     formData.append('folder', 'programadores');
-
     const url = `https://api.cloudinary.com/v1_1/dfsuyz4vw/image/upload`;
-    try {
-      const response = await axios.post(url, formData);
-      return response.data.secure_url;
-    } catch (err) {
-      console.error('Error subiendo a Cloudinary', err);
-      throw err;
-    }
+    const response = await axios.post(url, formData);
+    return response.data.secure_url;
   }
 
-  private showDialog(title: string, message: string) {
-    this.dialogTitle.set(title);
-    this.dialogMessage.set(message);
-    this.dialogVisible.set(true);
-  }
-
-  cerrarDialog() {
-    this.dialogVisible.set(false);
-  }
-
-  async registrarProgramador() {
-    const adminUser = this.authService.currentUser();
-    if (!adminUser) {
-      this.showDialog("Acceso denegado", "Debes iniciar sesión como administrador.");
-      return;
+  onFotoSeleccionada(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.foto = file;
+      this.fotoPreview = URL.createObjectURL(file);
     }
-
-    if (!this.nombre || !this.especialidad || !this.contacto || (!this.programmer && !this.password)) {
-      this.showDialog("Campos incompletos", "Completa todos los campos obligatorios");
-      return;
-    }
-
-    try {
-      let uid = this.programmer?.uid;
-
-      if (!uid) {
-        const auth2 = await this.createTemporaryAuth();
-        const cred = await createUserWithEmailAndPassword(auth2, this.contacto, this.password);
-        uid = cred.user.uid;
-        await auth2.signOut();
-      }
-
-      let fotoURL = this.programmer?.foto || 'https://via.placeholder.com/150';
-      if (this.foto) fotoURL = await this.subirImagenCloudinary(this.foto);
-
-      const nuevoProgramador: ProgramadorData = {
-        uid,
-        nombre: this.nombre,
-        especialidad: this.especialidad,
-        descripcion: this.descripcion,
-        contacto: this.contacto,
-        redes: this.redes,
-        foto: fotoURL,
-        mustChangePassword: true
-      };
-
-      await this.programadorService.registrarProgramador(nuevoProgramador, adminUser, uid);
-
-
-      this.showDialog("Éxito", this.programmer ? "Programador actualizado correctamente" : "Programador registrado correctamente");
-
-
-      this.cerrar.emit();
-      this.resetFormulario();
-
-    } catch (error: any) {
-      console.error(error);
-
-      this.showDialog("Error", "Ocurrió un error al registrar el programador.");
-
-    }
-  }
-
-  cancelar() {
-    this.cerrar.emit();
   }
 
   agregarRed() { this.redes.push(''); }
   eliminarRed(i: number) { this.redes.splice(i, 1); }
-  onFotoSeleccionada(event: any) { this.foto = event.target.files[0] ?? null; }
+  cancelar() { this.cerrar.emit(); }
+  
+  private showDialog(t: string, m: string) { 
+    this.dialogTitle.set(t); 
+    this.dialogMessage.set(m); 
+    this.dialogVisible.set(true); 
+  }
+
+  cerrarDialog() { this.dialogVisible.set(false); }
 
   private resetFormulario() {
-    this.nombre = '';
-    this.especialidad = '';
-    this.descripcion = '';
-    this.contacto = '';
-    this.password = '';
-    this.redes = [''];
-    this.foto = null;
+    this.nombre = ''; this.especialidad = ''; this.descripcion = ''; this.contacto = '';
+    this.password = ''; this.redes = ['']; this.foto = null; 
+    this.fotoPreview = 'https://via.placeholder.com/150';
   }
 }
