@@ -35,7 +35,7 @@
   </div>
 
   @if (activeFilter === 'category') {
-    <div class="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in">
+    <div class="flex flex-wrap justify-center gap-3 mb-10 animate-fadeIn">
       <button class="px-4 py-2 rounded-lg backdrop-blur-md transition-all text-sm font-medium"
         [ngClass]="selectedCategory === '' ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'"
         (click)="showAllCategories()">Todas</button>
@@ -48,7 +48,7 @@
   }
 
   @if (activeFilter === 'collaborator') {
-    <div class="flex flex-wrap justify-center gap-3 mb-10 animate-fade-in">
+    <div class="flex flex-wrap justify-center gap-3 mb-10 animate-fadeIn">
       <button class="px-4 py-2 rounded-lg backdrop-blur-md transition-all text-sm font-medium"
         [ngClass]="selectedCollaborator === '' ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white'"
         (click)="showAllCollaborators()">Todos</button>
@@ -61,7 +61,7 @@
   }
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-    @for (project of filteredRepos; track project.name) {
+    @for (project of paginatedProjects; track project.name) {
       <div class="card p-6 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-[0_0_25px_rgba(0,200,255,0.1)] text-white transition-all duration-500 hover:scale-[1.03] flex flex-col">
         
         <div class="flex items-center mb-5">
@@ -73,7 +73,9 @@
         </div>
 
         <h3 class="text-2xl font-black mb-3">{{ project.name }}</h3>
-        <p class="text-white/80 mb-6 leading-relaxed text-sm flex-grow italic">{{ project.description }}</p>
+        <p class="text-white/80 mb-6 leading-relaxed text-sm flex-grow italic line-clamp-3">
+          {{ project.description }}
+        </p>
 
         <div class="flex items-center gap-2 text-white/70 mb-5 py-2 border-y border-white/5">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -103,4 +105,34 @@
       </div>
     }
   </div>
+
+  @if (totalPages > 1) {
+    <div class="flex justify-center items-center gap-2 mt-16 animate-fadeIn">
+      
+      <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1"
+        class="p-3 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-20 hover:bg-yellow-400 hover:text-black transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="flex gap-2 bg-black/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/5">
+        @for (p of [].constructor(totalPages); track $index) {
+          <button (click)="goToPage($index + 1)"
+            [class]="$index + 1 === currentPage ? 'bg-yellow-400 text-black shadow-lg' : 'text-white hover:bg-white/10'"
+            class="w-10 h-10 rounded-xl font-bold transition-all text-sm">
+            {{ $index + 1 }}
+          </button>
+        }
+      </div>
+
+      <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages"
+        class="p-3 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-20 hover:bg-yellow-400 hover:text-black transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  }
+
 </section>

@@ -4,6 +4,7 @@ import { ProyectoService } from '../../../../../../services/proyecto-service';
 import { AuthService } from '../../../../../../services/auth-service';
 
 interface Project {
+  id?: number;
   name: string;
   description?: string;
   techs?: string[];
@@ -32,7 +33,10 @@ export class Proyectos implements OnInit {
   collaborators: string[] = [];
   activeFilter: 'category' | 'collaborator' = 'category';
   
-  // Nueva propiedad para las estadísticas llamativas
+  // Paginación
+  currentPage: number = 1;
+  itemsPerPage: number = 6;
+
   stats = {
     totalProjects: 0,
     totalCollaborators: 0,
@@ -75,6 +79,7 @@ export class Proyectos implements OnInit {
               : `https://ui-avatars.com/api/?name=${nombreFinal}&background=random`);
 
         return {
+          id: p.id,
           name: p.nombre || 'Proyecto sin título',
           description: p.descripcion || 'Este proyecto es una muestra del talento de nuestro equipo.',
           techs: p.tecnologias || [],
@@ -89,32 +94,56 @@ export class Proyectos implements OnInit {
         };
       });
 
-      // Cálculo de estadísticas
       this.collaborators = Array.from(new Set(this.repos.map(r => r.owner.login))).sort();
       this.stats.totalProjects = this.repos.length;
       this.stats.totalCollaborators = this.collaborators.length;
       this.stats.totalCategories = new Set(this.repos.map(r => r.category)).size;
       
       this.applyFilters();
-      this.cdr.detectChanges();
     });
   }
 
+  // Lógica de Paginación
+  get totalPages(): number {
+    return Math.ceil(this.filteredRepos.length / this.itemsPerPage);
+  }
+
+  get paginatedProjects(): Project[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredRepos.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  goToPage(page: number) {
+    this.currentPage = page;
+    window.scrollTo({ top: 450, behavior: 'smooth' });
+  }
+
   getCategories(projects: Project[]): string[] {
-    return Array.from(new Set(projects.map(p => p.category || 'Laboral').filter(cat => cat !== 'Personal'))).sort();
+    return Array.from(new Set(projects.map(p => p.category || 'Laboral'))).sort();
   }
 
   setActiveFilter(filter: 'category' | 'collaborator') {
     this.activeFilter = filter;
     this.selectedCategory = '';
     this.selectedCollaborator = '';
+    this.currentPage = 1;
     this.applyFilters();
   }
 
-  filterByCategory(cat: string) { this.selectedCategory = cat; this.applyFilters(); }
-  filterByCollaborator(user: string) { this.selectedCollaborator = user; this.applyFilters(); }
-  showAllCategories() { this.selectedCategory = ''; this.applyFilters(); }
-  showAllCollaborators() { this.selectedCollaborator = ''; this.applyFilters(); }
+  filterByCategory(cat: string) { 
+    this.selectedCategory = cat; 
+    this.currentPage = 1;
+    this.applyFilters(); 
+  }
+
+  filterByCollaborator(user: string) { 
+    this.selectedCollaborator = user; 
+    this.currentPage = 1;
+    this.applyFilters(); 
+  }
+
+  showAllCategories() { this.selectedCategory = ''; this.currentPage = 1; this.applyFilters(); }
+  showAllCollaborators() { this.selectedCollaborator = ''; this.currentPage = 1; this.applyFilters(); }
 
   private applyFilters() {
     this.filteredRepos = this.repos.filter(p => {
