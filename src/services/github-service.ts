@@ -2,10 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+// github-service.ts
 export interface Repo {
+  id: number;           // <--- Faltaba para el track por ID
   name: string;
-  description: string;
   html_url: string;
+  description: string;  // <--- Añadido para la descripción
+  fork: boolean;        // <--- Añadido para el filtrado
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
 }
 
 export interface GitHubUser {

@@ -7,7 +7,6 @@ import { RouterModule } from '@angular/router';
 import { AboutUs } from "../admin/AboutUs/AboutUs";
 import { Team } from "../admin/team/team";
 
-
 @Component({
   selector: 'app-inicio-component',
   templateUrl: './InicioComponent.html',
@@ -18,8 +17,8 @@ import { Team } from "../admin/team/team";
 })
 export class InicioComponent implements OnInit {
 
-  myRepos: Repo[] = [];
-  partnerRepos: Repo[] = [];
+  // Unificamos para un grid más dinámico
+  allRepos: Repo[] = [];
 
   readonly users = ['NayeliC98', 'JordyRomeroa'];
 
@@ -32,18 +31,25 @@ export class InicioComponent implements OnInit {
     const requests = this.users.map(user => this.githubService.getRepos(user));
 
     forkJoin(requests).subscribe({
-      next: ([firstUserRepos, secondUserRepos]) => {
-        this.myRepos = this.getRandomRepos(firstUserRepos, 3);
-        this.partnerRepos = this.getRandomRepos(secondUserRepos, 3);
+      next: ([nayeliRepos, jordyRepos]) => {
+        // Tomamos 3 aleatorios de cada uno
+        const filteredNayeli = this.getRandomRepos(nayeliRepos, 3);
+        const filteredJordy = this.getRandomRepos(jordyRepos, 3);
+        
+        // Combinamos y mezclamos
+        this.allRepos = [...filteredNayeli, ...filteredJordy].sort(() => Math.random() - 0.5);
+        
         this.cd.markForCheck();
       },
-      error: () => console.error(' Error al cargar los repositorios.')
+      error: () => console.error('Error al cargar los repositorios.')
     });
   }
 
   private getRandomRepos(repos: Repo[], count: number): Repo[] {
     if (!repos?.length) return [];
-    return [...repos]
+    // Solo repositorios que no sean forks para mostrar trabajo original
+    const originals = repos.filter(r => !r.fork);
+    return [...originals]
       .sort(() => Math.random() - 0.5)
       .slice(0, count);
   }
