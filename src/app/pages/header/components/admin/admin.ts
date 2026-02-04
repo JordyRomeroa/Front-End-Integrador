@@ -3,6 +3,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../services/programmer-service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // <-- NECESARIO PARA EL BUSCADOR
 import { RegisterProgrammer } from './register-programmer/register';
 import { ProgramadorData } from '../../../interface/programador';
 
@@ -14,7 +15,7 @@ import * as XLSX from 'xlsx';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, RegisterProgrammer],
+  imports: [RouterOutlet, CommonModule, RegisterProgrammer, FormsModule],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,7 +25,7 @@ export class Admin implements OnInit {
   public authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
 
-  // --- SEÑALES DE ESTADO ORIGINALES (NO TOCAR) ---
+  // --- SEÑALES DE ESTADO ORIGINALES ---
   role = signal<string | null>(null);
   programadores = signal<ProgramadorData[]>([]);
   showRegisterModal = signal(false);
@@ -36,10 +37,21 @@ export class Admin implements OnInit {
   toastMessage = signal('');
   programmerToDelete = signal<ProgramadorData | null>(null);
 
-  // --- NUEVAS SEÑALES PARA ESTADÍSTICAS ---
-  // Calculamos el total de programadores automáticamente basado en la lista
+  // --- LÓGICA DE FILTRADO ---
+  filtroBusqueda = signal('');
+
+  // SEÑAL COMPUTADA PARA LA TABLA
+  programadoresFiltrados = computed(() => {
+    const busqueda = this.filtroBusqueda().toLowerCase().trim();
+    if (!busqueda) return this.programadores();
+    
+    return this.programadores().filter(p => 
+      p.nombre.toLowerCase().includes(busqueda) || 
+      p.especialidad.toLowerCase().includes(busqueda)
+    );
+  });
+
   totalProgramadores = computed(() => this.programadores().length);
-  // Ejemplo de otras stats (puedes conectar estos números a tus servicios de asesorías/proyectos)
   totalProyectos = signal(0); 
   totalAsesorias = signal(0);
 
@@ -60,21 +72,13 @@ export class Admin implements OnInit {
     this.programadorService.refrescarTabla();
   }
 
-  // --- NUEVOS MÉTODOS DE EXPORTACIÓN ---
+  // --- MÉTODOS DE EXPORTACIÓN ---
   exportarPDF() {
     const doc = new jsPDF();
     doc.text('Reporte de Programadores', 14, 15);
-    
     const head = [['Nombre', 'Especialidad', 'Contacto']];
     const data = this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A']);
-
-    autoTable(doc, {
-      head: head,
-      body: data,
-      startY: 20,
-      theme: 'grid'
-    });
-
+    autoTable(doc, { head, body: data, startY: 20, theme: 'grid' });
     doc.save('lista-programadores.pdf');
   }
 
@@ -85,14 +89,13 @@ export class Admin implements OnInit {
       Contacto: p.contacto,
       Descripcion: p.descripcion
     }));
-
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Programadores');
     XLSX.writeFile(wb, 'reporte-programadores.xlsx');
   }
 
-  // --- TUS MÉTODOS ORIGINALES (MANTENIDOS TAL CUAL) ---
+  // --- MÉTODOS ORIGINALES ---
   registerProgrammer() {
     this.programmerSelected.set(null);
     this.showRegisterModal.set(true);
@@ -122,8 +125,7 @@ export class Admin implements OnInit {
       this.lanzarToast(`${programmer.nombre} ha sido eliminado.`);
       this.cerrarDeleteModal();
     } catch (error) {
-      console.error(error);
-      this.lanzarToast('Error al eliminar el programador');
+      this.lanzarToast('Error al eliminar');
     } finally {
       this.isDeleting.set(false);
     }
@@ -142,14 +144,8 @@ export class Admin implements OnInit {
 
   logout() {
     this.authService.logout().subscribe({
-      next: () => this.router.navigate(['/login']),
-      error: err => console.error(err)
+      next: () => this.router.navigate(['/login'])
     });
-  }
-
-  isLast(redes?: string[], red?: string) {
-    if (!redes || !red) return false;
-    return redes.indexOf(red) === redes.length - 1;
   }
 
   obtenerRedes(redes?: string[]) {
