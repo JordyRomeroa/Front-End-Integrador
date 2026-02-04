@@ -88,7 +88,40 @@
     </table>
   </div>
 </section>
+<section class="mx-auto my-6 max-w-7xl space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    
+    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl shadow-xl text-white">
+      <div class="flex justify-between items-center">
+        <h4 class="text-lg font-bold">Asesorías Totales</h4>
+        <span class="p-2 bg-white/20 rounded-lg">📊</span>
+      </div>
+      <p class="text-3xl font-black mt-2">124</p>
+      <p class="text-xs opacity-80 mt-1">Filtrado por fecha y estado</p>
+    </div>
 
+    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-2xl shadow-xl text-white">
+      <div class="flex justify-between items-center">
+        <h4 class="text-lg font-bold">Proyectos Activos</h4>
+        <span class="p-2 bg-white/20 rounded-lg">🚀</span>
+      </div>
+      <p class="text-3xl font-black mt-2">42</p>
+      <p class="text-xs opacity-80 mt-1">Usuarios con proyectos vigentes</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 flex flex-col justify-center space-y-3">
+      <h4 class="text-gray-900 font-bold text-sm uppercase tracking-wider">Descargar Reportes</h4>
+      <div class="flex gap-2">
+        <button (click)="exportToPDF()" class="flex-1 bg-red-50 text-red-600 py-2 rounded-lg font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-2">
+          <span>📄</span> PDF
+        </button>
+        <button (click)="exportToExcel()" class="flex-1 bg-green-50 text-green-600 py-2 rounded-lg font-bold hover:bg-green-100 transition-all flex items-center justify-center gap-2">
+          <span>📉</span> Excel
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
 @if (showRegisterModal()) {
   <div class="fixed inset-0 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm z-50 animate-fadeIn">
     <div class="bg-white rounded-2xl shadow-4xl p-6 sm:p-8 max-w-xl w-full transform transition-all scale-100 animate-fade-in-up relative border border-gray-100" (click)="$event.stopPropagation()">

@@ -1,10 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
-import { ProgramadorService,  } from '../../../../../services/programmer-service';
+import { ProgramadorService } from '../../../../../services/programmer-service';
 import { CommonModule } from '@angular/common';
 import { RegisterProgrammer } from './register-programmer/register';
 import { ProgramadorData } from '../../../interface/programador';
+
+// Librerías para reportes
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -24,13 +30,17 @@ export class Admin implements OnInit {
   showRegisterModal = signal(false);
   programmerSelected = signal<ProgramadorData | null>(null);
 
-  // --- NUEVAS SEÑALES PARA MODALS Y TOASTS ---
+  // Señales para Modals y Toasts
   showDeleteModal = signal(false);
   isDeleting = signal(false);
   showToast = signal(false);
   toastMessage = signal('');
   programmerToDelete = signal<ProgramadorData | null>(null);
 
+  // --- NUEVAS SEÑALES PARA REPORTES (DASHBOARD) ---
+  // Ejemplo de cálculos automáticos basados en la lista de programadores
+  totalProgramadores = computed(() => this.programadores().length);
+  
   constructor() {
     const r = this.authService.userRole();
     this.role.set(r);
@@ -48,6 +58,58 @@ export class Admin implements OnInit {
     this.programadorService.refrescarTabla();
   }
 
+  // --- MÉTODOS DE EXPORTACIÓN (REPORTES ADM) ---
+
+  exportToExcel() {
+    try {
+      // Preparamos los datos de la tabla
+      const dataToExport = this.programadores().map(p => ({
+        Nombre: p.nombre,
+        Especialidad: p.especialidad,
+        Email: p.contacto || 'No registrado',
+        Descripcion: p.descripcion || ''
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Programadores');
+      
+      XLSX.writeFile(workbook, 'Reporte_Administrativo.xlsx');
+      this.lanzarToast('Excel descargado correctamente');
+    } catch (error) {
+      this.lanzarToast('Error al generar Excel');
+    }
+  }
+
+  exportToPDF() {
+    try {
+      const doc = new jsPDF();
+      
+      // Título del PDF
+      doc.setFontSize(18);
+      doc.text('Reporte Administrativo de Programadores', 14, 20);
+      doc.setFontSize(10);
+      doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 14, 28);
+
+      // Generación de la tabla
+      autoTable(doc, {
+        startY: 35,
+        head: [['Nombre', 'Especialidad', 'Contacto']],
+        body: this.programadores().map(p => [
+          p.nombre, 
+          p.especialidad, 
+          p.contacto || 'N/A'
+        ]),
+        headStyles: { fillColor: [79, 70, 229] } // Color Indigo-600
+      });
+
+      doc.save('Reporte_Programadores.pdf');
+      this.lanzarToast('PDF descargado correctamente');
+    } catch (error) {
+      this.lanzarToast('Error al generar PDF');
+    }
+  }
+
   // --- MÉTODOS DE REGISTRO / EDICIÓN ---
   registerProgrammer() {
     this.programmerSelected.set(null);
@@ -63,16 +125,13 @@ export class Admin implements OnInit {
     this.showRegisterModal.set(false);
   }
 
-  // --- MÉTODOS DE ELIMINACIÓN REFACTORIZADOS ---
-  
-  // 1. En lugar de confirm(), abrimos nuestro modal
+  // --- MÉTODOS DE ELIMINACIÓN ---
   eliminarProgramador(programmer: ProgramadorData) {
     if (!programmer.uid) return;
     this.programmerToDelete.set(programmer);
     this.showDeleteModal.set(true);
   }
 
-  // 2. Ejecución real de la eliminación
   async confirmarEliminacionReal() {
     const programmer = this.programmerToDelete();
     if (!programmer?.uid) return;
@@ -80,7 +139,6 @@ export class Admin implements OnInit {
     try {
       this.isDeleting.set(true);
       await this.programadorService.eliminarProgramador(programmer.uid);
-      
       this.lanzarToast(`${programmer.nombre} ha sido eliminado.`);
       this.cerrarDeleteModal();
     } catch (error) {
@@ -108,11 +166,6 @@ export class Admin implements OnInit {
       next: () => this.router.navigate(['/login']),
       error: err => console.error(err)
     });
-  }
-
-  isLast(redes?: string[], red?: string) {
-    if (!redes || !red) return false;
-    return redes.indexOf(red) === redes.length - 1;
   }
 
   obtenerRedes(redes?: string[]) {
