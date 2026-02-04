@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { catchError, from, of, take } from 'rxjs'; // Añadido take
+import { catchError, from, of, take } from 'rxjs';
 
 import { FormUtils } from '../../shared/form-utils';
 import { AuthService } from '../../../services/auth-service';
@@ -22,8 +22,6 @@ export class Login {
   showPassword = false;
   mostrarNuevoPassword = signal(false);
   loginForm: FormGroup;
-
-  // Señal para el error visual amigable (reemplaza al alert)
   errorVisible = signal<string | null>(null);
 
   private loginTrigger = signal<{ email: string; password: string } | null>(null);
@@ -51,32 +49,29 @@ export class Login {
     });
 
     effect(() => {
-      const result = this.loginResource.value();
+      const result: any = this.loginResource.value();
       if (!result) return;
 
-      // 1. Manejo de Errores SIN ALERT
-      if ((result as any).error) {
-        const errorData = (result as any).error;
-        console.log('❌ Error de login:', errorData);
-        
-        // Seteamos el mensaje amigable
+      if (result.error) {
+        const errorData = result.error;
         this.errorVisible.set(this.getFriendlyError(errorData));
-        
-        // Reseteamos el campo password para que lo reintente limpiamente
         this.loginForm.get('password')?.reset();
-
-        // Limpia el mensaje de error automáticamente cuando el usuario empiece a escribir de nuevo
         this.loginForm.get('password')?.valueChanges.pipe(take(1)).subscribe(() => {
           this.errorVisible.set(null);
         });
         return;
       }
 
-      // 2. GUARDAR EN STORAGE
+      // GUARDAR EN STORAGE: Guardamos el objeto completo (que incluye el token)
       localStorage.setItem('user', JSON.stringify(result));
+      
+      // También guardamos 'auth_token' por separado para facilitar la lectura en los servicios
+      if (result.token) {
+        localStorage.setItem('auth_token', result.token);
+      }
+
       this.errorVisible.set(null);
 
-      // 3. Redirección lógica
       if (result.mustChangePassword) {
         this.router.navigate(['/must-change-password']);
       } else {
@@ -85,9 +80,7 @@ export class Login {
     });
   }
 
-  // Traductor de errores técnicos a mensajes profesionales
   private getFriendlyError(error: any): string {
-    // Si el error viene del backend o de Firebase, mapeamos el código
     const code = error.code || error.error?.code || error.status || '';
     const errorMessages: { [key: string]: string } = {
       'auth/invalid-email': 'El correo electrónico no es válido.',
@@ -104,7 +97,7 @@ export class Login {
       this.loginForm.markAllAsTouched();
       return;
     }
-    this.errorVisible.set(null); // Limpiar error previo al intentar
+    this.errorVisible.set(null);
     const { email, password } = this.loginForm.value;
     this.loginTrigger.set({ 
       email: email.trim(), 
@@ -116,6 +109,11 @@ export class Login {
     try {
       const result = await this.authService.loginWithGoogle();
       localStorage.setItem('user', JSON.stringify(result));
+      
+      if (result.token) {
+        localStorage.setItem('auth_token', result.token);
+      }
+
       if (result.mustChangePassword) {
         this.router.navigate(['/must-change-password']);
       } else {
@@ -130,8 +128,6 @@ export class Login {
   loading = this.loginResource.isLoading;
 
   errorMessage = () => {
-    // Mantenemos este método por si lo usas en otros inputs, 
-    // pero el error principal ahora lo maneja errorVisible()
     const error = this.loginResource.error();
     if (!error) return '';
     return 'Error al iniciar sesión';

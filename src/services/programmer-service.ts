@@ -17,17 +17,30 @@ export class ProgramadorService {
     this.refrescarTabla(); 
   }
 
-  /**
-   * MÉTODO REGISTRAR: Ahora 100% independiente de Firebase.
-   * Se eliminó el uso de adminUser interno y se enfoca en el backend.
-   */
-  async registrarProgramador(data: ProgramadorData, uid?: string) {
-    const token = localStorage.getItem('auth_token');
-    
-    const headers = new HttpHeaders({
+  // MÉTODO AUXILIAR: Para extraer el token del objeto 'user' o 'auth_token'
+  private getAuthHeaders(): HttpHeaders {
+    let token = localStorage.getItem('auth_token');
+
+    // Si no está en auth_token, lo buscamos dentro del objeto 'user' que guardas en Login
+    if (!token) {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        token = parsedUser.token || parsedUser.accessToken;
+      }
+    }
+
+    return new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
+  }
+
+  /**
+   * MÉTODO REGISTRAR: Ahora 100% independiente de Firebase.
+   */
+  async registrarProgramador(data: ProgramadorData, uid?: string) {
+    const headers = this.getAuthHeaders(); // Usamos los headers dinámicos
 
     const body = {
       nombre: data.nombre || '',
@@ -39,7 +52,6 @@ export class ProgramadorService {
     };
 
     try {
-      // Si recibimos un UID (numérico o string de la DB), actualizamos
       if (uid && uid !== 'undefined') { 
         console.log("Ejecutando PUT a backend:", `${this.API_URL}/${uid}`);
         const response = await firstValueFrom(
@@ -48,7 +60,6 @@ export class ProgramadorService {
         await this.refrescarTabla();
         return response;
       } else {
-        // MODO CREAR DIRECTO EN BACKEND
         console.log("Ejecutando POST a backend: /create-programmer");
         const response = await firstValueFrom(
           this.http.post(`${this.API_URL}/create-programmer`, body, { headers })
@@ -61,8 +72,6 @@ export class ProgramadorService {
       throw error;
     }
   }
-
-  // --- LO DEMÁS SE MANTIENE IGUAL ---
 
   async obtenerProgramadores(): Promise<ProgramadorData[]> {
     try {
@@ -87,24 +96,34 @@ export class ProgramadorService {
     this.programadoresSubject.next(lista);
   }
 
-  // Se quitó el parámetro adminUser aquí también para limpiar la cadena de llamadas
   guardarProgramador(data: ProgramadorData, uid?: string) {
     return this.registrarProgramador(data, uid);
   }
 
+  // --- MÉTODO ELIMINAR CORREGIDO CON MANEJO DE INTEGRIDAD ---
   async eliminarProgramador(uid: string) {
     if (!uid) return;
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+      const headers = this.getAuthHeaders();
 
+      console.log(`Intentando eliminar programador: ${uid}`);
+      
       await firstValueFrom(
         this.http.delete(`${this.API_URL}/${uid}`, { headers })
       );
+      
       await this.refrescarTabla();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al eliminar:", error);
-      throw error;
+      
+      // Si el error es 401, el token falló
+      if (error.status === 401) {
+         throw new Error("No tienes permisos o tu sesión expiró.");
+      }
+      
+      // Si el error es de integridad (asociado a proyectos/asesorías)
+      // Usualmente el backend lanza 500 o 409
+      throw new Error("No se puede eliminar: El programador tiene proyectos o asesorías asignadas.");
     }
   }
 
