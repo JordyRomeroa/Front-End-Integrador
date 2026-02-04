@@ -1,190 +1,153 @@
-<section class="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-  <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-indigo-500 flex items-center justify-between">
+<section class="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 flex items-center justify-between">
     <div>
-      <p class="text-sm text-gray-500 font-bold uppercase">Total Programadores</p>
-      <h4 class="text-3xl font-black text-gray-800">{{ totalProgramadores() }}</h4>
+      <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Programadores</p>
+      <h4 class="text-2xl font-black text-gray-800">{{ totalProgramadores() }}</h4>
     </div>
-    <div class="text-3xl">💻</div>
+    <div class="text-2xl">💻</div>
   </div>
 
-  <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-green-500 flex items-center justify-between">
+  <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
     <div>
-      <p class="text-sm text-gray-500 font-bold uppercase">Reportes Rápidos</p>
-      <div class="flex gap-2 mt-2">
-        <button (click)="exportarPDF()" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-xs font-bold hover:bg-red-200 transition-colors">PDF</button>
-        <button (click)="exportarExcel()" class="px-3 py-1 bg-green-100 text-green-600 rounded-lg text-xs font-bold hover:bg-green-200 transition-colors">Excel</button>
+      <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Reportes Rápidos</p>
+      <div class="flex gap-2 mt-1">
+        <button (click)="exportarPDF()" class="px-2 py-1 bg-red-100 text-red-600 rounded-md text-[10px] font-bold hover:bg-red-200 transition-colors">PDF</button>
+        <button (click)="exportarExcel()" class="px-2 py-1 bg-green-100 text-green-600 rounded-md text-[10px] font-bold hover:bg-green-200 transition-colors">Excel</button>
       </div>
     </div>
-    <div class="text-3xl">📁</div>
+    <div class="text-2xl">📁</div>
   </div>
 
-  <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-purple-500 flex items-center justify-between">
+  <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-purple-500 flex items-center justify-between">
     <div>
-      <p class="text-sm text-gray-500 font-bold uppercase">Estado Sistema</p>
-      <p class="text-xs text-green-500 font-bold mt-2 flex items-center gap-1">
+      <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Estado Sistema</p>
+      <p class="text-[10px] text-green-500 font-bold mt-1 flex items-center gap-1">
         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Servidor Activo
       </p>
     </div>
-    <div class="text-3xl">🛡️</div>
+    <div class="text-2xl">🛡️</div>
   </div>
 </section>
 
-<section class="bg-gradient-to-br from-gray-50/50 to-white/50 p-4 sm:p-8 rounded-2xl shadow-2xl mx-auto my-6 sm:my-10 max-w-7xl space-y-6 sm:space-y-8 backdrop-blur-md border border-gray-100">
+<section class="bg-white p-4 sm:p-6 rounded-2xl shadow-xl mx-auto my-6 max-w-7xl border border-gray-100">
+  
+  <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+    <h3 class="text-xl font-extrabold text-gray-900 tracking-tight">Gestión de Talento</h3>
+    <button
+      class="inline-flex items-center px-4 py-2 text-xs font-bold rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 transition-all hover:scale-105"
+      (click)="registerProgrammer()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+      Nuevo Registro
+    </button>
+  </div>
 
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 border-gray-200 space-y-3 sm:space-y-0">
-    <h3 class="text-xl sm:text-3xl font-extrabold text-gray-900 drop-shadow-sm">Administración de Usuarios</h3>
-    <button
-      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all hover:scale-[1.02]"
-      (click)="registerProgrammer()">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-      </svg>
-      Registrar Programador
-    </button>
-  </div>
-
-  <div class="relative shadow-xl rounded-xl overflow-x-auto">
-    <table class="w-full text-xs sm:text-sm text-left text-gray-600 bg-white table-auto">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-100/80 sticky top-0">
-        <tr>
-          <th scope="col" class="px-2 py-2 w-16 text-center">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-          </th>
-          <th scope="col" class="px-2 py-2 w-40">Nombre</th>
-          <th scope="col" class="px-2 py-2 w-28">Especialidad</th>
-          <th scope="col" class="px-2 py-2 min-w-[10rem]">Descripción</th>
-          <th scope="col" class="px-2 py-2 min-w-[8rem]">Contacto</th>
-          <th scope="col" class="px-2 py-2 w-36">Redes</th>
-          <th scope="col" class="px-2 py-2 w-24">Rol</th>
-          <th scope="col" class="px-2 py-2 w-36 text-center">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (programmer of programadores(); track programmer.uid) {
-          <tr class="bg-white border-b hover:bg-gray-50 transition-colors duration-200">
-            <td class="p-2 text-center">
-              <img [src]="programmer.foto || 'https://via.placeholder.com/40'" class="rounded-full w-8 h-8 sm:w-10 sm:h-10 object-cover mx-auto ring-1 ring-indigo-300 transition-transform hover:scale-110 shadow-sm" alt="Foto de {{ programmer.nombre }}">
-            </td>
-            <th scope="row" class="px-2 py-2 font-semibold text-gray-900 whitespace-nowrap">{{ programmer.nombre }}</th>
-            <td class="px-2 py-2 text-gray-700">{{ programmer.especialidad }}</td>
-            <td class="px-2 py-2 text-gray-500 max-w-[10rem] text-xs">
-              {{ programmer.descripcion }}
-            </td>
-            <td class="px-2 py-2">
-              @if (programmer.contacto) {
-                <a [href]="'mailto:' + programmer.contacto" class="text-indigo-600 hover:text-indigo-800 font-medium transition-colors text-xs truncate block max-w-full">
-                  {{ programmer.contacto }}
-                </a>
-              } @else {
-                  <span class="text-gray-400 text-xs">N/A</span>
-              }
-            </td>
-            <td class="px-2 py-2 space-y-1">
-              @for (red of obtenerRedes(programmer.redes); track $index) {
-                <a [href]="red" target="_blank" class="block text-blue-600 hover:text-blue-800 text-xs truncate max-w-[6rem]">{{ red | slice:0:20 }}...</a>
-              }
-            </td>
-            <td class="px-2 py-2">
-              <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">Programmer</span>
-            </td>
-            <td class="px-2 py-2 text-center space-x-0.5 whitespace-nowrap">
-              <button
-                class="px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors duration-150 transform transition-transform hover:scale-105 shadow-sm"
-                (click)="editarProgramador(programmer)">
-                Editar
-              </button>
-              <button
-                class="px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors duration-150 transform transition-transform hover:scale-105 shadow-sm"
-                (click)="eliminarProgramador(programmer)">
-                Eliminar
-              </button>
-            </td>
-          </tr>
-        } @empty {
-           <tr class="bg-white border-b"><td colspan="8" class="text-center py-4 text-sm text-gray-500">No hay programadores registrados.</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <div class="overflow-x-auto rounded-xl border border-gray-200">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-gray-50 text-[11px] uppercase text-gray-500 font-bold">
+        <tr>
+          <th class="px-4 py-3 w-16 text-center">Perfil</th>
+          <th class="px-4 py-3">Nombre</th>
+          <th class="px-4 py-3">Especialidad</th>
+          <th class="px-4 py-3 max-w-xs">Descripción</th>
+          <th class="px-4 py-3">Contacto</th>
+          <th class="px-4 py-3">Redes</th>
+          <th class="px-4 py-3 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 text-xs">
+        @for (programmer of programadores(); track programmer.uid) {
+          <tr class="hover:bg-indigo-50/30 transition-colors">
+            <td class="px-4 py-3">
+              <img [src]="programmer.foto || 'https://via.placeholder.com/40'" 
+                   class="rounded-full w-9 h-9 object-cover mx-auto border-2 border-white shadow-sm" alt="User">
+            </td>
+            <td class="px-4 py-3 font-bold text-gray-800 whitespace-nowrap">
+              {{ programmer.nombre }}
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 bg-gray-100 rounded text-gray-600 font-medium italic">
+                {{ programmer.especialidad }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-500 max-w-[200px]">
+              <p class="truncate text-[11px]" title="{{ programmer.descripcion }}">
+                {{ programmer.descripcion }}
+              </p>
+            </td>
+            <td class="px-4 py-3">
+              <a [href]="'mailto:' + programmer.contacto" class="text-indigo-600 hover:underline font-medium">
+                {{ programmer.contacto }}
+              </a>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2">
+                @for (red of obtenerRedes(programmer.redes); track $index) {
+                  <a [href]="red" target="_blank" class="p-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors" title="Ver Link">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826L10.242 9.172a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102 1.101" /></svg>
+                  </a>
+                } @empty { <span class="text-gray-300">-</span> }
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center whitespace-nowrap">
+              <button (click)="editarProgramador(programmer)" class="mr-2 text-indigo-600 hover:text-indigo-900 font-bold uppercase text-[10px]">Editar</button>
+              <button (click)="eliminarProgramador(programmer)" class="text-red-500 hover:text-red-700 font-bold uppercase text-[10px]">Eliminar</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="text-center py-10 text-gray-400 italic">No hay registros disponibles.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </section>
 
 @if (showRegisterModal()) {
-  <div class="fixed inset-0 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm z-50 animate-fadeIn">
-    <div class="bg-white rounded-2xl shadow-4xl p-6 sm:p-8 max-w-xl w-full transform transition-all scale-100 animate-fade-in-up relative border border-gray-100" (click)="$event.stopPropagation()">
-      <button
-        class="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-        (click)="cerrarRegistro()"
-        aria-label="Cerrar">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <app-register 
-        [programmer]="programmerSelected()" 
-        (cerrar)="cerrarRegistro()">
-      </app-register>
-    </div>
-  </div>
+  <div class="fixed inset-0 flex items-center justify-center bg-gray-950/50 backdrop-blur-sm z-50 animate-fadeIn">
+    <div class="bg-white rounded-2xl shadow-4xl p-6 max-w-xl w-full mx-4 animate-fade-in-up relative" (click)="$event.stopPropagation()">
+      <button (click)="cerrarRegistro()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      <app-register [programmer]="programmerSelected()" (cerrar)="cerrarRegistro()"></app-register>
+    </div>
+  </div>
 }
 
 <router-outlet></router-outlet>
+
 @if (showDeleteModal()) {
-  <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
-    <div class="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" (click)="cerrarDeleteModal()"></div>
-
-    <div class="relative bg-white rounded-3xl shadow-4xl max-w-sm w-full p-8 animate-fade-in-up border border-gray-100">
-      <div class="text-center">
-        <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-50 mb-6">
-          <span class="text-4xl">🗑️</span>
-        </div>
-        <h3 class="text-2xl font-black text-gray-900 leading-tight">¿Confirmar eliminación?</h3>
-        <p class="text-gray-500 mt-3 text-sm leading-relaxed px-2">
-          Estás a punto de eliminar a <span class="font-bold text-gray-800">{{ programmerToDelete()?.nombre }}</span> de la base de datos. Esta acción es irreversible.
-        </p>
-      </div>
-
-      <div class="mt-10 flex gap-3">
-        <button (click)="cerrarDeleteModal()" 
-                class="flex-1 px-4 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all active:scale-95">
-          Cancelar
-        </button>
-        <button (click)="confirmarEliminacionReal()" 
-                [disabled]="isDeleting()"
-                class="flex-1 px-4 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-          @if (isDeleting()) {
-            <span class="flex items-center justify-center">
-              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </span>
-          } @else {
-            Eliminar
-          }
-        </button>
-      </div>
-    </div>
-  </div>
+  <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
+    <div class="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" (click)="cerrarDeleteModal()"></div>
+    <div class="relative bg-white rounded-3xl shadow-4xl max-w-sm w-full p-8 animate-fade-in-up text-center">
+      <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 mb-4 text-3xl">🗑️</div>
+      <h3 class="text-xl font-black text-gray-900">¿Eliminar registro?</h3>
+      <p class="text-gray-500 mt-2 text-xs leading-relaxed">Confirma que deseas eliminar a <b>{{ programmerToDelete()?.nombre }}</b>. Esta acción no se puede deshacer.</p>
+      <div class="mt-8 flex gap-3">
+        <button (click)="cerrarDeleteModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-all">Cancelar</button>
+        <button (click)="confirmarEliminacionReal()" [disabled]="isDeleting()" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-lg disabled:opacity-50">
+          {{ isDeleting() ? 'Borrando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
 }
 
 @if (showToast()) {
-  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-4 bg-gray-900 text-white px-8 py-4 rounded-2xl shadow-4xl animate-slide-up border border-white/10">
-    <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-indigo-500 rounded-full">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-      </svg>
-    </div>
-    <div class="flex flex-col">
-      <span class="text-xs text-gray-400 uppercase font-black tracking-widest">Sistema</span>
-      <span class="text-sm font-bold">{{ toastMessage() }}</span>
-    </div>
-  </div>
+  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-4 bg-gray-900 text-white px-6 py-3 rounded-xl shadow-4xl animate-slide-up border border-white/10">
+    <div class="w-6 h-6 flex items-center justify-center bg-indigo-500 rounded-full">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+    </div>
+    <span class="text-xs font-bold">{{ toastMessage() }}</span>
+  </div>
 }
 
 <style>
-/* TUS ESTILOS (IGUALES) */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
-@keyframes slideUp { from { transform: translate(-50%, 40px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-.shadow-4xl { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25), 0 18px 36px -18px rgba(0, 0, 0, 0.3); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+  @keyframes slideUp { from { transform: translate(-50%, 40px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  .shadow-4xl { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25); }
 </style>
