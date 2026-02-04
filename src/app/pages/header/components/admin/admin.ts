@@ -5,11 +5,13 @@ import { ProgramadorService } from '../../../../../services/programmer-service';
 import { CommonModule } from '@angular/common';
 import { RegisterProgrammer } from './register-programmer/register';
 import { ProgramadorData } from '../../../interface/programador';
+import { Proyecto } from '../../../interface/proyecto';
 
-// Librerías para reportes
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { Asesoria, AsesoriaService } from '../../../../../services/advice';
+import { ProyectoService } from '../../../../../services/proyecto-service';
 
 @Component({
   selector: 'app-admin',
@@ -23,152 +25,111 @@ export class Admin implements OnInit {
   private router = inject(Router);
   public authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
+  private asesoriaService = inject(AsesoriaService);
+  private proyectoService = inject(ProyectoService);
 
-  // Señales de Estado
-  role = signal<string | null>(null);
+  // Señales de Datos
   programadores = signal<ProgramadorData[]>([]);
+  todasAsesorias = signal<Asesoria[]>([]);
+  todosProyectos = signal<Proyecto[]>([]);
+
+  // Señales de UI
   showRegisterModal = signal(false);
   programmerSelected = signal<ProgramadorData | null>(null);
-
-  // Señales para Modals y Toasts
   showDeleteModal = signal(false);
   isDeleting = signal(false);
   showToast = signal(false);
   toastMessage = signal('');
   programmerToDelete = signal<ProgramadorData | null>(null);
 
-  // --- NUEVAS SEÑALES PARA REPORTES (DASHBOARD) ---
-  // Ejemplo de cálculos automáticos basados en la lista de programadores
+  // --- CONTADORES DINÁMICOS (DASHBOARD) ---
   totalProgramadores = computed(() => this.programadores().length);
   
+  // Contamos asesorías totales
+  totalAsesorias = computed(() => this.todasAsesorias().length);
+  
+  // Contamos proyectos con estado 'activo' (o simplemente el total)
+  proyectosActivos = computed(() => this.todosProyectos().length);
+
   constructor() {
     const r = this.authService.userRole();
-    this.role.set(r);
-
     if (!r || r !== 'admin') {
       this.router.navigate(['/login']);
     }
 
-    this.programadorService.programadores$.subscribe(lista => {
-      this.programadores.set(lista);
-    });
+    // Suscripción a Programadores
+    this.programadorService.programadores$.subscribe(lista => this.programadores.set(lista));
+    
+    // Suscripción a Proyectos del Servicio (Admin View)
+    this.proyectoService.todosProyectos$.subscribe(lista => this.todosProyectos.set(lista));
   }
 
   ngOnInit() {
-    this.programadorService.refrescarTabla();
+    this.cargarDatosDashboard();
   }
 
-  // --- MÉTODOS DE EXPORTACIÓN (REPORTES ADM) ---
+  async cargarDatosDashboard() {
+    this.programadorService.refrescarTabla();
+    
+    // Cargar Proyectos (usando tu método del servicio)
+    await this.proyectoService.cargarTodosLosProyectos();
 
+    // Cargar Asesorías (puedes crear un método obtenerTodas en tu servicio o usar uno por programador)
+    // Suponiendo que necesitas todas para el dashboard admin:
+    this.asesoriaService.obtenerAsesoriasPorUsuario(0).subscribe({ // Ajusta según tu API para traer todas
+      next: (data) => this.todasAsesorias.set(data),
+      error: (err) => console.error('Error cargando asesorías', err)
+    });
+  }
+
+  // --- REPORTES ---
   exportToExcel() {
-    try {
-      // Preparamos los datos de la tabla
-      const dataToExport = this.programadores().map(p => ({
-        Nombre: p.nombre,
-        Especialidad: p.especialidad,
-        Email: p.contacto || 'No registrado',
-        Descripcion: p.descripcion || ''
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Programadores');
-      
-      XLSX.writeFile(workbook, 'Reporte_Administrativo.xlsx');
-      this.lanzarToast('Excel descargado correctamente');
-    } catch (error) {
-      this.lanzarToast('Error al generar Excel');
-    }
+    const data = this.programadores().map(p => ({
+      Nombre: p.nombre,
+      Especialidad: p.especialidad,
+      Contacto: p.contacto,
+      Asesorias: this.todasAsesorias().filter(a => a.nombreProgramador === p.nombre).length
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+    XLSX.writeFile(wb, 'Admin_Report.xlsx');
   }
 
   exportToPDF() {
-    try {
-      const doc = new jsPDF();
-      
-      // Título del PDF
-      doc.setFontSize(18);
-      doc.text('Reporte Administrativo de Programadores', 14, 20);
-      doc.setFontSize(10);
-      doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 14, 28);
-
-      // Generación de la tabla
-      autoTable(doc, {
-        startY: 35,
-        head: [['Nombre', 'Especialidad', 'Contacto']],
-        body: this.programadores().map(p => [
-          p.nombre, 
-          p.especialidad, 
-          p.contacto || 'N/A'
-        ]),
-        headStyles: { fillColor: [79, 70, 229] } // Color Indigo-600
-      });
-
-      doc.save('Reporte_Programadores.pdf');
-      this.lanzarToast('PDF descargado correctamente');
-    } catch (error) {
-      this.lanzarToast('Error al generar PDF');
-    }
+    const doc = new jsPDF();
+    doc.text('Dashboard Administrativo', 14, 20);
+    autoTable(doc, {
+      startY: 30,
+      head: [['Programador', 'Especialidad', 'Contacto']],
+      body: this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A'])
+    });
+    doc.save('Reporte_Admin.pdf');
   }
 
-  // --- MÉTODOS DE REGISTRO / EDICIÓN ---
-  registerProgrammer() {
-    this.programmerSelected.set(null);
-    this.showRegisterModal.set(true);
-  }
-
-  editarProgramador(programmer: ProgramadorData) {
-    this.programmerSelected.set(programmer);
-    this.showRegisterModal.set(true);
-  }
-
-  cerrarRegistro() {
-    this.showRegisterModal.set(false);
-  }
-
-  // --- MÉTODOS DE ELIMINACIÓN ---
-  eliminarProgramador(programmer: ProgramadorData) {
-    if (!programmer.uid) return;
-    this.programmerToDelete.set(programmer);
-    this.showDeleteModal.set(true);
-  }
-
+  // --- MÉTODOS EXISTENTES ---
+  registerProgrammer() { this.programmerSelected.set(null); this.showRegisterModal.set(true); }
+  editarProgramador(p: ProgramadorData) { this.programmerSelected.set(p); this.showRegisterModal.set(true); }
+  cerrarRegistro() { this.showRegisterModal.set(false); }
+  eliminarProgramador(p: ProgramadorData) { this.programmerToDelete.set(p); this.showDeleteModal.set(true); }
+  cerrarDeleteModal() { this.showDeleteModal.set(false); }
+  
   async confirmarEliminacionReal() {
-    const programmer = this.programmerToDelete();
-    if (!programmer?.uid) return;
-
-    try {
+    const p = this.programmerToDelete();
+    if (p?.uid) {
       this.isDeleting.set(true);
-      await this.programadorService.eliminarProgramador(programmer.uid);
-      this.lanzarToast(`${programmer.nombre} ha sido eliminado.`);
-      this.cerrarDeleteModal();
-    } catch (error) {
-      console.error(error);
-      this.lanzarToast('Error al eliminar el programador');
-    } finally {
+      await this.programadorService.eliminarProgramador(p.uid);
+      this.lanzarToast('Eliminado correctamente');
       this.isDeleting.set(false);
+      this.cerrarDeleteModal();
     }
   }
 
-  cerrarDeleteModal() {
-    this.showDeleteModal.set(false);
-    this.programmerToDelete.set(null);
-  }
-
-  // --- UTILIDADES ---
-  lanzarToast(mensaje: string) {
-    this.toastMessage.set(mensaje);
+  lanzarToast(msg: string) {
+    this.toastMessage.set(msg);
     this.showToast.set(true);
     setTimeout(() => this.showToast.set(false), 3000);
   }
 
-  logout() {
-    this.authService.logout().subscribe({
-      next: () => this.router.navigate(['/login']),
-      error: err => console.error(err)
-    });
-  }
-
-  obtenerRedes(redes?: string[]) {
-    return redes?.filter(r => r.trim() !== '') || [];
-  }
+  obtenerRedes(redes?: string[]) { return redes?.filter(r => r.trim() !== '') || []; }
 }
