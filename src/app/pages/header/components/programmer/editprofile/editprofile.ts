@@ -73,9 +73,13 @@ export class EditProfileProgrammerComponent implements OnInit {
         }
       })
       .catch(err => {
-        console.error('Error al cargar perfil:', err);
-        this.showMessage('Error al cargar datos del servidor', 'error');
-      })
+    // Imprime el objeto completo para ver si es un error de red o de lógica
+    console.dir(err); 
+    console.error('Status:', err.status);
+    console.error('Cuerpo del error:', err.error);
+    
+    this.showMessage('No se pudo sincronizar con el servidor', 'error');
+})
       .finally(() => {
         this.loading = false;
         this.cdr.detectChanges();
