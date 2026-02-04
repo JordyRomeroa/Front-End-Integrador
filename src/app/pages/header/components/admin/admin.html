@@ -1,6 +1,5 @@
 <section class="mx-auto mt-10 mb-6 max-w-7xl px-4 sm:px-0">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    
     <div class="bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 rounded-3xl shadow-2xl text-white transform transition-all hover:scale-[1.02]">
       <div class="flex justify-between items-start">
         <div>
@@ -31,7 +30,6 @@
         </div>
         <span class="text-2xl">🚀</span>
       </div>
-      
       <div class="flex gap-2">
         <button (click)="exportToPDF()" class="flex-1 bg-red-50 text-red-600 py-2.5 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors border border-red-100 flex items-center justify-center gap-1">
           <span>📄</span> PDF
@@ -68,16 +66,16 @@
             <th class="px-4 py-4 text-center">Avatar</th>
             <th class="px-4 py-4">Nombre / Info</th>
             <th class="px-4 py-4">Especialidad</th>
-            <th class="px-4 py-4">Contacto</th>
+            <th class="px-4 py-4">Redes</th>
             <th class="px-4 py-4">Estadísticas</th>
             <th class="px-4 py-4 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
           @for (p of programadores(); track p.uid) {
-            <tr class="border-b hover:bg-indigo-50/30 transition-colors">
+            <tr class="border-b hover:bg-indigo-50/30 transition-colors duration-200">
               <td class="px-4 py-4">
-                <img [src]="p.foto || 'https://via.placeholder.com/40'" class="rounded-full w-10 h-10 object-cover mx-auto ring-2 ring-indigo-100 shadow-sm" alt="Avatar">
+                <img [src]="p.foto || 'https://via.placeholder.com/40'" class="rounded-full w-10 h-10 object-cover mx-auto ring-2 ring-indigo-100 shadow-sm transition-transform hover:scale-110" alt="Avatar">
               </td>
               <td class="px-4 py-4">
                 <div class="font-bold text-gray-900">{{ p.nombre }}</div>
@@ -86,22 +84,32 @@
               <td class="px-4 py-4">
                 <span class="px-2 py-1 bg-gray-100 rounded-md text-xs font-medium">{{ p.especialidad }}</span>
               </td>
-              <td class="px-4 py-4 text-xs">
-                {{ p.contacto || 'N/A' }}
+              <td class="px-4 py-4">
+                <div class="flex flex-col gap-1">
+                  @for (red of obtenerRedes(p.redes); track $index) {
+                    <a [href]="red" target="_blank" class="text-blue-600 hover:text-blue-800 text-[10px] truncate max-w-[8rem] block">
+                      {{ red | slice:0:20 }}...
+                    </a>
+                  } @empty {
+                    <span class="text-gray-300 text-[10px]">Sin redes</span>
+                  }
+                </div>
               </td>
               <td class="px-4 py-4">
                 <div class="flex flex-col gap-1 text-[10px] font-bold">
-                  <span class="text-purple-600">Asesorías: {{ getAsesoriasCount(p.nombre) }}</span>
-                  <span class="text-emerald-600">Proyectos: {{ getProyectosCount(p.nombre) }}</span>
+                  <span class="text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">Asesorías: {{ getAsesoriasCount(p.nombre) }}</span>
+                  <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Proyectos: {{ getProyectosCount(p.nombre) }}</span>
                 </div>
               </td>
               <td class="px-4 py-4 text-center">
                 <div class="flex justify-center gap-2">
-                  <button (click)="editarProgramador(p)" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">✏️</button>
-                  <button (click)="eliminarProgramador(p)" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">🗑️</button>
+                  <button (click)="editarProgramador(p)" title="Editar" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-all hover:scale-110">✏️</button>
+                  <button (click)="eliminarProgramador(p)" title="Eliminar" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all hover:scale-110">🗑️</button>
                 </div>
               </td>
             </tr>
+          } @empty {
+            <tr><td colspan="6" class="text-center py-10 text-gray-400">No hay programadores registrados.</td></tr>
           }
         </tbody>
       </table>
@@ -131,7 +139,7 @@
       <div class="mt-10 flex gap-3">
         <button (click)="cerrarDeleteModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all">Cancelar</button>
         <button (click)="confirmarEliminacionReal()" [disabled]="isDeleting()" class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg transition-all disabled:opacity-50">
-          {{ isDeleting() ? '...' : 'Eliminar' }}
+          {{ isDeleting() ? 'Eliminando...' : 'Eliminar' }}
         </button>
       </div>
     </div>
@@ -139,7 +147,7 @@
 }
 
 @if (showToast()) {
-  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-4 bg-gray-900 text-white px-8 py-4 rounded-2xl shadow-4xl animate-slide-up">
+  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-4 bg-gray-900 text-white px-8 py-4 rounded-2xl shadow-4xl animate-slide-up border border-white/10">
     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
     <span class="text-sm font-bold">{{ toastMessage() }}</span>
   </div>
