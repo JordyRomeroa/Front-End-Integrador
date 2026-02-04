@@ -88,7 +88,6 @@ export class Admin implements OnInit {
 
   private async cargarAsesoriasGlobales() {
     try {
-      // CORRECCIÓN: Ahora llamamos al método obtenerTodas() que creamos arriba
       const lista = await firstValueFrom(this.asesoriaService.obtenerTodas());
       if (lista) {
         this.asesorias.set(lista);
@@ -118,17 +117,27 @@ export class Admin implements OnInit {
       theme: 'striped'
     });
 
-    // 2. TABLA PROYECTOS
+    // 2. TABLA PROYECTOS (SOLUCIÓN AL [object Object])
     const finalY1 = (doc as any).lastAutoTable.finalY || 40;
     doc.text('2. Proyectos y Responsables', 14, finalY1 + 15);
     autoTable(doc, {
       startY: finalY1 + 20,
       head: [['Proyecto', 'Estado', 'Programador Asignado']],
-      body: this.proyectos().map(pro => [
-        pro.nombre, 
-        pro.categoria || 'Sin categoría', 
-        pro.assignedTo || 'No asignado'
-      ]),
+      body: this.proyectos().map(pro => {
+        // Lógica para extraer el nombre si es un objeto
+        let nombreProgramador = 'No asignado';
+        if (pro.assignedTo) {
+          nombreProgramador = typeof pro.assignedTo === 'object' 
+            ? (pro.assignedTo as any).nombre || 'Sin nombre' 
+            : pro.assignedTo;
+        }
+
+        return [
+          pro.nombre, 
+          pro.categoria  || 'Sin categoría', 
+          nombreProgramador
+        ];
+      }),
       theme: 'grid',
       headStyles: { fillColor: [79, 70, 229] }
     });
@@ -143,7 +152,7 @@ export class Admin implements OnInit {
         as.fecha || 'S/F', 
         as.nombreUsuario || 'Cliente', 
         as.estado, 
-        (as.mensaje || '').substring(0, 50) + '...'
+        (as.mensaje || '').substring(0, 50) + (as.mensaje?.length > 50 ? '...' : '')
       ]),
       theme: 'plain'
     });
@@ -164,6 +173,7 @@ export class Admin implements OnInit {
     XLSX.writeFile(wb, 'reporte-programadores.xlsx');
   }
 
+  // --- MÉTODOS ORIGINALES ---
   registerProgrammer() {
     this.programmerSelected.set(null);
     this.showRegisterModal.set(true);
