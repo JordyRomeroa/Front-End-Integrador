@@ -33,7 +33,7 @@ export class Admin implements OnInit {
   todasAsesorias = signal<Asesoria[]>([]);
   todosProyectos = signal<Proyecto[]>([]);
 
-  // Señales de UI
+  // UI Signals
   showRegisterModal = signal(false);
   programmerSelected = signal<ProgramadorData | null>(null);
   showDeleteModal = signal(false);
@@ -42,13 +42,9 @@ export class Admin implements OnInit {
   toastMessage = signal('');
   programmerToDelete = signal<ProgramadorData | null>(null);
 
-  // --- CONTADORES DINÁMICOS (DASHBOARD) ---
+  // Computed Dashboard
   totalProgramadores = computed(() => this.programadores().length);
-  
-  // Contamos asesorías totales
   totalAsesorias = computed(() => this.todasAsesorias().length);
-  
-  // Contamos proyectos con estado 'activo' (o simplemente el total)
   proyectosActivos = computed(() => this.todosProyectos().length);
 
   constructor() {
@@ -57,10 +53,8 @@ export class Admin implements OnInit {
       this.router.navigate(['/login']);
     }
 
-    // Suscripción a Programadores
+    // Suscripciones reactivas
     this.programadorService.programadores$.subscribe(lista => this.programadores.set(lista));
-    
-    // Suscripción a Proyectos del Servicio (Admin View)
     this.proyectoService.todosProyectos$.subscribe(lista => this.todosProyectos.set(lista));
   }
 
@@ -70,44 +64,67 @@ export class Admin implements OnInit {
 
   async cargarDatosDashboard() {
     this.programadorService.refrescarTabla();
-    
-    // Cargar Proyectos (usando tu método del servicio)
     await this.proyectoService.cargarTodosLosProyectos();
-
-    // Cargar Asesorías (puedes crear un método obtenerTodas en tu servicio o usar uno por programador)
-    // Suponiendo que necesitas todas para el dashboard admin:
-    this.asesoriaService.obtenerAsesoriasPorUsuario(0).subscribe({ // Ajusta según tu API para traer todas
+    
+    // Obtener asesorías (Admin pide todas)
+    this.asesoriaService.obtenerAsesoriasPorUsuario(0).subscribe({
       next: (data) => this.todasAsesorias.set(data),
       error: (err) => console.error('Error cargando asesorías', err)
     });
   }
 
+  // Helper para conteo en tabla
+  getAsesoriasCount(nombre: string) {
+    return this.todasAsesorias().filter(a => a.nombreProgramador === nombre).length;
+  }
+
+  getProyectosCount(nombre: string) {
+    // Asumiendo que el proyecto tiene el nombre del creador o asignado
+    return this.todosProyectos().filter(p => p.nombre === nombre).length;
+  }
+
   // --- REPORTES ---
   exportToExcel() {
     const data = this.programadores().map(p => ({
-      Nombre: p.nombre,
-      Especialidad: p.especialidad,
-      Contacto: p.contacto,
-      Asesorias: this.todasAsesorias().filter(a => a.nombreProgramador === p.nombre).length
+      'Programador': p.nombre,
+      'Especialidad': p.especialidad,
+      'Email': p.contacto || 'N/A',
+      'Asesorías Realizadas': this.getAsesoriasCount(p.nombre),
+      'Proyectos Creados': this.getProyectosCount(p.nombre),
+      'Fecha Reporte': new Date().toLocaleDateString()
     }));
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
-    XLSX.writeFile(wb, 'Admin_Report.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Administrativo');
+    XLSX.writeFile(wb, `Reporte_General_${new Date().getTime()}.xlsx`);
   }
 
   exportToPDF() {
     const doc = new jsPDF();
-    doc.text('Dashboard Administrativo', 14, 20);
+    doc.setFontSize(18);
+    doc.text('Dashboard Administrativo - Reporte de Desempeño', 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 28);
+
     autoTable(doc, {
-      startY: 30,
-      head: [['Programador', 'Especialidad', 'Contacto']],
-      body: this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A'])
+      startY: 35,
+      head: [['Nombre', 'Especialidad', 'Asesorías', 'Proyectos', 'Contacto']],
+      body: this.programadores().map(p => [
+        p.nombre, 
+        p.especialidad, 
+        this.getAsesoriasCount(p.nombre),
+        this.getProyectosCount(p.nombre),
+        p.contacto || 'N/A'
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] } // Color Indigo-600
     });
-    doc.save('Reporte_Admin.pdf');
+
+    doc.save('Reporte_Admin_Completo.pdf');
   }
 
-  // --- MÉTODOS EXISTENTES ---
+  // Métodos UI
   registerProgrammer() { this.programmerSelected.set(null); this.showRegisterModal.set(true); }
   editarProgramador(p: ProgramadorData) { this.programmerSelected.set(p); this.showRegisterModal.set(true); }
   cerrarRegistro() { this.showRegisterModal.set(false); }
@@ -119,7 +136,7 @@ export class Admin implements OnInit {
     if (p?.uid) {
       this.isDeleting.set(true);
       await this.programadorService.eliminarProgramador(p.uid);
-      this.lanzarToast('Eliminado correctamente');
+      this.lanzarToast('Programador eliminado de la base de datos');
       this.isDeleting.set(false);
       this.cerrarDeleteModal();
     }
@@ -130,6 +147,4 @@ export class Admin implements OnInit {
     this.showToast.set(true);
     setTimeout(() => this.showToast.set(false), 3000);
   }
-
-  obtenerRedes(redes?: string[]) { return redes?.filter(r => r.trim() !== '') || []; }
 }
