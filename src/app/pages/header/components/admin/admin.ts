@@ -6,12 +6,10 @@ import { CommonModule } from '@angular/common';
 import { RegisterProgrammer } from './register-programmer/register';
 import { ProgramadorData } from '../../../interface/programador';
 
-// Nuevas Importaciones para reportes y servicios
+// Nuevas Importaciones para PDF y Excel
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Asesoria, AsesoriaService } from '../../../../../services/advice';
-import { ProyectoService } from '../../../../../services/proyecto-service';
 
 @Component({
   selector: 'app-admin',
@@ -25,30 +23,25 @@ export class Admin implements OnInit {
   private router = inject(Router);
   public authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
-  private asesoriaService = inject(AsesoriaService);
-  private proyectoService = inject(ProyectoService);
 
-  // Señales de Estado Originales
+  // --- SEÑALES DE ESTADO ORIGINALES (NO TOCAR) ---
   role = signal<string | null>(null);
   programadores = signal<ProgramadorData[]>([]);
   showRegisterModal = signal(false);
   programmerSelected = signal<ProgramadorData | null>(null);
 
-  // Señales de Datos adicionales para estadísticas
-  todasAsesorias = signal<Asesoria[]>([]);
-  todosProyectos = signal<any[]>([]);
-
-  // Señales para Modals y Toasts
   showDeleteModal = signal(false);
   isDeleting = signal(false);
   showToast = signal(false);
   toastMessage = signal('');
   programmerToDelete = signal<ProgramadorData | null>(null);
 
-  // --- NUEVAS ESTADÍSTICAS COMPUTADAS ---
+  // --- NUEVAS SEÑALES PARA ESTADÍSTICAS ---
+  // Calculamos el total de programadores automáticamente basado en la lista
   totalProgramadores = computed(() => this.programadores().length);
-  totalAsesorias = computed(() => this.todasAsesorias().length);
-  proyectosActivos = computed(() => this.todosProyectos().length);
+  // Ejemplo de otras stats (puedes conectar estos números a tus servicios de asesorías/proyectos)
+  totalProyectos = signal(0); 
+  totalAsesorias = signal(0);
 
   constructor() {
     const r = this.authService.userRole();
@@ -61,75 +54,45 @@ export class Admin implements OnInit {
     this.programadorService.programadores$.subscribe(lista => {
       this.programadores.set(lista);
     });
-
-    // Suscripción a proyectos para el contador
-    this.proyectoService.todosProyectos$.subscribe(lista => {
-      this.todosProyectos.set(lista || []);
-    });
   }
 
   ngOnInit() {
     this.programadorService.refrescarTabla();
-    this.cargarDatosEstadisticos();
   }
 
-  // Carga de datos para las nuevas estadísticas
-  async cargarDatosEstadisticos() {
-    await this.proyectoService.cargarTodosLosProyectos();
-    this.asesoriaService.obtenerAsesoriasPorUsuario(0).subscribe({
-      next: (data) => this.todasAsesorias.set(data || []),
-      error: (err) => console.error('Error cargando asesorías', err)
-    });
-  }
-
-  // Helpers para conteo por programador en la tabla
-  getAsesoriasCount(nombre: string): number {
-    const n = nombre?.toLowerCase().trim();
-    return this.todasAsesorias().filter(a => a.nombreProgramador?.toLowerCase().trim() === n).length;
-  }
-
-  getProyectosCount(nombre: string): number {
-    const n = nombre?.toLowerCase().trim();
-    return this.todosProyectos().filter(p => 
-      p.assignedTo?.toLowerCase().trim() === n || p.nombre?.toLowerCase().trim() === n
-    ).length;
-  }
-
-  // --- MÉTODOS DE EXPORTACIÓN (REPORTES) ---
-  exportToExcel() {
-    const data = this.programadores().map(p => ({
-      'Programador': p.nombre,
-      'Especialidad': p.especialidad,
-      'Email': p.contacto || 'N/A',
-      'Asesorías': this.getAsesoriasCount(p.nombre),
-      'Proyectos': this.getProyectosCount(p.nombre)
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Reporte General');
-    XLSX.writeFile(wb, `Reporte_Admin_${new Date().getTime()}.xlsx`);
-  }
-
-  exportToPDF() {
+  // --- NUEVOS MÉTODOS DE EXPORTACIÓN ---
+  exportarPDF() {
     const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Reporte Administrativo de Desempeño', 14, 20);
+    doc.text('Reporte de Programadores', 14, 15);
     
+    const head = [['Nombre', 'Especialidad', 'Contacto']];
+    const data = this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A']);
+
     autoTable(doc, {
-      startY: 30,
-      head: [['Nombre', 'Especialidad', 'Asesorías', 'Proyectos']],
-      body: this.programadores().map(p => [
-        p.nombre, 
-        p.especialidad, 
-        this.getAsesoriasCount(p.nombre),
-        this.getProyectosCount(p.nombre)
-      ]),
-      headStyles: { fillColor: [79, 70, 229] }
+      head: head,
+      body: data,
+      startY: 20,
+      theme: 'grid'
     });
-    doc.save('Reporte_General_Admin.pdf');
+
+    doc.save('lista-programadores.pdf');
   }
 
-  // --- TUS MÉTODOS ORIGINALES (SIN CAMBIOS) ---
+  exportarExcel() {
+    const data = this.programadores().map(p => ({
+      Nombre: p.nombre,
+      Especialidad: p.especialidad,
+      Contacto: p.contacto,
+      Descripcion: p.descripcion
+    }));
+
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Programadores');
+    XLSX.writeFile(wb, 'reporte-programadores.xlsx');
+  }
+
+  // --- TUS MÉTODOS ORIGINALES (MANTENIDOS TAL CUAL) ---
   registerProgrammer() {
     this.programmerSelected.set(null);
     this.showRegisterModal.set(true);
