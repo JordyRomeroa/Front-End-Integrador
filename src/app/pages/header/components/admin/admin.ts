@@ -2,15 +2,19 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } 
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../services/programmer-service';
+import { ProyectoService } from '../../../../../services/proyecto-service'; // Asegura la ruta
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // <-- NECESARIO PARA EL BUSCADOR
+import { FormsModule } from '@angular/forms'; 
 import { RegisterProgrammer } from './register-programmer/register';
 import { ProgramadorData } from '../../../interface/programador';
+import { Proyecto } from '../../../interface/proyecto';
 
-// Nuevas Importaciones para PDF y Excel
+// Importaciones para PDF y Excel
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { firstValueFrom } from 'rxjs';
+import { AsesoriaService } from '../../../../../services/advice';
 
 @Component({
   selector: 'app-admin',
@@ -24,13 +28,17 @@ export class Admin implements OnInit {
   private router = inject(Router);
   public authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
+  private proyectoService = inject(ProyectoService);
+  private asesoriaService = inject(AsesoriaService);
 
-  // --- SEÑALES DE ESTADO ORIGINALES ---
+  // --- SEÑALES DE ESTADO ---
   role = signal<string | null>(null);
   programadores = signal<ProgramadorData[]>([]);
+  proyectos = signal<Proyecto[]>([]);
+  asesorias = signal<any[]>([]);
+
   showRegisterModal = signal(false);
   programmerSelected = signal<ProgramadorData | null>(null);
-
   showDeleteModal = signal(false);
   isDeleting = signal(false);
   showToast = signal(false);
@@ -40,11 +48,9 @@ export class Admin implements OnInit {
   // --- LÓGICA DE FILTRADO ---
   filtroBusqueda = signal('');
 
-  // SEÑAL COMPUTADA PARA LA TABLA
   programadoresFiltrados = computed(() => {
     const busqueda = this.filtroBusqueda().toLowerCase().trim();
     if (!busqueda) return this.programadores();
-    
     return this.programadores().filter(p => 
       p.nombre.toLowerCase().includes(busqueda) || 
       p.especialidad.toLowerCase().includes(busqueda)
@@ -52,8 +58,8 @@ export class Admin implements OnInit {
   });
 
   totalProgramadores = computed(() => this.programadores().length);
-  totalProyectos = signal(0); 
-  totalAsesorias = signal(0);
+  totalProyectos = computed(() => this.proyectos().length);
+  totalAsesorias = computed(() => this.asesorias().length);
 
   constructor() {
     const r = this.authService.userRole();
@@ -63,23 +69,85 @@ export class Admin implements OnInit {
       this.router.navigate(['/login']);
     }
 
+    // Suscripción a programadores
     this.programadorService.programadores$.subscribe(lista => {
       this.programadores.set(lista);
     });
+
+    // Suscripción a proyectos
+    this.proyectoService.todosProyectos$.subscribe(lista => {
+      this.proyectos.set(lista);
+    });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.programadorService.refrescarTabla();
+    await this.proyectoService.cargarTodosLosProyectos();
+    this.cargarAsesoriasGlobales();
+  }
+
+  // Carga inicial de asesorías (asumiendo que necesitas todas para el reporte)
+  private async cargarAsesoriasGlobales() {
+    try {
+      // Nota: Si tu API no tiene "obtenerTodas", podrías mapear por programador 
+      // o usar el endpoint que corresponda en tu backend.
+      // Aquí usamos un ejemplo basado en tus servicios:
+      const lista: any[] = []; // Cargar datos de tu servicio aquí
+      this.asesorias.set(lista);
+    } catch (e) { console.error(e); }
   }
 
   // --- MÉTODOS DE EXPORTACIÓN ---
-  exportarPDF() {
+  async exportarPDF() {
     const doc = new jsPDF();
-    doc.text('Reporte de Programadores', 14, 15);
-    const head = [['Nombre', 'Especialidad', 'Contacto']];
-    const data = this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A']);
-    autoTable(doc, { head, body: data, startY: 20, theme: 'grid' });
-    doc.save('lista-programadores.pdf');
+    const fechaReporte = new Date().toLocaleDateString();
+
+    doc.setFontSize(18);
+    doc.text('REPORTE GENERAL DE GESTIÓN', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha de generación: ${fechaReporte}`, 14, 22);
+
+    // 1. TABLA PROGRAMADORES
+    doc.setFontSize(14);
+    doc.text('1. Listado de Programadores', 14, 35);
+    autoTable(doc, {
+      startY: 40,
+      head: [['Nombre', 'Especialidad', 'Contacto']],
+      body: this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A']),
+      theme: 'striped'
+    });
+
+    // 2. TABLA PROYECTOS
+    const finalY1 = (doc as any).lastAutoTable.finalY || 40;
+    doc.text('2. Proyectos y Responsables', 14, finalY1 + 15);
+    autoTable(doc, {
+      startY: finalY1 + 20,
+      head: [['Proyecto', 'Estado', 'Programador Asignado']],
+      body: this.proyectos().map(pro => [
+        pro.nombre, 
+        pro.categoria || 'Sin categoría', 
+        pro.assignedTo || 'No asignado'
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }
+    });
+
+    // 3. TABLA ASESORÍAS
+    const finalY2 = (doc as any).lastAutoTable.finalY || finalY1 + 20;
+    doc.text('3. Historial de Asesorías', 14, finalY2 + 15);
+    autoTable(doc, {
+      startY: finalY2 + 20,
+      head: [['Fecha', 'Usuario', 'Estado', 'Mensaje']],
+      body: this.asesorias().map(as => [
+        as.fecha || 'S/F', 
+        as.nombreUsuario || 'Cliente', 
+        as.estado, 
+        as.mensaje.substring(0, 50) + '...'
+      ]),
+      theme: 'plain'
+    });
+
+    doc.save(`Reporte_Admin_${fechaReporte}.pdf`);
   }
 
   exportarExcel() {
