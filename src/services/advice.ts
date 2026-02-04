@@ -25,7 +25,9 @@ export class AsesoriaService {
 private API_URL = `${environment.apiUrl}/api/asesorias`;
   constructor() {}
 
-  
+obtenerTodas(): Observable<any[]> {
+    return this.http.get<any[]>(this.API_URL);
+  }
   // Creación vía Backend
   crearAsesoria(asesoria: Asesoria): Observable<any> {
     return this.http.post(this.API_URL, asesoria);

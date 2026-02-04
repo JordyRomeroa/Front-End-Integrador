@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } 
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../services/programmer-service';
-import { ProyectoService } from '../../../../../services/proyecto-service'; // Asegura la ruta
+import { ProyectoService } from '../../../../../services/proyecto-service'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; 
 import { RegisterProgrammer } from './register-programmer/register';
@@ -71,12 +71,12 @@ export class Admin implements OnInit {
 
     // Suscripción a programadores
     this.programadorService.programadores$.subscribe(lista => {
-      this.programadores.set(lista);
+      this.programadores.set(lista || []);
     });
 
     // Suscripción a proyectos
     this.proyectoService.todosProyectos$.subscribe(lista => {
-      this.proyectos.set(lista);
+      this.proyectos.set(lista || []);
     });
   }
 
@@ -86,15 +86,16 @@ export class Admin implements OnInit {
     this.cargarAsesoriasGlobales();
   }
 
-  // Carga inicial de asesorías (asumiendo que necesitas todas para el reporte)
   private async cargarAsesoriasGlobales() {
     try {
-      // Nota: Si tu API no tiene "obtenerTodas", podrías mapear por programador 
-      // o usar el endpoint que corresponda en tu backend.
-      // Aquí usamos un ejemplo basado en tus servicios:
-      const lista: any[] = []; // Cargar datos de tu servicio aquí
-      this.asesorias.set(lista);
-    } catch (e) { console.error(e); }
+      // CORRECCIÓN: Ahora llamamos al método obtenerTodas() que creamos arriba
+      const lista = await firstValueFrom(this.asesoriaService.obtenerTodas());
+      if (lista) {
+        this.asesorias.set(lista);
+      }
+    } catch (e) { 
+      console.error("Error al cargar asesorías:", e); 
+    }
   }
 
   // --- MÉTODOS DE EXPORTACIÓN ---
@@ -142,7 +143,7 @@ export class Admin implements OnInit {
         as.fecha || 'S/F', 
         as.nombreUsuario || 'Cliente', 
         as.estado, 
-        as.mensaje.substring(0, 50) + '...'
+        (as.mensaje || '').substring(0, 50) + '...'
       ]),
       theme: 'plain'
     });
@@ -163,7 +164,6 @@ export class Admin implements OnInit {
     XLSX.writeFile(wb, 'reporte-programadores.xlsx');
   }
 
-  // --- MÉTODOS ORIGINALES ---
   registerProgrammer() {
     this.programmerSelected.set(null);
     this.showRegisterModal.set(true);
