@@ -9,6 +9,7 @@ import { ProgramadorData } from '../../../../interface/programador';
 
 @Component({
   selector: 'app-management',
+  standalone: true, // Asegúrate de tener esto si usas imports directos
   imports: [FormsModule, CommonModule],
   templateUrl: './management.html',
   styleUrls: ['./management.css'],
@@ -21,56 +22,50 @@ export class Management {
   proyectos = signal<Proyecto[]>([]);
   showModal = signal(false);
   proyectoSelected = signal<Proyecto | null>(null);
+  
+  // Señales para manejo de mensajes en el Modal/UI
+  mensajeError = signal<string | null>(null);
+  mensajeExito = signal<string | null>(null);
 
   programador: ProgramadorData | null = null;
-
-  proyectoForm: Proyecto = {
-    nombre: '',
-    descripcion: '',
-    tipo: '',
-    categoria: '',
-    tecnologias: [],
-    repo: '',
-    deploy: '',
-    assignedTo: ''
-  };
-
   tecnologiasInput: string = '';
   cargando = signal(true);
 
- constructor() {
-  effect(() => {
-    const user = this.authService.currentUser();
-    
-    if (!user) {
-      this.cargando.set(false);
-      return;
-    }
+  proyectoForm: Proyecto = this.resetForm();
 
-    // PRIORIDAD: Usar el ID numérico para el Backend de Java
-    const userIdParaBackend = user.id || user.uid; 
+  constructor() {
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (!user) {
+        this.cargando.set(false);
+        return;
+      }
 
-    if (userIdParaBackend) {
-      this.proyectoService.cargarProyectosProgramador(userIdParaBackend)
-        .then(() => {
-          this.proyectoService.proyectosProgramador$.subscribe(lista => {
-            this.proyectos.set(lista);
-          });
-        })
-        .finally(() => this.cargando.set(false));
-    }
-    
-    // Para la info del programador (si usas uid como clave)
-    this.programadorService.programadores$.subscribe(lista => {
-      this.programador = lista.find(p => p.uid === user.uid || p.id === user.id) || null;
+      const userIdParaBackend = user.id || user.uid; 
+      if (userIdParaBackend) {
+        this.cargarProyectos(userIdParaBackend);
+      }
+      
+      this.programadorService.programadores$.subscribe(lista => {
+        this.programador = lista.find(p => p.uid === user.uid || p.id === user.id) || null;
+      });
     });
-  });
-}
-  crearProyecto() {
-    const user = this.authService.currentUser();
-    if (!user) return;
+  }
 
-    this.proyectoForm = {
+  private async cargarProyectos(userId: string | number) {
+    this.cargando.set(true);
+    try {
+      await this.proyectoService.cargarProyectosProgramador(userId);
+      this.proyectoService.proyectosProgramador$.subscribe(lista => {
+        this.proyectos.set(lista);
+      });
+    } finally {
+      this.cargando.set(false);
+    }
+  }
+
+  private resetForm(): Proyecto {
+    return {
       nombre: '',
       descripcion: '',
       tipo: '',
@@ -78,82 +73,86 @@ export class Management {
       tecnologias: [],
       repo: '',
       deploy: '',
-      assignedTo: user.uid
+      assignedTo: ''
     };
+  }
 
+  crearProyecto() {
+    const user = this.authService.currentUser();
+    if (!user) return;
+    this.mensajeError.set(null);
+    this.proyectoForm = this.resetForm();
+    this.proyectoForm.assignedTo = user.uid;
     this.tecnologiasInput = '';
     this.proyectoSelected.set(null);
     this.showModal.set(true);
   }
 
   editarProyecto(proyecto: Proyecto) {
+    this.mensajeError.set(null);
     this.proyectoForm = { ...proyecto };
     this.tecnologiasInput = proyecto.tecnologias.join(', ');
     this.proyectoSelected.set(proyecto);
     this.showModal.set(true);
   }
 
- // management.ts
-
-async guardarProyecto() {
-  const user = this.authService.currentUser() as any; // Casteo para evitar error de ID
-  if (!user || !user.id) {
-    alert('Sesión no válida o ID de usuario ausente.');
-    return;
-  }
-
-  // 1. Limpiar tecnologías
-  const listaTecnologias = this.tecnologiasInput
-    .split(',')
-    .map(t => t.trim())
-    .filter(t => t);
-
-  // 2. CONSTRUIR OBJETO LIMPIO PARA JAVA
-  // No enviamos 'assignedTo' (objeto), enviamos 'assignedToId' (ID numérico)
-  const proyectoData: any = {
-    nombre: this.proyectoForm.nombre,
-    descripcion: this.proyectoForm.descripcion,
-    categoria: this.proyectoForm.categoria,
-    tipo: this.proyectoForm.tipo,
-    deploy: this.proyectoForm.deploy,
-    repo: this.proyectoForm.repo,
-    tecnologias: listaTecnologias,
-    assignedToId: Number(user.id) 
-  };
-
-  try {
-    if (this.proyectoSelected() && this.proyectoSelected()?.id) {
-      // ACTUALIZAR: Incluimos el ID del proyecto en el cuerpo y lo enviamos
-      proyectoData.id = this.proyectoSelected()!.id;
-      await this.proyectoService.actualizarProyecto(proyectoData);
-      console.log('Proyecto actualizado con éxito');
-    } else {
-      // CREAR
-      await this.proyectoService.crearProyecto(proyectoData);
-      console.log('Proyecto creado con éxito');
+  async guardarProyecto() {
+    const user = this.authService.currentUser() as any;
+    if (!user || !user.id) {
+      this.mensajeError.set('Sesión no válida o ID de usuario ausente.');
+      return;
     }
-    
-    // 3. Refrescar la lista tras guardar
-    await this.proyectoService.cargarProyectosProgramador(user.id);
-    this.showModal.set(false);
 
-  } catch (error) {
-    console.error('Error guardando proyecto en Java:', error);
-    alert('Error 500: El servidor rechazó los datos. Revisa la consola del Backend.');
+    const listaTecnologias = this.tecnologiasInput.split(',').map(t => t.trim()).filter(t => t);
+
+    const proyectoData: any = {
+      ...this.proyectoForm,
+      tecnologias: listaTecnologias,
+      assignedToId: Number(user.id) 
+    };
+
+    try {
+      if (this.proyectoSelected()?.id) {
+        proyectoData.id = this.proyectoSelected()!.id;
+        await this.proyectoService.actualizarProyecto(proyectoData);
+      } else {
+        await this.proyectoService.crearProyecto(proyectoData);
+      }
+      
+      // Actualización inmediata
+      await this.cargarProyectos(user.id);
+      this.showModal.set(false);
+      this.mensajeExito.set('¡Proyecto guardado correctamente!');
+      setTimeout(() => this.mensajeExito.set(null), 3000);
+
+    } catch (error) {
+      this.mensajeError.set('Error en el servidor (500). Verifique los datos ingresados.');
+    }
   }
-}
 
   async eliminarProyecto(proyecto: Proyecto) {
-    const user = this.authService.currentUser();
+    const user = this.authService.currentUser() as any;
     if (!user || !proyecto.id) return;
 
+    // Puedes crear un modal de confirmación personalizado, aquí mantenemos la lógica
     if (confirm('¿Seguro que deseas eliminar este proyecto?')) {
       try {
-await this.proyectoService.eliminarProyecto(String(proyecto.id), user.uid);
+        await this.proyectoService.eliminarProyecto(String(proyecto.id), user.uid);
+        
+        // CRUCIAL: Actualizar la lista después de eliminar
+        await this.cargarProyectos(user.id);
+        
+        this.mensajeExito.set('Proyecto eliminado correctamente.');
+        setTimeout(() => this.mensajeExito.set(null), 3000);
       } catch (error) {
-        console.error('Error eliminando proyecto:', error);
-        alert('No tienes permisos para eliminar este proyecto.');
+        this.mensajeError.set('No fue posible eliminar el proyecto. Revisa tus permisos.');
+        setTimeout(() => this.mensajeError.set(null), 5000);
       }
     }
+  }
+
+  cerrarModal() {
+    this.showModal.set(false);
+    this.mensajeError.set(null);
   }
 }

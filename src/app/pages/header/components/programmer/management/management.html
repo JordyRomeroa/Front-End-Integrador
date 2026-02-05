@@ -1,4 +1,18 @@
 <div class="p-6 min-h-screen">
+  @if (mensajeExito()) {
+    <div class="mb-6 p-4 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 rounded-2xl animate-fadeIn flex items-center gap-3">
+      <span class="text-xl">✓</span>
+      <p class="font-bold">{{ mensajeExito() }}</p>
+    </div>
+  }
+
+  @if (mensajeError() && !showModal()) {
+    <div class="mb-6 p-4 bg-rose-500/20 border border-rose-500/50 text-rose-400 rounded-2xl animate-fadeIn flex items-center gap-3">
+      <span class="text-xl">⚠️</span>
+      <p class="font-bold">{{ mensajeError() }}</p>
+    </div>
+  }
+
   <div class="flex justify-between items-center mb-8">
     <h2 class="text-2xl font-extrabold text-white tracking-tight">Mis Proyectos</h2>
     <button (click)="crearProyecto()" 
@@ -10,7 +24,7 @@
   @if (!cargando()) {
     @if (proyectos().length > 0) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-        @for (proyecto of proyectos(); track proyecto.nombre) {
+        @for (proyecto of proyectos(); track proyecto.id) {
           <div class="bg-slate-800/40 backdrop-blur-md border border-white/10 p-6 rounded-3xl shadow-xl hover:border-blue-500/50 transition-all duration-300 group">
             <div class="flex justify-between items-start mb-3">
               <h3 class="font-black text-xl text-white group-hover:text-blue-400 transition-colors">{{ proyecto.nombre }}</h3>
@@ -47,6 +61,10 @@
         <p class="text-cyan-200 font-medium italic text-lg">No tienes proyectos aún. Usa el botón "Nuevo Proyecto" para crear uno.</p>
       </div>
     }
+  } @else {
+    <div class="flex justify-center p-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+    </div>
   }
 </div>
 
@@ -54,15 +72,22 @@
   <div class="fixed inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm z-50 p-4 animate-fadeIn">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-bounceIn relative">
       
-      <button (click)="showModal.set(false)" 
+      <button (click)="cerrarModal()" 
               class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
         ✕
       </button>
 
       <div class="p-10">
-        <h3 class="text-2xl font-black text-slate-800 mb-6">
+        <h3 class="text-2xl font-black text-slate-800 mb-2">
           {{ proyectoSelected() ? 'Editar Proyecto' : 'Nuevo Proyecto' }}
         </h3>
+        <p class="text-slate-400 text-sm mb-6">Completa los campos para {{ proyectoSelected() ? 'actualizar' : 'registrar' }} la información.</p>
+
+        @if (mensajeError()) {
+          <div class="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-sm font-bold flex items-center gap-2 animate-shake">
+            <span>⚠️</span> {{ mensajeError() }}
+          </div>
+        }
 
         <div class="space-y-3">
           <div class="group">
