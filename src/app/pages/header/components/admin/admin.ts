@@ -88,16 +88,33 @@ async ngOnInit() {
   await this.cargarAsesoriasGlobales(); 
 }
 
-private async cargarAsesoriasGlobales() {
+async cargarAsesoriasGlobales() {
+  console.log("Iniciando carga de asesorías...");
   try {
-    const lista = await firstValueFrom(this.asesoriaService.obtenerTodas());
-    console.log('Datos recibidos:', lista);
+    // Usamos firstValueFrom si 'y1' es el alias de esa función en tu código compilado
+    const r = await firstValueFrom(this.asesoriaService.obtenerTodas());
     
-    // Seteamos la señal. Esto disparará automáticamente totalAsesorias()
-    this.asesorias.set(lista || []);
+    console.log("✅ Solicitud exitosa. Cantidad de registros:", r?.length);
+    console.log("Contenido de los datos:", r);
     
-  } catch (e) {
-    console.error('Error 500 o 404 detectado:', e);
+    this.asesorias.set(r || []);
+  } catch (error: any) {
+    // Imprimimos el error completo para inspeccionar las propiedades de red
+    console.error("❌ Error detectado en cargarAsesoriasGlobales");
+    
+    if (error.status) {
+      console.error(`Código de estado: ${error.status}`); // 500, 404, etc.
+      console.error(`Texto del estado: ${error.statusText}`);
+    }
+
+    // Si el backend envió un mensaje de error específico (JSON)
+    if (error.error) {
+      console.error("Detalle del error desde el servidor:", error.error);
+    }
+
+    console.error("URL intentada:", error.url);
+    console.error("Objeto de error completo:", error);
+
     this.asesorias.set([]);
   }
 }
