@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Firestore } from '@angular/fire/firestore';
 import { AsesoriaConId } from '../../../../interface/asesoria';
 import { AuthService, Role } from '../../../../../../services/auth-service';
 import { AsesoriaService } from '../../../../../../services/advice';
+import { Subscription, filter, take } from 'rxjs';
 
 @Component({
   selector: 'app-programmer-advice',
@@ -15,128 +15,126 @@ import { AsesoriaService } from '../../../../../../services/advice';
   styleUrls: ['./advice.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Advice {
+export class Advice implements OnInit, OnDestroy {
+  // Servicios
+  public authService = inject(AuthService);
+  private router = inject(Router);
+  private asesoriaService = inject(AsesoriaService);
+  
+  private subscripciones = new Subscription();
 
+  // Estado con Signals
   role: Role | null = null;
   asesorias = signal<AsesoriaConId[]>([]);
   pendientes = signal<AsesoriaConId[]>([]);
   historial = signal<AsesoriaConId[]>([]);
 
-  // Modales
+  // Modales y Feedback
   asesorSeleccionado = signal<AsesoriaConId | null>(null);
   mensajeRespuesta = signal('');
-  
-  // Feedback Visual (Reemplazo de Alerts)
   mensajeExito = signal<string | null>(null);
   mensajeError = signal<string | null>(null);
-
-  // Notificaciones visuales
   notificacionUsuario = signal<string | null>(null);
-  notificacionAdmin = signal<string | null>(null);
 
-  private firestore = inject(Firestore);
+  ngOnInit() {
+    // 1. CARGA ULTRA-RÁPIDA: Escuchamos el estado del usuario inmediatamente
+    this.subscripciones.add(
+      this.authService.user$.pipe(
+        filter(user => !!user), // Solo procedemos cuando el usuario no sea null
+        take(1) // Solo nos interesa la primera carga exitosa para disparar el fetch
+      ).subscribe(user => {
+        this.role = this.authService.getUserRole();
+        this.cargarAsesorias();
+      })
+    );
 
-  constructor(
-    public authService: AuthService,
-    private router: Router,
-    private asesoriaService: AsesoriaService
-  ) {
-    if (this.authService.roleLoaded()) {
-      this.role = this.authService.getUserRole();
-      this.cargarAsesorias();
-    }
+    // 2. ESCUCHAR CAMBIOS EN TIEMPO REAL (Si tu servicio usa BehaviorSubject como hicimos antes)
+    this.subscripciones.add(
+      this.asesoriaService.asesoriasActuales$.subscribe(lista => {
+        if (lista.length > 0) {
+          this.asesorias.set(lista);
+          this.actualizarListas(lista);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscripciones.unsubscribe();
   }
 
   async cargarAsesorias() {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
-    const userId = currentUser.id || currentUser.uid; 
+    const userId = currentUser.id || currentUser.uid;
 
+    // Llamada directa al servicio
     this.asesoriaService.obtenerAsesoriasPorProgramador(userId).subscribe({
       next: (lista: AsesoriaConId[]) => {
         this.asesorias.set(lista);
         this.actualizarListas(lista);
-
-        if (this.role === 'user') {
-          this.mostrarNotificacionesPendientesUsuario(lista);
-        }
+        if (this.role === 'user') this.mostrarNotificacionesPendientesUsuario(lista);
       },
-      error: (err) => {
-        this.mostrarError('No se pudieron cargar las asesorías desde el servidor.');
-      }
+      error: () => this.mostrarError('Error de conexión con el servidor.')
     });
   }
 
   private actualizarListas(lista: AsesoriaConId[]) {
+    // Usamos signal.set para que OnPush detecte el cambio instantáneo
     this.pendientes.set(lista.filter(a => a.estado === 'pendiente'));
     this.historial.set(lista.filter(a => a.estado !== 'pendiente'));
   }
 
   async enviarRespuesta(estado: 'aceptada' | 'rechazada') {
     const asesoria = this.asesorSeleccionado();
-    if (!asesoria) return;
-
     const msj = this.mensajeRespuesta().trim();
-    if (!msj) {
-      this.mostrarError('Por favor, escribe un mensaje para el usuario.');
+    
+    if (!asesoria || !msj) {
+      this.mostrarError('Escribe un mensaje antes de enviar.');
       return;
     }
 
-    const datosActualizar = { estado, mensajeRespuesta: msj };
-
-    this.asesoriaService.actualizarAsesoria(asesoria.id, datosActualizar).subscribe({
+    this.asesoriaService.actualizarAsesoria(asesoria.id, { estado, mensajeRespuesta: msj }).subscribe({
       next: () => {
-        const actualizada = this.asesorias().map(a =>
-          a.id === asesoria.id ? { ...a, ...datosActualizar } : a
-        );
-
-        this.asesorias.set(actualizada);
-        this.actualizarListas(actualizada);
-        
-        this.mostrarExito(estado === 'aceptada' ? 'Solicitud aceptada con éxito.' : 'Solicitud rechazada correctamente.');
+        this.mostrarExito(`Solicitud ${estado} correctamente.`);
         this.asesorSeleccionado.set(null);
+        // El servicio refrescará automáticamente si implementaste el BehaviorSubject
       },
-      error: (err) => {
-        this.mostrarError('Error al procesar la solicitud en el servidor Java.');
-      }
+      error: () => this.mostrarError('No se pudo actualizar la asesoría.')
     });
   }
 
-  // Helpers para Feedback
+  // --- HELPERS DE UI ---
+  abrirModal(as: AsesoriaConId) {
+    this.asesorSeleccionado.set(as);
+    this.mensajeRespuesta.set('');
+  }
+
+  cerrarModal() { this.asesorSeleccionado.set(null); }
+
   private mostrarExito(msj: string) {
     this.mensajeExito.set(msj);
-    setTimeout(() => this.mensajeExito.set(null), 3500);
+    setTimeout(() => this.mensajeExito.set(null), 3000);
   }
 
   private mostrarError(msj: string) {
     this.mensajeError.set(msj);
-    setTimeout(() => this.mensajeError.set(null), 4000);
-  }
-
-  abrirModal(asesoria: AsesoriaConId) {
-    this.mensajeError.set(null); // Limpiar errores previos
-    this.asesorSeleccionado.set(asesoria);
-    this.mensajeRespuesta.set('');
-  }
-
-  cerrarModal() {
-    this.asesorSeleccionado.set(null);
-    this.mensajeError.set(null);
+    setTimeout(() => this.mensajeError.set(null), 3000);
   }
 
   getWhatsAppLink(data: AsesoriaConId): string {
     if (!data.telefono) return '#';
-    const text = `Mucho gusto, he revisado tu solicitud ${data.nombreUsuario}, sobre "${data.mensaje}".`;
+    const text = `Hola ${data.nombreUsuario}, respondo a tu consulta: "${data.mensaje}"`;
     return `https://wa.me/${data.telefono}?text=${encodeURIComponent(text)}`;
   }
 
   private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
     const revisadas = lista.filter(a => a.estado !== 'pendiente');
-    if (revisadas.length === 0) return;
-
-    const ultima = revisadas[revisadas.length - 1];
-    this.notificacionUsuario.set(`📧 Tu solicitud ha sido ${ultima.estado}.`);
-    setTimeout(() => this.notificacionUsuario.set(null), 4000);
+    if (revisadas.length > 0) {
+      const ultima = revisadas[revisadas.length - 1];
+      this.notificacionUsuario.set(`Tu solicitud está: ${ultima.estado}`);
+      setTimeout(() => this.notificacionUsuario.set(null), 5000);
+    }
   }
 }

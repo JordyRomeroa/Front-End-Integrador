@@ -1,20 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed, OnDestroy } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../services/programmer-service';
 import { ProyectoService } from '../../../../../services/proyecto-service'; 
+import { AsesoriaService } from '../../../../../services/advice';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; 
 import { RegisterProgrammer } from './register-programmer/register';
 import { ProgramadorData } from '../../../interface/programador';
 import { Proyecto } from '../../../interface/proyecto';
 
-// Importaciones para PDF y Excel
+// Importaciones para reportes
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { firstValueFrom } from 'rxjs';
-import { AsesoriaService } from '../../../../../services/advice';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -24,12 +24,14 @@ import { AsesoriaService } from '../../../../../services/advice';
   styleUrls: ['./admin.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Admin implements OnInit {
+export class Admin implements OnInit, OnDestroy {
   private router = inject(Router);
   public authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
   private proyectoService = inject(ProyectoService);
   private asesoriaService = inject(AsesoriaService);
+
+  private subscriptions = new Subscription();
 
   // --- SEÑALES DE ESTADO ---
   role = signal<string | null>(null);
@@ -37,6 +39,7 @@ export class Admin implements OnInit {
   proyectos = signal<Proyecto[]>([]);
   asesorias = signal<any[]>([]);
 
+  // Modales y UI
   showRegisterModal = signal(false);
   programmerSelected = signal<ProgramadorData | null>(null);
   showDeleteModal = signal(false);
@@ -45,7 +48,7 @@ export class Admin implements OnInit {
   toastMessage = signal('');
   programmerToDelete = signal<ProgramadorData | null>(null);
 
-  // --- LÓGICA DE FILTRADO ---
+  // --- FILTRADO ---
   filtroBusqueda = signal('');
 
   programadoresFiltrados = computed(() => {
@@ -57,69 +60,76 @@ export class Admin implements OnInit {
     );
   });
 
+  // Métricas rápidas (Reactiva a través de signals)
   totalProgramadores = computed(() => this.programadores().length);
   totalProyectos = computed(() => this.proyectos().length);
   totalAsesorias = computed(() => this.asesorias().length);
 
   constructor() {
+    // Verificación de seguridad inmediata al construir el componente
     const r = this.authService.userRole();
     this.role.set(r);
-
     if (!r || r !== 'admin') {
       this.router.navigate(['/login']);
     }
-
-    // Suscripción a programadores
-    this.programadorService.programadores$.subscribe(lista => {
-      this.programadores.set(lista || []);
-    });
-
-    // Suscripción a proyectos
-    this.proyectoService.todosProyectos$.subscribe(lista => {
-      this.proyectos.set(lista || []);
-    });
   }
 
-async ngOnInit() {
-  this.programadorService.refrescarTabla();
-  await this.proyectoService.cargarTodosLosProyectos();
-  
-  // Forzamos la carga y verificamos en consola
-  await this.cargarAsesoriasGlobales(); 
-}
-
-async cargarAsesoriasGlobales() {
-  console.log("Iniciando carga de asesorías...");
-  try {
-    // Usamos firstValueFrom si 'y1' es el alias de esa función en tu código compilado
-    const r = await firstValueFrom(this.asesoriaService.obtenerTodas());
+  ngOnInit() {
+    // 1. SUSCRIPCIONES REACTIVAS (Detectan cambios automáticamente)
     
-    console.log("✅ Solicitud exitosa. Cantidad de registros:", r?.length);
-    console.log("Contenido de los datos:", r);
-    
-    this.asesorias.set(r || []);
-  } catch (error: any) {
-    // Imprimimos el error completo para inspeccionar las propiedades de red
-    console.error("❌ Error detectado en cargarAsesoriasGlobales");
-    
-    if (error.status) {
-      console.error(`Código de estado: ${error.status}`); // 500, 404, etc.
-      console.error(`Texto del estado: ${error.statusText}`);
-    }
+    // Suscripción a Programadores
+    this.subscriptions.add(
+      this.programadorService.programadores$.subscribe(lista => {
+        this.programadores.set(lista || []);
+      })
+    );
 
-    // Si el backend envió un mensaje de error específico (JSON)
-    if (error.error) {
-      console.error("Detalle del error desde el servidor:", error.error);
-    }
+    // Suscripción a Proyectos
+    this.subscriptions.add(
+      this.proyectoService.todosProyectos$.subscribe(lista => {
+        this.proyectos.set(lista || []);
+      })
+    );
 
-    console.error("URL intentada:", error.url);
-    console.error("Objeto de error completo:", error);
+    // Suscripción a Asesorías (Patrón BehaviorSubject del servicio)
+    this.subscriptions.add(
+      this.asesoriaService.asesoriasActuales$.subscribe(lista => {
+        this.asesorias.set(lista || []);
+        console.log("🔄 UI de Admin: Lista de asesorías actualizada automáticamente.");
+      })
+    );
 
-    this.asesorias.set([]);
+    // 2. CARGA INICIAL DE DATOS
+    this.cargarTodoElSistema();
   }
-}
 
-  // --- MÉTODOS DE EXPORTACIÓN ---
+  ngOnDestroy() {
+    // Limpieza de suscripciones para evitar fugas de memoria
+    this.subscriptions.unsubscribe();
+  }
+
+  /**
+   * Dispara la carga inicial en todos los servicios
+   */
+  private async cargarTodoElSistema() {
+    try {
+      this.programadorService.refrescarTabla();
+      await this.proyectoService.cargarTodosLosProyectos();
+      
+      // La carga de asesorías notificará al Subject asesoriasActuales$
+      this.asesoriaService.obtenerTodas().subscribe({
+        error: (err) => {
+          if (err.status === 500) this.lanzarToast("Error 500: El servidor falló al cargar asesorías");
+        }
+      });
+      
+      console.log("✅ Sistema sincronizado y suscrito.");
+    } catch (err) {
+      console.error("Error cargando el sistema:", err);
+    }
+  }
+
+  // --- REPORTES ---
   async exportarPDF() {
     const doc = new jsPDF();
     const fechaReporte = new Date().toLocaleDateString();
@@ -127,62 +137,50 @@ async cargarAsesoriasGlobales() {
     doc.setFontSize(18);
     doc.text('REPORTE GENERAL DE GESTIÓN', 14, 15);
     doc.setFontSize(10);
-    doc.text(`Fecha de generación: ${fechaReporte}`, 14, 22);
+    doc.text(`Generado por Admin - ${fechaReporte}`, 14, 22);
 
-    // 1. TABLA PROGRAMADORES
+    // Tabla 1: Programadores
     doc.setFontSize(14);
     doc.text('1. Listado de Programadores', 14, 35);
     autoTable(doc, {
       startY: 40,
-      head: [['Nombre', 'Especialidad', 'Contacto']],
+      head: [['Nombre', 'Especialidad', 'Email']],
       body: this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A']),
       theme: 'striped'
     });
 
-    // 2. TABLA PROYECTOS (SOLUCIÓN AL [object Object])
+    // Tabla 2: Proyectos
     const finalY1 = (doc as any).lastAutoTable.finalY || 40;
-    doc.text('2. Proyectos y Responsables', 14, finalY1 + 15);
+    doc.text('2. Resumen de Proyectos', 14, finalY1 + 15);
     autoTable(doc, {
       startY: finalY1 + 20,
-      head: [['Proyecto', 'Estado', 'Programador Asignado']],
-      body: this.proyectos().map(pro => {
-        // Lógica para extraer el nombre si es un objeto
-        let nombreProgramador = 'No asignado';
-        if (pro.assignedTo) {
-          nombreProgramador = typeof pro.assignedTo === 'object' 
-            ? (pro.assignedTo as any).nombre || 'Sin nombre' 
-            : pro.assignedTo;
-        }
-
-        return [
-          pro.nombre, 
-          pro.categoria  || 'Sin categoría', 
-          nombreProgramador
-        ];
-      }),
+      head: [['Proyecto', 'Categoría', 'Responsable']],
+      body: this.proyectos().map(pro => [
+        pro.nombre, 
+        pro.categoria || 'N/A', 
+        pro.assignedTo && typeof pro.assignedTo === 'object' ? (pro.assignedTo as any).nombre : 'Sin asignar'
+      ]),
       theme: 'grid',
       headStyles: { fillColor: [79, 70, 229] }
     });
 
-    // 3. TABLA ASESORÍAS
-    // 3. TABLA ASESORÍAS (Actualizada para mostrar Programador)
-const finalY2 = (doc as any).lastAutoTable.finalY || finalY1 + 20;
-doc.text('3. Historial de Asesorías', 14, finalY2 + 15);
-autoTable(doc, {
-  startY: finalY2 + 20,
-  head: [['Fecha', 'Usuario', 'Estado', 'Asignado a', 'Mensaje']], // Añadimos columna
-  body: this.asesorias().map(as => [
-    as.fecha || 'S/F', 
-    as.nombreUsuario || 'Cliente', 
-    as.estado.toUpperCase(), // Se ve más profesional en mayúsculas
-    as.nombreProgramador || 'Sin asignar', // Gracias al mapeo del servicio, esto ya funciona
-    (as.mensaje || '').substring(0, 40) + (as.mensaje?.length > 40 ? '...' : '')
-  ]),
-  theme: 'striped',
-  headStyles: { fillColor: [50, 50, 50] } // Un color distinto para diferenciar
-});
+    // Tabla 3: Asesorías
+    const finalY2 = (doc as any).lastAutoTable.finalY || finalY1 + 20;
+    doc.text('3. Registro de Asesorías', 14, finalY2 + 15);
+    autoTable(doc, {
+      startY: finalY2 + 20,
+      head: [['Fecha', 'Usuario', 'Estado', 'Programador']],
+      body: this.asesorias().map(as => [
+        as.fecha || 'N/A', 
+        as.nombreUsuario || 'Usuario', 
+        as.estado, 
+        as.nombreProgramador || 'Pendiente'
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [50, 50, 50] }
+    });
 
-    doc.save(`Reporte_Admin_${fechaReporte}.pdf`);
+    doc.save(`Reporte_Sistema_${fechaReporte}.pdf`);
   }
 
   exportarExcel() {
@@ -198,7 +196,7 @@ autoTable(doc, {
     XLSX.writeFile(wb, 'reporte-programadores.xlsx');
   }
 
-  // --- MÉTODOS ORIGINALES ---
+  // --- ACCIONES CRUD ---
   registerProgrammer() {
     this.programmerSelected.set(null);
     this.showRegisterModal.set(true);
@@ -209,36 +207,26 @@ autoTable(doc, {
     this.showRegisterModal.set(true);
   }
 
-  cerrarRegistro() {
-    this.showRegisterModal.set(false);
-  }
-
-  eliminarProgramador(programmer: ProgramadorData) {
-    if (!programmer.uid) return;
-    this.programmerToDelete.set(programmer);
-    this.showDeleteModal.set(true);
-  }
-
   async confirmarEliminacionReal() {
     const programmer = this.programmerToDelete();
     if (!programmer?.uid) return;
     try {
       this.isDeleting.set(true);
       await this.programadorService.eliminarProgramador(programmer.uid);
-      this.lanzarToast(`${programmer.nombre} ha sido eliminado.`);
+      this.lanzarToast(`${programmer.nombre} eliminado con éxito.`);
       this.cerrarDeleteModal();
     } catch (error) {
-      this.lanzarToast('Error al eliminar');
+      this.lanzarToast('Error al procesar la eliminación');
     } finally {
       this.isDeleting.set(false);
     }
   }
 
-  cerrarDeleteModal() {
-    this.showDeleteModal.set(false);
-    this.programmerToDelete.set(null);
-  }
-
+  // --- UI HELPERS ---
+  cerrarRegistro() { this.showRegisterModal.set(false); }
+  cerrarDeleteModal() { this.showDeleteModal.set(false); this.programmerToDelete.set(null); }
+  eliminarProgramador(p: ProgramadorData) { this.programmerToDelete.set(p); this.showDeleteModal.set(true); }
+  
   lanzarToast(mensaje: string) {
     this.toastMessage.set(mensaje);
     this.showToast.set(true);
@@ -246,12 +234,6 @@ autoTable(doc, {
   }
 
   logout() {
-    this.authService.logout().subscribe({
-      next: () => this.router.navigate(['/login'])
-    });
-  }
-
-  obtenerRedes(redes?: string[]) {
-    return redes?.filter(r => r.trim() !== '') || [];
+    this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }
