@@ -9,27 +9,35 @@ import { ProgramadorData } from '../../../../interface/programador';
 
 @Component({
   selector: 'app-management',
-  standalone: true, // Asegúrate de tener esto si usas imports directos
+  standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './management.html',
   styleUrls: ['./management.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Management {
   private proyectoService = inject(ProyectoService);
   private authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
 
+  // Estados de la lista y UI
   proyectos = signal<Proyecto[]>([]);
-  showModal = signal(false);
-  proyectoSelected = signal<Proyecto | null>(null);
+  cargando = signal(true);
   
-  // Señales para manejo de mensajes en el Modal/UI
+  // Modales
+  showModal = signal(false);
+  showConfirmModal = signal(false);
+  
+  // Selección para editar o eliminar
+  proyectoSelected = signal<Proyecto | null>(null);
+  proyectoAEliminar = signal<Proyecto | null>(null);
+  
+  // Mensajes de feedback
   mensajeError = signal<string | null>(null);
   mensajeExito = signal<string | null>(null);
 
   programador: ProgramadorData | null = null;
   tecnologiasInput: string = '';
-  cargando = signal(true);
 
   proyectoForm: Proyecto = this.resetForm();
 
@@ -41,6 +49,7 @@ export class Management {
         return;
       }
 
+      // Priorizamos ID numérico para el backend de Java
       const userIdParaBackend = user.id || user.uid; 
       if (userIdParaBackend) {
         this.cargarProyectos(userIdParaBackend);
@@ -59,6 +68,8 @@ export class Management {
       this.proyectoService.proyectosProgramador$.subscribe(lista => {
         this.proyectos.set(lista);
       });
+    } catch (error) {
+      this.mensajeError.set('No se pudieron cargar los proyectos.');
     } finally {
       this.cargando.set(false);
     }
@@ -103,7 +114,10 @@ export class Management {
       return;
     }
 
-    const listaTecnologias = this.tecnologiasInput.split(',').map(t => t.trim()).filter(t => t);
+    const listaTecnologias = this.tecnologiasInput
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t);
 
     const proyectoData: any = {
       ...this.proyectoForm,
@@ -119,36 +133,50 @@ export class Management {
         await this.proyectoService.crearProyecto(proyectoData);
       }
       
-      // Actualización inmediata
       await this.cargarProyectos(user.id);
       this.showModal.set(false);
-      this.mensajeExito.set('¡Proyecto guardado correctamente!');
+      this.mensajeExito.set('¡Proyecto guardado con éxito!');
       setTimeout(() => this.mensajeExito.set(null), 3000);
 
     } catch (error) {
-      this.mensajeError.set('Error en el servidor (500). Verifique los datos ingresados.');
+      this.mensajeError.set('Error en el servidor (500). Revisa los datos.');
     }
   }
 
-  async eliminarProyecto(proyecto: Proyecto) {
-    const user = this.authService.currentUser() as any;
-    if (!user || !proyecto.id) return;
+  // --- Lógica de Eliminación (Sin confirm() nativo) ---
+  
+  prepararEliminacion(proyecto: Proyecto) {
+    this.proyectoAEliminar.set(proyecto);
+    this.showConfirmModal.set(true);
+  }
 
-    // Puedes crear un modal de confirmación personalizado, aquí mantenemos la lógica
-    if (confirm('¿Seguro que deseas eliminar este proyecto?')) {
-      try {
-        await this.proyectoService.eliminarProyecto(String(proyecto.id), user.uid);
-        
-        // CRUCIAL: Actualizar la lista después de eliminar
-        await this.cargarProyectos(user.id);
-        
-        this.mensajeExito.set('Proyecto eliminado correctamente.');
-        setTimeout(() => this.mensajeExito.set(null), 3000);
-      } catch (error) {
-        this.mensajeError.set('No fue posible eliminar el proyecto. Revisa tus permisos.');
-        setTimeout(() => this.mensajeError.set(null), 5000);
-      }
+  async confirmarEliminacion() {
+    const proyecto = this.proyectoAEliminar();
+    const user = this.authService.currentUser() as any;
+    
+    if (!user || !proyecto?.id) return;
+
+    try {
+      await this.proyectoService.eliminarProyecto(String(proyecto.id), user.uid);
+      
+      // Actualización inmediata para que desaparezca de "Mis Proyectos"
+      await this.cargarProyectos(user.id);
+      
+      this.showConfirmModal.set(false);
+      this.proyectoAEliminar.set(null);
+      this.mensajeExito.set('Proyecto eliminado correctamente.');
+      setTimeout(() => this.mensajeExito.set(null), 3000);
+      
+    } catch (error) {
+      this.showConfirmModal.set(false);
+      this.mensajeError.set('No se pudo eliminar el proyecto.');
+      setTimeout(() => this.mensajeError.set(null), 4000);
     }
+  }
+
+  cancelarEliminacion() {
+    this.showConfirmModal.set(false);
+    this.proyectoAEliminar.set(null);
   }
 
   cerrarModal() {

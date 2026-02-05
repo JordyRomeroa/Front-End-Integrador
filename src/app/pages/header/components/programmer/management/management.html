@@ -6,7 +6,7 @@
     </div>
   }
 
-  @if (mensajeError() && !showModal()) {
+  @if (mensajeError() && !showModal() && !showConfirmModal()) {
     <div class="mb-6 p-4 bg-rose-500/20 border border-rose-500/50 text-rose-400 rounded-2xl animate-fadeIn flex items-center gap-3">
       <span class="text-xl">⚠️</span>
       <p class="font-bold">{{ mensajeError() }}</p>
@@ -48,7 +48,7 @@
                       class="flex-1 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white font-bold py-2 rounded-xl transition-all border border-emerald-500/20">
                 Editar
               </button>
-              <button (click)="eliminarProyecto(proyecto)" 
+              <button (click)="prepararEliminacion(proyecto)" 
                       class="flex-1 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold py-2 rounded-xl transition-all border border-rose-500/20">
                 Eliminar
               </button>
@@ -139,6 +139,33 @@
         <button (click)="guardarProyecto()" 
                 class="w-full bg-slate-900 hover:bg-blue-600 text-white p-4 rounded-2xl font-bold mt-8 transition-all shadow-xl shadow-slate-200 active:scale-[0.98]">
           Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConfirmModal()) {
+  <div class="fixed inset-0 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm z-[60] p-4 animate-fadeIn">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-bounceIn p-8 text-center">
+      <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+        ⚠️
+      </div>
+      
+      <h3 class="text-xl font-black text-slate-800 mb-2">¿Estás seguro?</h3>
+      <p class="text-slate-500 text-sm mb-8 leading-relaxed">
+        Esta acción eliminará permanentemente el proyecto <br>
+        <span class="font-bold text-slate-700">"{{ proyectoAEliminar()?.nombre }}"</span>.
+      </p>
+
+      <div class="flex gap-3">
+        <button (click)="cancelarEliminacion()" 
+                class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all">
+          Cancelar
+        </button>
+        <button (click)="confirmarEliminacion()" 
+                class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-rose-500/30 active:scale-95">
+          Sí, eliminar
         </button>
       </div>
     </div>
