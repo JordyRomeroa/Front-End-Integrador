@@ -80,19 +80,24 @@ export class Admin implements OnInit {
     });
   }
 
- async ngOnInit() {
+async ngOnInit() {
   this.programadorService.refrescarTabla();
   await this.proyectoService.cargarTodosLosProyectos();
-  await this.cargarAsesoriasGlobales(); // Añadimos await aquí
+  
+  // Forzamos la carga y verificamos en consola
+  await this.cargarAsesoriasGlobales(); 
 }
 
 private async cargarAsesoriasGlobales() {
   try {
     const lista = await firstValueFrom(this.asesoriaService.obtenerTodas());
-    console.log('Asesorías cargadas:', lista); // Debug para ver si llegan datos
+    console.log('Datos recibidos:', lista);
+    
+    // Seteamos la señal. Esto disparará automáticamente totalAsesorias()
     this.asesorias.set(lista || []);
+    
   } catch (e) {
-    console.error('Error cargando asesorías', e);
+    console.error('Error 500 o 404 detectado:', e);
     this.asesorias.set([]);
   }
 }
