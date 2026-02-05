@@ -19,11 +19,11 @@ export interface Asesoria {
 })
 export class AsesoriaService {
   private http = inject(HttpClient);
-  // URL controlador Java
+
 private API_URL = `${environment.apiUrl}/api/asesorias`;
 
   obtenerTodas(): Observable<any[]> {
-    // En Java el GetMapping es "", por lo tanto eliminamos la "/" extra al final
+  
     return this.http.get<any[]>(`${this.API_URL}`); 
   }
   crearAsesoria(asesoria: Asesoria): Observable<any> {
