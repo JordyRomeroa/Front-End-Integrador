@@ -1,6 +1,6 @@
 import { Asesoria } from "../../../services/advice";
 export interface AsesoriaConId extends Asesoria {
-  id: string;
+  id: number;
   titulo: string;
   descripcion: string;
   estado: string;
