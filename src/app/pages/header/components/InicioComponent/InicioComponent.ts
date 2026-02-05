@@ -121,11 +121,30 @@ export class InicioComponent implements OnInit {
         id: 4,
         name: 'Front-End-Integrador',
         description: 'Interfaz de usuario para el proyecto integrador final.',
-        html_url: 'https://github.com/JordyRomeroa/Front-End-Integrador',
-        homepage: 'https://jordyromeroa.github.io/Front-End-Integrador/',
+        html_url: 'https://github.com/JordyRomeroa/icc-ppw-03-componentes-estilos',
+        homepage: 'https://jordyromeroa.github.io/icc-ppw-03-componentes-estilos/',
+        fork: false,
+        owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
+      },
+      {
+         id: 5,
+        name: 'Front-End-Integrador',
+        description: 'Interfaz de usuario para el proyecto integrador final.',
+        html_url: 'https://github.com/JordyRomeroa/icc-ppw-02-ui-componentes',
+        homepage: 'https://jordyromeroa.github.io/icc-ppw-02-ui-componentes/',
+        fork: false,
+        owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
+      },
+      {
+         id: 6,
+        name: 'Front-End-Integrador',
+        description: 'Interfaz de usuario para el proyecto integrador final.',
+        html_url: 'https://github.com/JordyRomeroa/icc-ppw-u1-AngularPractica',
+        homepage: 'https://jordyromeroa.github.io/icc-ppw-u1-AngularPractica/',
         fork: false,
         owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
       }
+
     ];
   }
 }
