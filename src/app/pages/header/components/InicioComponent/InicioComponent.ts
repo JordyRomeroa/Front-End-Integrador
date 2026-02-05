@@ -1,7 +1,4 @@
 import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { GitHubService, Repo } from '../../../../../services/github-service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -18,133 +15,69 @@ import { Team } from "../admin/team/team";
 })
 export class InicioComponent implements OnInit {
 
-  // Cambiamos el tipo a any[] para evitar el error de propiedad inexistente en el HTML
+  // Lista definitiva de proyectos (Sin aleatoriedad)
   allRepos: any[] = [];
 
-  readonly users = ['NayeliC98', 'JordyRomeroa'];
-
-  constructor(
-    private githubService: GitHubService,
-    private cd: ChangeDetectorRef
-  ) {}
+  constructor(private cd: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    const requests = this.users.map(user => 
-      this.githubService.getRepos(user).pipe(
-        catchError(err => {
-          console.warn(`Error cargando repos de ${user}:`, err);
-          return of([]); 
-        })
-      )
-    );
-
-    forkJoin(requests).subscribe({
-      next: ([nayeliRepos, jordyRepos]) => {
-        if (nayeliRepos.length === 0 && jordyRepos.length === 0) {
-          this.loadFallbackRepos();
-        } else {
-          // Procesamos los repositorios para inyectar la propiedad homepage
-          const processedNayeli = this.processRepos(nayeliRepos);
-          const processedJordy = this.processRepos(jordyRepos);
-
-          const filteredNayeli = this.getRandomRepos(processedNayeli, 3);
-          const filteredJordy = this.getRandomRepos(processedJordy, 3);
-          
-          this.allRepos = [...filteredNayeli, ...filteredJordy].sort(() => Math.random() - 0.5);
-        }
-        this.cd.markForCheck();
-      },
-      error: () => {
-        this.loadFallbackRepos();
-        this.cd.markForCheck();
-      }
-    });
+    this.loadSpecificRepos();
   }
 
   /**
-   * Genera la URL de GitHub Pages y la asigna al objeto.
-   * Usamos 'any' para poder añadir la propiedad 'homepage' sin que TS se queje.
+   * Carga exactamente los proyectos definidos con sus GitHub Pages.
    */
-  private processRepos(repos: Repo[]): any[] {
-    return repos.map(repo => ({
-      ...repo,
-      homepage: (repo as any).homepage || `https://${repo.owner.login}.github.io/${repo.name}/`
-    }));
-  }
-
-  /**
-   * Filtra originales y selecciona aleatorios.
-   */
-  private getRandomRepos(repos: any[], count: number): any[] {
-    if (!repos || repos.length === 0) return [];
-    
-    const originals = repos.filter(r => !r.fork);
-    
-    return [...originals]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, count);
-  }
-
-  /**
-   * Datos de respaldo con los enlaces directos de GitHub Pages.
-   */
-  private loadFallbackRepos(): void {
+  private loadSpecificRepos(): void {
     this.allRepos = [
       {
         id: 1,
-        name: 'icc-ppw-practica-heuristicas-nuevo',
-        description: 'Práctica sobre evaluación de heurísticas de usabilidad.',
+        name: 'Práctica Heurísticas',
+        description: 'Análisis de usabilidad y evaluación de interfaces basado en las heurísticas de Nielsen.',
         html_url: 'https://github.com/NayeliC98/icc-ppw-practica-heuristicas-nuevo',
         homepage: 'https://nayelic98.github.io/icc-ppw-practica-heuristicas-nuevo/',
-        fork: false,
         owner: { login: 'NayeliC98', avatar_url: 'https://avatars.githubusercontent.com/NayeliC98' }
       },
       {
         id: 2,
-        name: 'icc-ppw-u1-estilos-componentes-nuevo',
-        description: 'Desarrollo de componentes y gestión de estilos en Angular.',
+        name: 'Estilos y Componentes',
+        description: 'Proyecto de Angular enfocado en la modularización de componentes y manejo de SCSS.',
         html_url: 'https://github.com/NayeliC98/icc-ppw-u1-estilos-componentes-nuevo',
         homepage: 'https://nayelic98.github.io/icc-ppw-u1-estilos-componentes-nuevo/',
-        fork: false,
         owner: { login: 'NayeliC98', avatar_url: 'https://avatars.githubusercontent.com/NayeliC98' }
       },
       {
         id: 3,
         name: 'WC3',
-        description: 'Proyecto integrador WC3 desplegado.',
+        description: 'Dashboard integrador desarrollado con tecnologías web modernas.',
         html_url: 'https://github.com/NayeliC98/WC3',
         homepage: 'https://nayelic98.github.io/WC3/',
-        fork: false,
         owner: { login: 'NayeliC98', avatar_url: 'https://avatars.githubusercontent.com/NayeliC98' }
       },
       {
         id: 4,
-        name: 'Front-End-Integrador',
-        description: 'Interfaz de usuario para el proyecto integrador final.',
+        name: 'Componentes y Estilos',
+        description: 'Exploración avanzada de estilos dinámicos en entornos Angular.',
         html_url: 'https://github.com/JordyRomeroa/icc-ppw-03-componentes-estilos',
         homepage: 'https://jordyromeroa.github.io/icc-ppw-03-componentes-estilos/',
-        fork: false,
         owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
       },
       {
-         id: 5,
-        name: 'Front-End-Integrador',
-        description: 'Interfaz de usuario para el proyecto integrador final.',
+        id: 5,
+        name: 'UI Componentes',
+        description: 'Librería de componentes de interfaz de usuario para aplicaciones integradoras.',
         html_url: 'https://github.com/JordyRomeroa/icc-ppw-02-ui-componentes',
         homepage: 'https://jordyromeroa.github.io/icc-ppw-02-ui-componentes/',
-        fork: false,
         owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
       },
       {
-         id: 6,
-        name: 'Front-End-Integrador',
-        description: 'Interfaz de usuario para el proyecto integrador final.',
+        id: 6,
+        name: 'Angular Práctica U1',
+        description: 'Fundamentos de Angular: Rutas, servicios y estructura de proyecto inicial.',
         html_url: 'https://github.com/JordyRomeroa/icc-ppw-u1-AngularPractica',
         homepage: 'https://jordyromeroa.github.io/icc-ppw-u1-AngularPractica/',
-        fork: false,
         owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
       }
-
     ];
+    this.cd.markForCheck();
   }
 }
