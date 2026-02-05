@@ -50,9 +50,10 @@ export class AsesoriaService {
     );
   }
 
-  actualizarAsesoria(id: string, data: Partial<Asesoria>): Observable<any> {
-    return this.http.put(`${this.API_URL}/${id}`, data);
-  }
+  // Cambia id: string por id: number
+actualizarAsesoria(id: number, data: Partial<Asesoria>): Observable<any> {
+  return this.http.put(`${this.API_URL}/${id}`, data);
+}
 
   /**
    * Método de apoyo para no repetir lógica.
