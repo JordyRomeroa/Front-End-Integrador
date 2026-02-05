@@ -74,7 +74,7 @@
         <div class="user-initials">{{ getInitials(user?.email ?? '') }}</div>
         <button (click)="logout()" class="logout-btn">Cerrar sesión</button>
       } @else {
-        <button routerLink="/login" class="logout-btn">Iniciar sesión</button>
+        <button routerLink="/home/inicio" class="logout-btn">Iniciar sesión</button>
       }
     </div>
   </aside>
