@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../../../services/auth-service';
 import { ProgramadorService } from '../../../../../services/programmer-service';
@@ -13,7 +13,7 @@ import { Proyecto } from '../../../interface/proyecto';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Subscription, firstValueFrom } from 'rxjs'; // Añadido Subscription
+import { firstValueFrom } from 'rxjs';
 import { AsesoriaService } from '../../../../../services/advice';
 
 @Component({
@@ -24,13 +24,12 @@ import { AsesoriaService } from '../../../../../services/advice';
   styleUrls: ['./admin.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Admin implements OnInit, OnDestroy {
+export class Admin implements OnInit {
   private router = inject(Router);
   public authService = inject(AuthService);
   private programadorService = inject(ProgramadorService);
   private proyectoService = inject(ProyectoService);
   private asesoriaService = inject(AsesoriaService);
-  private subscripciones = new Subscription(); // Para limpiar memoria
 
   // --- SEÑALES DE ESTADO ---
   role = signal<string | null>(null);
@@ -70,70 +69,118 @@ export class Admin implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
     }
 
-    // 1. ESCUCHA ACTIVA DE PROGRAMADORES (Recarga automática)
-    this.subscripciones.add(
-      this.programadorService.programadores$.subscribe(lista => {
-        this.programadores.set(lista || []);
-        console.log("🔄 UI: Programadores actualizados");
-      })
-    );
+    // Suscripción a programadores
+    this.programadorService.programadores$.subscribe(lista => {
+      this.programadores.set(lista || []);
+    });
 
-    // 2. ESCUCHA ACTIVA DE PROYECTOS (Recarga automática)
-    this.subscripciones.add(
-      this.proyectoService.todosProyectos$.subscribe(lista => {
-        this.proyectos.set(lista || []);
-        console.log("🔄 UI: Proyectos actualizados");
-      })
-    );
+    // Suscripción a proyectos
+    this.proyectoService.todosProyectos$.subscribe(lista => {
+      this.proyectos.set(lista || []);
+    });
   }
 
-  async ngOnInit() {
-    // Disparar las cargas iniciales
-    this.programadorService.refrescarTabla();
-    this.proyectoService.cargarTodosLosProyectos();
-    this.cargarAsesoriasGlobales(); 
-  }
+async ngOnInit() {
+  this.programadorService.refrescarTabla();
+  await this.proyectoService.cargarTodosLosProyectos();
+  
+  // Forzamos la carga y verificamos en consola
+  await this.cargarAsesoriasGlobales(); 
+}
 
-  ngOnDestroy() {
-    // Evita fugas de memoria al salir del componente
-    this.subscripciones.unsubscribe();
-  }
-
-  async cargarAsesoriasGlobales() {
-    try {
-      const r = await firstValueFrom(this.asesoriaService.obtenerTodas());
-      this.asesorias.set(r || []);
-    } catch (error: any) {
-      console.error("❌ Error en asesorías:", error);
-      this.asesorias.set([]);
+async cargarAsesoriasGlobales() {
+  console.log("Iniciando carga de asesorías...");
+  try {
+    // Usamos firstValueFrom si 'y1' es el alias de esa función en tu código compilado
+    const r = await firstValueFrom(this.asesoriaService.obtenerTodas());
+    
+    console.log("✅ Solicitud exitosa. Cantidad de registros:", r?.length);
+    console.log("Contenido de los datos:", r);
+    
+    this.asesorias.set(r || []);
+  } catch (error: any) {
+    // Imprimimos el error completo para inspeccionar las propiedades de red
+    console.error("❌ Error detectado en cargarAsesoriasGlobales");
+    
+    if (error.status) {
+      console.error(`Código de estado: ${error.status}`); // 500, 404, etc.
+      console.error(`Texto del estado: ${error.statusText}`);
     }
-  }
 
-  // --- MÉTODOS DE EXPORTACIÓN (Sin cambios en lógica) ---
+    // Si el backend envió un mensaje de error específico (JSON)
+    if (error.error) {
+      console.error("Detalle del error desde el servidor:", error.error);
+    }
+
+    console.error("URL intentada:", error.url);
+    console.error("Objeto de error completo:", error);
+
+    this.asesorias.set([]);
+  }
+}
+
+  // --- MÉTODOS DE EXPORTACIÓN ---
   async exportarPDF() {
     const doc = new jsPDF();
     const fechaReporte = new Date().toLocaleDateString();
+
     doc.setFontSize(18);
     doc.text('REPORTE GENERAL DE GESTIÓN', 14, 15);
-    
-    // Programadores
+    doc.setFontSize(10);
+    doc.text(`Fecha de generación: ${fechaReporte}`, 14, 22);
+
+    // 1. TABLA PROGRAMADORES
+    doc.setFontSize(14);
+    doc.text('1. Listado de Programadores', 14, 35);
     autoTable(doc, {
       startY: 40,
       head: [['Nombre', 'Especialidad', 'Contacto']],
       body: this.programadores().map(p => [p.nombre, p.especialidad, p.contacto || 'N/A']),
+      theme: 'striped'
     });
 
-    // Proyectos
+    // 2. TABLA PROYECTOS (SOLUCIÓN AL [object Object])
     const finalY1 = (doc as any).lastAutoTable.finalY || 40;
+    doc.text('2. Proyectos y Responsables', 14, finalY1 + 15);
     autoTable(doc, {
       startY: finalY1 + 20,
       head: [['Proyecto', 'Estado', 'Programador Asignado']],
-      body: this.proyectos().map(pro => [
-        pro.nombre, 
-        pro.categoria || 'Sin categoría', 
-        typeof pro.assignedTo === 'object' ? (pro.assignedTo as any).nombre : (pro.assignedTo || 'No asignado')
-      ]),
+      body: this.proyectos().map(pro => {
+        // Lógica para extraer el nombre si es un objeto
+        let nombreProgramador = 'No asignado';
+        if (pro.assignedTo) {
+          nombreProgramador = typeof pro.assignedTo === 'object' 
+            ? (pro.assignedTo as any).nombre || 'Sin nombre' 
+            : pro.assignedTo;
+        }
+
+        return [
+          pro.nombre, 
+          pro.categoria  || 'Sin categoría', 
+          nombreProgramador
+        ];
+      }),
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }
     });
+
+    // 3. TABLA ASESORÍAS
+    // 3. TABLA ASESORÍAS (Actualizada para mostrar Programador)
+const finalY2 = (doc as any).lastAutoTable.finalY || finalY1 + 20;
+doc.text('3. Historial de Asesorías', 14, finalY2 + 15);
+autoTable(doc, {
+  startY: finalY2 + 20,
+  head: [['Fecha', 'Usuario', 'Estado', 'Asignado a', 'Mensaje']], // Añadimos columna
+  body: this.asesorias().map(as => [
+    as.fecha || 'S/F', 
+    as.nombreUsuario || 'Cliente', 
+    as.estado.toUpperCase(), // Se ve más profesional en mayúsculas
+    as.nombreProgramador || 'Sin asignar', // Gracias al mapeo del servicio, esto ya funciona
+    (as.mensaje || '').substring(0, 40) + (as.mensaje?.length > 40 ? '...' : '')
+  ]),
+  theme: 'striped',
+  headStyles: { fillColor: [50, 50, 50] } // Un color distinto para diferenciar
+});
 
     doc.save(`Reporte_Admin_${fechaReporte}.pdf`);
   }
@@ -142,7 +189,8 @@ export class Admin implements OnInit, OnDestroy {
     const data = this.programadores().map(p => ({
       Nombre: p.nombre,
       Especialidad: p.especialidad,
-      Contacto: p.contacto
+      Contacto: p.contacto,
+      Descripcion: p.descripcion
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -150,7 +198,7 @@ export class Admin implements OnInit, OnDestroy {
     XLSX.writeFile(wb, 'reporte-programadores.xlsx');
   }
 
-  // --- MÉTODOS ORIGINALES (Mantenidos al 100%) ---
+  // --- MÉTODOS ORIGINALES ---
   registerProgrammer() {
     this.programmerSelected.set(null);
     this.showRegisterModal.set(true);
@@ -177,10 +225,6 @@ export class Admin implements OnInit, OnDestroy {
     try {
       this.isDeleting.set(true);
       await this.programadorService.eliminarProgramador(programmer.uid);
-      
-      // LA MAGIA: Al eliminar, el servicio notifica a programadores$ 
-      // y este componente se actualiza solo sin refrescar página.
-      
       this.lanzarToast(`${programmer.nombre} ha sido eliminado.`);
       this.cerrarDeleteModal();
     } catch (error) {
