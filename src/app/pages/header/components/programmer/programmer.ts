@@ -89,7 +89,7 @@ export class Programmer {
   motivosRechazo: { [asesoriaId: string]: string } = {}; 
   showRechazo: { [asesoriaId: string]: boolean } = {};
 
-  async cambiarEstado(asesoriaId: string, nuevoEstado: string) {
+  async cambiarEstado(asesoriaId: number, nuevoEstado: string) {
     try {
       const mensajeRespuesta = this.motivosRechazo[asesoriaId]?.trim() || '';
       if (nuevoEstado === 'rechazada' && !mensajeRespuesta) {
