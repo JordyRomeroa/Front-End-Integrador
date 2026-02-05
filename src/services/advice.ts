@@ -5,7 +5,7 @@ import { AsesoriaConId } from '../app/pages/interface/asesoria';
 import { environment } from '../environments/environment';
 
 export interface Asesoria {
-  id?: number; // Añadido id opcional
+  id?: number;
   mensaje: string;
   estado: string;
   mensajeRespuesta: string;

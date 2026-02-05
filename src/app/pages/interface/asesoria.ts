@@ -1,7 +1,7 @@
 import { Asesoria } from "../../../services/advice";
 
 export interface AsesoriaConId extends Asesoria {
-  id: string;
+ id: number;
   correoUsuario?: string;
   nombreUsuario?: string;
   fecha?: string;
