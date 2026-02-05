@@ -148,19 +148,22 @@ private async cargarAsesoriasGlobales() {
     });
 
     // 3. TABLA ASESORÍAS
-    const finalY2 = (doc as any).lastAutoTable.finalY || finalY1 + 20;
-    doc.text('3. Historial de Asesorías', 14, finalY2 + 15);
-    autoTable(doc, {
-      startY: finalY2 + 20,
-      head: [['Fecha', 'Usuario', 'Estado', 'Mensaje']],
-      body: this.asesorias().map(as => [
-        as.fecha || 'S/F', 
-        as.nombreUsuario || 'Cliente', 
-        as.estado, 
-        (as.mensaje || '').substring(0, 50) + (as.mensaje?.length > 50 ? '...' : '')
-      ]),
-      theme: 'plain'
-    });
+    // 3. TABLA ASESORÍAS (Actualizada para mostrar Programador)
+const finalY2 = (doc as any).lastAutoTable.finalY || finalY1 + 20;
+doc.text('3. Historial de Asesorías', 14, finalY2 + 15);
+autoTable(doc, {
+  startY: finalY2 + 20,
+  head: [['Fecha', 'Usuario', 'Estado', 'Asignado a', 'Mensaje']], // Añadimos columna
+  body: this.asesorias().map(as => [
+    as.fecha || 'S/F', 
+    as.nombreUsuario || 'Cliente', 
+    as.estado.toUpperCase(), // Se ve más profesional en mayúsculas
+    as.nombreProgramador || 'Sin asignar', // Gracias al mapeo del servicio, esto ya funciona
+    (as.mensaje || '').substring(0, 40) + (as.mensaje?.length > 40 ? '...' : '')
+  ]),
+  theme: 'striped',
+  headStyles: { fillColor: [50, 50, 50] } // Un color distinto para diferenciar
+});
 
     doc.save(`Reporte_Admin_${fechaReporte}.pdf`);
   }

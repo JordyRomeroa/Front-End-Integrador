@@ -1,29 +1,23 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map } from 'rxjs'; // Añadido map
+import { AsesoriaConId } from '../app/pages/interface/asesoria';
 import { environment } from '../environments/environment';
 
-// Interfaz actualizada para coincidir con el AdviceResponseDto de Java
 export interface Asesoria {
-  id?: number;
+  id?: number; // Añadido id opcional
   mensaje: string;
   estado: string;
   mensajeRespuesta: string;
+  programadorId: string;
+  usuarioId: string;
   fecha?: string;
   telefono: string;
-  nombreUsuario?: string;    // Se llenará desde el objeto usuario
-  nombreProgramador?: string; // Se llenará desde el objeto programador
-  // Objetos anidados que vienen del Backend
-  usuario?: {
-    id: number;
-    nombre: string;
-    contacto: string;
-  };
-  programador?: {
-    id: number;
-    nombre: string;
-    contacto: string;
-  };
+  nombreUsuario?: string;
+  nombreProgramador: string;
+  // Campos para recibir los objetos del backend
+  usuario?: { nombre: string };
+  programador?: { nombre: string };
 }
 
 @Injectable({
@@ -33,30 +27,27 @@ export class AsesoriaService {
   private http = inject(HttpClient);
   private API_URL = `${environment.apiUrl}/api/asesorias`;
 
-  /**
-   * Obtiene todas las asesorías y mapea los nombres de los objetos
-   * anidados a propiedades planas para facilitar su uso en la UI.
-   */
-  obtenerTodas(): Observable<Asesoria[]> {
-    return this.http.get<Asesoria[]>(this.API_URL).pipe(
-      map(asesorias => asesorias.map(as => this.mapearAsesoria(as)))
+  // Mantiene todos tus métodos originales con el mapeo de datos
+  obtenerTodas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}`).pipe(
+      map(data => data.map(as => this.transformarAsesoria(as)))
     );
   }
 
-  obtenerAsesoriasPorUsuario(userId: number): Observable<Asesoria[]> {
-    return this.http.get<Asesoria[]>(`${this.API_URL}/usuario/${userId}`).pipe(
-      map(asesorias => asesorias.map(as => this.mapearAsesoria(as)))
-    );
-  }
-
-  obtenerAsesoriasPorProgramador(id: number): Observable<Asesoria[]> {
-    return this.http.get<Asesoria[]>(`${this.API_URL}/programador/${id}`).pipe(
-      map(asesorias => asesorias.map(as => this.mapearAsesoria(as)))
-    );
-  }
-
-  crearAsesoria(asesoria: any): Observable<any> {
+  crearAsesoria(asesoria: Asesoria): Observable<any> {
     return this.http.post(this.API_URL, asesoria);
+  }
+
+  obtenerAsesoriasPorUsuario(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/usuario/${userId}`).pipe(
+      map(data => data.map(as => this.transformarAsesoria(as)))
+    );
+  }
+
+  obtenerAsesoriasPorProgramador(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/api/asesorias/programador/${id}`).pipe(
+      map(data => data.map(as => this.transformarAsesoria(as)))
+    );
   }
 
   actualizarAsesoria(id: string, data: Partial<Asesoria>): Observable<any> {
@@ -64,13 +55,14 @@ export class AsesoriaService {
   }
 
   /**
-   * Método privado para asegurar que nombreUsuario y nombreProgramador 
-   * existan aunque el Backend envíe objetos.
+   * Método de apoyo para no repetir lógica.
+   * Extrae los nombres de los objetos usuario/programador 
+   * y los asigna a las variables que usa tu componente.
    */
-  private mapearAsesoria(as: Asesoria): Asesoria {
+  private transformarAsesoria(as: any): any {
     return {
       ...as,
-      nombreUsuario: as.usuario ? as.usuario.nombre : (as.nombreUsuario || 'Anónimo'),
+      nombreUsuario: as.usuario ? as.usuario.nombre : (as.nombreUsuario || 'Usuario'),
       nombreProgramador: as.programador ? as.programador.nombre : 'Sin asignar'
     };
   }
