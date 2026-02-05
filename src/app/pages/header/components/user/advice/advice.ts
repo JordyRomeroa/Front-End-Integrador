@@ -122,13 +122,13 @@ const nuevaAsesoria: any = {
   programadorId: Number(this.programadorId),
   usuarioId: Number(idParaJava),
   nombreUsuario: currentUser.nombre || currentUser.displayName,
-  fecha: this.fecha, // <--- Enviamos la fecha formateada
+  fecha: this.fecha, 
   telefono: this.telefono
 };
 
   this.asesoriaService.crearAsesoria(nuevaAsesoria).subscribe({
     next: (res) => {
-      this.showDialog(`Asesoría enviada correctamente }`);
+      this.showDialog(`Asesoría enviada correctamente `);
       this.limpiarFormulario();
     },
     error: (err) => {
