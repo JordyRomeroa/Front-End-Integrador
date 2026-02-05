@@ -18,8 +18,8 @@ import { Team } from "../admin/team/team";
 })
 export class InicioComponent implements OnInit {
 
-  // Lista unificada para el grid
-  allRepos: Repo[] = [];
+  // Cambiamos el tipo a any[] para evitar el error de propiedad inexistente en el HTML
+  allRepos: any[] = [];
 
   readonly users = ['NayeliC98', 'JordyRomeroa'];
 
@@ -29,24 +29,26 @@ export class InicioComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Creamos las peticiones con manejo de errores individual
     const requests = this.users.map(user => 
       this.githubService.getRepos(user).pipe(
         catchError(err => {
           console.warn(`Error cargando repos de ${user}:`, err);
-          return of([]); // Si falla uno, devolvemos lista vacía para no romper el forkJoin
+          return of([]); 
         })
       )
     );
 
     forkJoin(requests).subscribe({
       next: ([nayeliRepos, jordyRepos]) => {
-        // Si ambos fallan (listas vacías), cargamos datos de respaldo
         if (nayeliRepos.length === 0 && jordyRepos.length === 0) {
           this.loadFallbackRepos();
         } else {
-          const filteredNayeli = this.getRandomRepos(nayeliRepos, 3);
-          const filteredJordy = this.getRandomRepos(jordyRepos, 3);
+          // Procesamos los repositorios para inyectar la propiedad homepage
+          const processedNayeli = this.processRepos(nayeliRepos);
+          const processedJordy = this.processRepos(jordyRepos);
+
+          const filteredNayeli = this.getRandomRepos(processedNayeli, 3);
+          const filteredJordy = this.getRandomRepos(processedJordy, 3);
           
           this.allRepos = [...filteredNayeli, ...filteredJordy].sort(() => Math.random() - 0.5);
         }
@@ -60,13 +62,23 @@ export class InicioComponent implements OnInit {
   }
 
   /**
-   * Filtra repositorios que no sean copias (forks) y selecciona N cantidad al azar.
+   * Genera la URL de GitHub Pages y la asigna al objeto.
+   * Usamos 'any' para poder añadir la propiedad 'homepage' sin que TS se queje.
    */
-  private getRandomRepos(repos: Repo[], count: number): Repo[] {
+  private processRepos(repos: Repo[]): any[] {
+    return repos.map(repo => ({
+      ...repo,
+      homepage: (repo as any).homepage || `https://${repo.owner.login}.github.io/${repo.name}/`
+    }));
+  }
+
+  /**
+   * Filtra originales y selecciona aleatorios.
+   */
+  private getRandomRepos(repos: any[], count: number): any[] {
     if (!repos || repos.length === 0) return [];
     
-    // Filtramos originales usando as any para evitar conflictos de interfaz si no se ha actualizado
-    const originals = repos.filter(r => !(r as any).fork);
+    const originals = repos.filter(r => !r.fork);
     
     return [...originals]
       .sort(() => Math.random() - 0.5)
@@ -74,34 +86,46 @@ export class InicioComponent implements OnInit {
   }
 
   /**
-   * Datos de emergencia en caso de que la API de GitHub falle (Error 401/403)
+   * Datos de respaldo con los enlaces directos de GitHub Pages.
    */
   private loadFallbackRepos(): void {
     this.allRepos = [
       {
         id: 1,
-        name: 'Sistema de Gestión Académica',
-        description: 'Plataforma educativa robusta desarrollada con Spring Boot y Angular.',
-        html_url: 'https://github.com/NayeliC98',
+        name: 'icc-ppw-practica-heuristicas-nuevo',
+        description: 'Práctica sobre evaluación de heurísticas de usabilidad.',
+        html_url: 'https://github.com/NayeliC98/icc-ppw-practica-heuristicas-nuevo',
+        homepage: 'https://nayelic98.github.io/icc-ppw-practica-heuristicas-nuevo/',
         fork: false,
         owner: { login: 'NayeliC98', avatar_url: 'https://avatars.githubusercontent.com/NayeliC98' }
       },
       {
         id: 2,
-        name: 'E-commerce Pro',
-        description: 'Tienda virtual con integración de pagos y diseño responsivo premium.',
-        html_url: 'https://github.com/JordyRomeroa',
+        name: 'icc-ppw-u1-estilos-componentes-nuevo',
+        description: 'Desarrollo de componentes y gestión de estilos en Angular.',
+        html_url: 'https://github.com/NayeliC98/icc-ppw-u1-estilos-componentes-nuevo',
+        homepage: 'https://nayelic98.github.io/icc-ppw-u1-estilos-componentes-nuevo/',
         fork: false,
-        owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
+        owner: { login: 'NayeliC98', avatar_url: 'https://avatars.githubusercontent.com/NayeliC98' }
       },
       {
         id: 3,
-        name: 'Dashboard Administrativo',
-        description: 'Panel de control con métricas en tiempo real y gestión de usuarios.',
-        html_url: 'https://github.com/NayeliC98',
+        name: 'WC3',
+        description: 'Proyecto integrador WC3 desplegado.',
+        html_url: 'https://github.com/NayeliC98/WC3',
+        homepage: 'https://nayelic98.github.io/WC3/',
         fork: false,
         owner: { login: 'NayeliC98', avatar_url: 'https://avatars.githubusercontent.com/NayeliC98' }
+      },
+      {
+        id: 4,
+        name: 'Front-End-Integrador',
+        description: 'Interfaz de usuario para el proyecto integrador final.',
+        html_url: 'https://github.com/JordyRomeroa/Front-End-Integrador',
+        homepage: 'https://jordyromeroa.github.io/Front-End-Integrador/',
+        fork: false,
+        owner: { login: 'JordyRomeroa', avatar_url: 'https://avatars.githubusercontent.com/JordyRomeroa' }
       }
-    ] as Repo[];
+    ];
   }
 }
