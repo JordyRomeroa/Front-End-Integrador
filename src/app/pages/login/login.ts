@@ -32,7 +32,6 @@ export class Login {
       if (!params) return of(null);
       return from(this.authService.login(params.email, params.password)).pipe(
         catchError(err => {
-          console.error('Login fallido:', err);
           return of({ error: err }); 
         })
       );
@@ -120,7 +119,6 @@ export class Login {
         this.router.navigate(['/home']);
       }
     } catch (error: any) {
-      console.error("Error en Google Login:", error);
       this.errorVisible.set('No se pudo conectar con Google.');
     }
   }

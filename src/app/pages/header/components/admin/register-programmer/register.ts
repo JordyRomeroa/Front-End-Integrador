@@ -101,9 +101,8 @@ export class RegisterProgrammer implements OnChanges {
       this.resetFormulario();
 
     } catch (error: any) {
-      console.error("Error en registro:", error);
       // Captura el error de tu API (ej: Correo duplicado 400 Bad Request)
-      const errorMsg = error.error?.message || "No se pudo conectar con el servidor.";
+      const errorMsg = error.error?.message || "Error desconocido al registrar el programador.";
       this.showDialog("Error de Registro", errorMsg);
     } finally {
       this.loading = false;

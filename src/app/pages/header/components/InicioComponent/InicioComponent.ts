@@ -77,7 +77,6 @@ export class InicioComponent implements OnInit {
    * Datos de emergencia en caso de que la API de GitHub falle (Error 401/403)
    */
   private loadFallbackRepos(): void {
-    console.log('Cargando proyectos destacados desde el respaldo local...');
     this.allRepos = [
       {
         id: 1,

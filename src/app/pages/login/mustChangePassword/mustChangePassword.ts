@@ -99,7 +99,6 @@ export class MustChangePassword {
       }, 1500);
 
     } catch (err: any) {
-      console.error("Error en el componente:", err);
       this.showStatus('Error al conectar con el servidor.', false);
     } finally {
       this.loading.set(false);

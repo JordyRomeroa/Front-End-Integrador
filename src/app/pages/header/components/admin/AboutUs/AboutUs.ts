@@ -42,14 +42,12 @@ export class AboutUs implements AfterViewInit {
       const lista = await this.programadorService.camposEspecificosProgramadores();
       this.bloques.set(lista);
     } catch (error) {
-      console.error('Error cargando programadores:', error);
     }
   }
 
   /** Asegura que el ViewChild esté disponible */
   ngAfterViewInit(): void {
     if (!this.carousel) {
-      console.warn('⚠ El carrusel no está listo todavía.');
     }
   }
 

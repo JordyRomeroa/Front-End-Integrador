@@ -93,7 +93,6 @@ export class Admin implements OnInit {
         this.asesorias.set(lista);
       }
     } catch (e) { 
-      console.error("Error al cargar asesorías:", e); 
     }
   }
 

@@ -36,10 +36,8 @@ export class ProgrammerGuard implements CanActivate {
 
     // 4. Si no tiene acceso, verificamos si es que ni siquiera está logueado
     if (!userJson) {
-      console.warn("No hay sesión activa, al login.");
       this.router.navigate(['/login']);
     } else {
-      console.error("Acceso denegado. Tu rol actual es:", role || storedRole);
       this.router.navigate(['/home/inicio']);
     }
     

@@ -80,9 +80,7 @@ export class Programmer {
       const idNumerico = Number(userId);
       const lista = await firstValueFrom(this.asesoriaService.obtenerAsesoriasPorProgramador(idNumerico));
       this.asesorias.set(lista);
-      console.log('✅ Asesorías cargadas:', lista);
     } catch (err) {
-      console.error('❌ Error asesorías:', err);
     }
   }
 
