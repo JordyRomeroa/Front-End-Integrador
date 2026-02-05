@@ -80,21 +80,22 @@ export class Admin implements OnInit {
     });
   }
 
-  async ngOnInit() {
-    this.programadorService.refrescarTabla();
-    await this.proyectoService.cargarTodosLosProyectos();
-    this.cargarAsesoriasGlobales();
-  }
+ async ngOnInit() {
+  this.programadorService.refrescarTabla();
+  await this.proyectoService.cargarTodosLosProyectos();
+  await this.cargarAsesoriasGlobales(); // Añadimos await aquí
+}
 
-  private async cargarAsesoriasGlobales() {
-    try {
-      const lista = await firstValueFrom(this.asesoriaService.obtenerTodas());
-      if (lista) {
-        this.asesorias.set(lista);
-      }
-    } catch (e) { 
-    }
+private async cargarAsesoriasGlobales() {
+  try {
+    const lista = await firstValueFrom(this.asesoriaService.obtenerTodas());
+    console.log('Asesorías cargadas:', lista); // Debug para ver si llegan datos
+    this.asesorias.set(lista || []);
+  } catch (e) {
+    console.error('Error cargando asesorías', e);
+    this.asesorias.set([]);
   }
+}
 
   // --- MÉTODOS DE EXPORTACIÓN ---
   async exportarPDF() {

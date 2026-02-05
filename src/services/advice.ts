@@ -24,7 +24,7 @@ private API_URL = `${environment.apiUrl}/api/asesorias`;
   constructor() {}
 
 obtenerTodas(): Observable<any[]> {
-    return this.http.get<any[]>(this.API_URL);
+    return this.http.get<any[]>(`${this.API_URL}/`); 
   }
   crearAsesoria(asesoria: Asesoria): Observable<any> {
     return this.http.post(this.API_URL, asesoria);
@@ -38,4 +38,5 @@ obtenerAsesoriasPorProgramador(id: number): Observable<any[]> {
   actualizarAsesoria(id: string, data: Partial<Asesoria>): Observable<any> {
     return this.http.put(`${this.API_URL}/${id}`, data);
   }
+  
 }
