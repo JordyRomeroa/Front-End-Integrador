@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Firestore, collection, getDocs, query, where } from '@angular/fire/firestore';
+import { Firestore } from '@angular/fire/firestore';
 import { AsesoriaConId } from '../../../../interface/asesoria';
 import { AuthService, Role } from '../../../../../../services/auth-service';
 import { AsesoriaService } from '../../../../../../services/advice';
@@ -19,21 +19,20 @@ export class Advice {
 
   role: Role | null = null;
   asesorias = signal<AsesoriaConId[]>([]);
-
-  // NUEVO: listas separadas como tu otro proyecto
   pendientes = signal<AsesoriaConId[]>([]);
   historial = signal<AsesoriaConId[]>([]);
 
-  // Modal
+  // Modales
   asesorSeleccionado = signal<AsesoriaConId | null>(null);
   mensajeRespuesta = signal('');
+  
+  // Feedback Visual (Reemplazo de Alerts)
+  mensajeExito = signal<string | null>(null);
+  mensajeError = signal<string | null>(null);
 
   // Notificaciones visuales
   notificacionUsuario = signal<string | null>(null);
   notificacionAdmin = signal<string | null>(null);
-
-  motivosRechazo: { [asesoriaId: string]: string } = {};
-  showRechazo: { [asesoriaId: string]: boolean } = {};
 
   private firestore = inject(Firestore);
 
@@ -48,113 +47,96 @@ export class Advice {
     }
   }
 
- async cargarAsesorias() {
+  async cargarAsesorias() {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
-    // Obtener el ID numérico (en Java los IDs suelen ser números)
-    // Si tu uid de AuthService es el ID de la base de datos Java:
     const userId = currentUser.id || currentUser.uid; 
 
-    // LLAMADA AL BACKEND JAVA EN LUGAR DE FIREBASE
     this.asesoriaService.obtenerAsesoriasPorProgramador(userId).subscribe({
       next: (lista: AsesoriaConId[]) => {
         this.asesorias.set(lista);
-
-        // Separar pendientes y revisadas
-        this.pendientes.set(lista.filter(a => a.estado === 'pendiente'));
-        this.historial.set(lista.filter(a => a.estado !== 'pendiente'));
+        this.actualizarListas(lista);
 
         if (this.role === 'user') {
           this.mostrarNotificacionesPendientesUsuario(lista);
         }
       },
       error: (err) => {
-        console.error('Error al cargar asesorías desde Java:', err);
+        this.mostrarError('No se pudieron cargar las asesorías desde el servidor.');
       }
     });
   }
 
-  // Cambiar enviarRespuesta para usar el Observable de Angular
+  private actualizarListas(lista: AsesoriaConId[]) {
+    this.pendientes.set(lista.filter(a => a.estado === 'pendiente'));
+    this.historial.set(lista.filter(a => a.estado !== 'pendiente'));
+  }
+
   async enviarRespuesta(estado: 'aceptada' | 'rechazada') {
     const asesoria = this.asesorSeleccionado();
     if (!asesoria) return;
 
     const msj = this.mensajeRespuesta().trim();
     if (!msj) {
-      alert('Escribe un mensaje para el usuario.');
+      this.mostrarError('Por favor, escribe un mensaje para el usuario.');
       return;
     }
 
-    const datosActualizar = {
-      estado,
-      mensajeRespuesta: msj
-    };
+    const datosActualizar = { estado, mensajeRespuesta: msj };
 
-    // Usar subscribe porque el servicio devuelve un Observable
     this.asesoriaService.actualizarAsesoria(asesoria.id, datosActualizar).subscribe({
-      next: (res) => {
+      next: () => {
         const actualizada = this.asesorias().map(a =>
           a.id === asesoria.id ? { ...a, ...datosActualizar } : a
         );
 
         this.asesorias.set(actualizada);
-        this.pendientes.set(actualizada.filter(a => a.estado === 'pendiente'));
-        this.historial.set(actualizada.filter(a => a.estado !== 'pendiente'));
-
-        alert(estado === 'aceptada' ? 'Solicitud aceptada.' : 'Solicitud rechazada.');
+        this.actualizarListas(actualizada);
+        
+        this.mostrarExito(estado === 'aceptada' ? 'Solicitud aceptada con éxito.' : 'Solicitud rechazada correctamente.');
         this.asesorSeleccionado.set(null);
       },
       error: (err) => {
-        console.error('Error en el PUT:', err);
-        alert('Error al actualizar en el servidor Java');
+        this.mostrarError('Error al procesar la solicitud en el servidor Java.');
       }
     });
   }
 
-  private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
-    const pendientes = lista.filter(a => a.estado !== 'pendiente');
-    if (pendientes.length === 0) return;
-
-    const ultima = pendientes[pendientes.length - 1];
-    this.notificacionUsuario.set(`📧 Tu solicitud ha sido ${ultima.estado}.`);
-    setTimeout(() => this.notificacionUsuario.set(null), 4000);
+  // Helpers para Feedback
+  private mostrarExito(msj: string) {
+    this.mensajeExito.set(msj);
+    setTimeout(() => this.mensajeExito.set(null), 3500);
   }
 
+  private mostrarError(msj: string) {
+    this.mensajeError.set(msj);
+    setTimeout(() => this.mensajeError.set(null), 4000);
+  }
 
   abrirModal(asesoria: AsesoriaConId) {
+    this.mensajeError.set(null); // Limpiar errores previos
     this.asesorSeleccionado.set(asesoria);
     this.mensajeRespuesta.set('');
   }
 
-
-  
-
+  cerrarModal() {
+    this.asesorSeleccionado.set(null);
+    this.mensajeError.set(null);
+  }
 
   getWhatsAppLink(data: AsesoriaConId): string {
     if (!data.telefono) return '#';
-
     const text = `Mucho gusto, he revisado tu solicitud ${data.nombreUsuario}, sobre "${data.mensaje}".`;
-
     return `https://wa.me/${data.telefono}?text=${encodeURIComponent(text)}`;
   }
 
-  private mostrarNotificacion(asesoriaId: string, estado: string) {
-    const asesoria = this.asesorias().find(a => a.id === asesoriaId);
-    if (!asesoria) return;
+  private mostrarNotificacionesPendientesUsuario(lista: AsesoriaConId[]) {
+    const revisadas = lista.filter(a => a.estado !== 'pendiente');
+    if (revisadas.length === 0) return;
 
-    const usuario = asesoria.nombreUsuario ?? 'Usuario';
-    const admin = 'Admin';
-
-    this.notificacionUsuario.set(`📧 Correo a ${usuario}: Tu solicitud ha sido ${estado}.`);
-
-    if (this.role === 'admin') {
-      this.notificacionAdmin.set(`📧 Correo al admin: La asesoría del usuario ${usuario} ha sido ${estado}.`);
-    }
-
-    setTimeout(() => {
-      this.notificacionUsuario.set(null);
-      this.notificacionAdmin.set(null);
-    }, 4000);
+    const ultima = revisadas[revisadas.length - 1];
+    this.notificacionUsuario.set(`📧 Tu solicitud ha sido ${ultima.estado}.`);
+    setTimeout(() => this.notificacionUsuario.set(null), 4000);
   }
 }
