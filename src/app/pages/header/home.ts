@@ -118,7 +118,7 @@ export class Home implements OnInit {
     this.authService.logout().subscribe({
       next: () => {
         this.resetRoles();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/home/inicio']);
       },
       error: (err) => console.error('Error al cerrar sesión:', err)
     });
