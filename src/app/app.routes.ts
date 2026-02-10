@@ -21,7 +21,6 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/mustChangePassword/mustChangePassword').then(m => m.MustChangePassword),
     canActivate: [MustChangePasswordGuard]
   },
-
   {
     path: 'register',
     loadComponent: () => import('./pages/header/components/register-user/register').then(m => m.RegisterPage)
@@ -40,8 +39,6 @@ export const routes: Routes = [
   loadComponent: () =>
     import('./pages/header/components/user/user').then(m => m.User),
   children: [
-    
-    
     {
       path: 'solicitudes',
       loadComponent: () =>
@@ -49,9 +46,7 @@ export const routes: Routes = [
           .then(m => m.Solicitudes)
     }
   ]
-}
-
-,
+},
       {
         path: 'about-us',
         loadComponent: () => import('./pages/header/components/admin/AboutUs/AboutUs').then(m => m.AboutUs)
@@ -70,8 +65,6 @@ export const routes: Routes = [
   children: [
     {
       path: 'register-programmer',
-      // No hace falta repetirlo aquí si el padre ya lo tiene, 
-      // pero puedes dejarlo por seguridad.
       canActivate: [adminGuard], 
       loadComponent: () => import('./pages/header/components/admin/register-programmer/register').then(m => m.RegisterProgrammer)
     }
@@ -95,12 +88,11 @@ export const routes: Routes = [
             loadComponent: () => import('./pages/header/components/programmer/editprofile/editprofile').then(m => m.EditProfileProgrammerComponent)
           },
         {
-          path: 'solicitudes',        // ← nueva ruta para solicitudes
+          path: 'solicitudes', 
       loadComponent: () => import('./pages/header/components/programmer/advice/advice').then(m => m.Advice)
         },
           {
             path: 'schedules',
-
             loadComponent: () => import('./pages/header/components/programmer/schedules/schedules').then(m => m.Schedules)
           }
         ]

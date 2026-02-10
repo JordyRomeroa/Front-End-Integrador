@@ -16,8 +16,6 @@ export const firebaseConfig = {
   messagingSenderId: "1036960154226",
   appId: "1:1036960154226:web:66225a6e175e78cec6b8eb"
 };
-
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -27,9 +25,8 @@ export const appConfig: ApplicationConfig = {
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),provideHttpClient(
-      withInterceptors([authInterceptor]) // <--- ESTO ES LO QUE FALTA
+      withInterceptors([authInterceptor]) 
     ),
-
     provideHttpClient(withInterceptors([authInterceptor]))
   ]
 };
