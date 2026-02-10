@@ -30,7 +30,6 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
   constructor() {
     this.loadStorage();
   }
-
   private loadStorage() {
   const storedUser = localStorage.getItem("user");
   const storedToken = localStorage.getItem("auth_token");
@@ -38,7 +37,7 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
 
   if (storedUser) {
     const user = JSON.parse(storedUser);
-    // Nos aseguramos de que el id exista en la señal al recargar
+    // Nos aseguramos de que el id exista 
     this.currentUser.set(user);
     this.mustChangePassword.set(user.mustChangePassword || false);
   }
@@ -48,25 +47,20 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
       this.roleLoaded.set(true);
     }
   }
-
-  // ====== MÉTODOS DE COMPROBACIÓN ======
+  // COMPROBACIÓN
   getUserRole(): Role | null { return this.userRole(); }
   
   isAdmin(): boolean {
     const r = this.userRole();
-    // Agregamos verificación de seguridad para ignorar mayúsculas/minúsculas
+    //seguridad para ignorar mayúsculas/minúsculas
     return r?.toUpperCase() === 'ROLE_ADMIN' || r?.toLowerCase() === 'admin';
   }
 
   isProgrammer(): boolean {
     const r = this.userRole();
-    // Modificado para aceptar tanto el formato de DB como el normalizado
+    // Modificado normalizado
     return r === 'ROLE_PROGRAMMER' || r === 'programmer' || r === 'ROLE_PROGRAMMER'.toLowerCase();
   }
-
-  // ====== LOGIN Y REGISTRO ======
-
- 
 
   login(contacto: string, password: string): Observable<any> {
     return this.http.post(`${this.API_URL}/login`, { contacto, password }).pipe(
@@ -74,7 +68,6 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
     );
   }
   
-
   async loginWithGoogle(): Promise<any> {
     try {
       const provider = new GoogleAuthProvider();
@@ -94,36 +87,30 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
       throw error;
     }
   }
-
   private handleAuthSuccess(res: any) {
-  // 1. Extraemos el rol
+  // 1. NORMALIZAR ROL
   const rawRole = res.roles && res.roles.length > 0 ? res.roles[0] : 'ROLE_USER';
   let normalizedRole = rawRole.replace("ROLE_", "").toLowerCase() as Role;
   
-  // 2. IMPORTANTE: Sincronizar ID para evitar el 'undefined'
-  // Si Java envía 'id', nos aseguramos de que Angular lo reconozca.
+
   const userToStore = {
     ...res,
-    id: res.userId, // ID numérico de Neon
-    uid: res.id?.toString() // Mantenemos uid como string del ID para no romper componentes viejos
+    id: res.userId, 
+    uid: res.id?.toString() 
   };
 
-  // 3. Persistencia
   localStorage.setItem("auth_token", res.token);
   localStorage.setItem("authRole", normalizedRole);
   localStorage.setItem("user", JSON.stringify(userToStore));
 
-  // 4. Actualización de señales
   this.token.set(res.token);
   this.userRole.set(normalizedRole);
-  this.currentUser.set(userToStore); // Seteamos el objeto con el ID asegurado
+  this.currentUser.set(userToStore); 
   this.mustChangePassword.set(res.mustChangePassword || false);
   this.roleLoaded.set(true);
 
   console.log("Login exitoso. ID de Usuario Java:", userToStore.id);
 }
-
-  // ====== ACTUALIZACIÓN DE CONTRASEÑA ======
 
   async changePassword(newPassword: string): Promise<any> {
     const user = this.currentUser();
@@ -134,13 +121,10 @@ private router = inject(Router) as Router;  private auth = inject(Auth);
     }
     return this.updatePassword(contacto, newPassword);
   }
-// En auth.service.ts añadir:
-
 updateProfile(userData: any): Observable<any> {
-  // Enviamos los datos al nuevo endpoint de actualización propia
+
   return this.http.put(`${environment.apiUrl}/api/users/profile/update`, userData).pipe(
     tap((res: any) => {
-      // Actualizamos la señal del usuario actual con los nuevos datos
       this.currentUser.set(res);
       localStorage.setItem("user", JSON.stringify(res));
     })
@@ -154,29 +138,21 @@ updateProfile(userData: any): Observable<any> {
       })
     );
   }
-
-  // ====== OTROS MÉTODOS ======
-
-  // En auth.service.ts
 async refreshCurrentUser() {
-  // Cambiamos la URL para apuntar al controlador de usuarios, no al de auth
+
   const res = await firstValueFrom(
     this.http.get(`${environment.apiUrl}/api/users/me`)
   );
   this.currentUser.set(res);
-  localStorage.setItem("user", JSON.stringify(res)); // Actualizamos el storage también
+  localStorage.setItem("user", JSON.stringify(res)); 
   return res;
 }
-
  logout(): Observable<void> {
-    // EN LUGAR DE: localStorage.clear();
-    // USAMOS:
+
     localStorage.removeItem("auth_token");
     localStorage.removeItem("authRole");
     localStorage.removeItem("user");
     
-    // Al NO borrar "app_welcome_v1_...", la marca de bienvenida persistirá.
-
     this.token.set(null);
     this.userRole.set(null);
     this.currentUser.set(null);
@@ -196,35 +172,25 @@ async refreshCurrentUser() {
       return 'Sin nombre';
     }
   }
-  // En auth-service.ts añade este método:
 isUser(): boolean {
   const r = this.userRole();
-  // Solo es usuario si no es admin ni programador y está logueado
   return this.token() !== null && !this.isAdmin() && !this.isProgrammer();
 }
-// Dentro de ec.edu.ups.icc.proyectofinal.services.AuthService
-
-// ... otros métodos existentes
 
 isLogged(): boolean {
   return this.token() !== null;
 }
 
-// En auth.service.ts
-// En auth.service.ts
-// En AuthService
 register(email: string, password: string): Observable<any> {
   const body = { 
     contacto: email, 
     password: password,
     nombre: email.split('@')[0], 
-    role: 'user' // Asegúrate de que tu backend acepte este nombre de campo
+    role: 'user' 
   };
-  
   return this.http.post(`${this.API_URL}/register`, body).pipe(
     tap((res: any) => this.handleAuthSuccess(res)),
     catchError(err => {
-      // Devolvemos el error para que rxResource lo capture sin "morir"
       console.error("Error en el registro de usuario:", err);
       throw err; 
     })
