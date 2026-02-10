@@ -37,7 +37,6 @@ export class Login {
       );
     }
   });
-
   formUtils = FormUtils;
 
   constructor() {
@@ -60,17 +59,13 @@ export class Login {
         });
         return;
       }
-
       // GUARDAR EN STORAGE: Guardamos el objeto completo (que incluye el token)
       localStorage.setItem('user', JSON.stringify(result));
-      
       // También guardamos 'auth_token' por separado para facilitar la lectura en los servicios
       if (result.token) {
         localStorage.setItem('auth_token', result.token);
       }
-
       this.errorVisible.set(null);
-
       if (result.mustChangePassword) {
         this.router.navigate(['/must-change-password']);
       } else {
@@ -78,7 +73,6 @@ export class Login {
       }
     });
   }
-
   private getFriendlyError(error: any): string {
     const code = error.code || error.error?.code || error.status || '';
     const errorMessages: { [key: string]: string } = {
@@ -103,16 +97,13 @@ export class Login {
       password: password.trim() 
     });
   }
-
   async loginWithGoogle() {
     try {
       const result = await this.authService.loginWithGoogle();
       localStorage.setItem('user', JSON.stringify(result));
-      
       if (result.token) {
         localStorage.setItem('auth_token', result.token);
       }
-
       if (result.mustChangePassword) {
         this.router.navigate(['/must-change-password']);
       } else {
@@ -122,15 +113,12 @@ export class Login {
       this.errorVisible.set('No se pudo conectar con Google.');
     }
   }
-
   loading = this.loginResource.isLoading;
-
   errorMessage = () => {
     const error = this.loginResource.error();
     if (!error) return '';
     return 'Error al iniciar sesión';
   }
-
   get email() { return this.loginForm.get('email'); }
   get password() { return this.loginForm.get('password'); }
 }

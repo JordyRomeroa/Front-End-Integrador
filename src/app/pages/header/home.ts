@@ -3,7 +3,6 @@ import { AuthService, Role } from '../../../services/auth-service';
 import { Router, RouterLinkActive, RouterModule, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
-// Componentes internos
 import { User } from './components/user/user';
 import { Advice as UserAdviceModal } from './components/user/advice/advice';
 import { Advice } from './components/programmer/advice/advice';
@@ -25,8 +24,7 @@ import { Advice } from './components/programmer/advice/advice';
 })
 export class Home implements OnInit {
   showWelcomeBanner = signal(false);
-  private bannerCheckDone = false; // Evita que el banner reaparezca en la misma sesión
-
+  private bannerCheckDone = false; 
   // UI
   sidebarOpen = false;
   currentRoute = '';
@@ -38,7 +36,6 @@ export class Home implements OnInit {
   isUser = false;
   isAdmin = false;
   isProgrammer = false;
-
   // State
   loading = signal(true);
   showAsesoriaModal = signal(false);
@@ -62,7 +59,6 @@ export class Home implements OnInit {
         this.loading.set(false);
         return;
       }
-
       // SI LOS ROLES AÚN NO CARGAN
       if (!loaded) return;
 
@@ -72,14 +68,11 @@ export class Home implements OnInit {
         email: currentUser.email || currentUser.contacto,
         nombre: currentUser.nombre || 'Usuario'
       };
-
       const roleName = this.authService.getUserRole();
 
       this.isAdmin = roleName === 'admin' || roleName === 'ROLE_ADMIN';
       this.isProgrammer = roleName === 'programmer' || roleName === 'ROLE_PROGRAMMER';
       this.isUser = !this.isAdmin && !this.isProgrammer && (roleName === 'user' || roleName === 'ROLE_USER');
-
-      // --- LÓGICA DE BIENVENIDA REFORZADA ---
       // Solo entra si es programador, tiene email y NO hemos hecho el chequeo ya
       if (this.isProgrammer && this.user?.email && !this.bannerCheckDone) {
         const hasSeenWelcome = localStorage.getItem(`welcome_seen_${this.user.email}`);
@@ -95,9 +88,7 @@ export class Home implements OnInit {
       this.loading.set(false);
     });
   }
-
   ngOnInit() {
-    // Ya no es necesario llamar a checkFirstTimeProgrammer aquí, el effect lo hace mejor
   }
 
   private resetRoles() {
@@ -137,7 +128,6 @@ export class Home implements OnInit {
     return this.currentRoute === '/home/inicio';
   }
 
-  // Se mantiene por compatibilidad, corregido para usar email
   checkFirstTimeProgrammer() {
     if (this.isProgrammer && this.user?.email && !this.bannerCheckDone) {
       const hasSeenWelcome = localStorage.getItem(`welcome_seen_${this.user.email}`);
@@ -156,7 +146,6 @@ export class Home implements OnInit {
     this.showWelcomeBanner.set(false);
     this.bannerCheckDone = true; // Bloqueo extra
   }
-
   activarPerfilYLogin() {
     // Borramos datos de sesión, pero respetamos las marcas de bienvenida
     localStorage.removeItem('token'); 

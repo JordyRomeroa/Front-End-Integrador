@@ -1,11 +1,4 @@
-/* home.css (CORRECCIÓN FINAL DEFINITIVA - MINIMALISTA EN @apply) */
 
-/* ================================================
-   ESTILOS DE COMPONENTES
-   ================================================
-*/
-
-/* Activación de enlaces (Se mantienen estilos complejos) */
 a.nav-link[routerLinkActive='active'] {
   color: #e7f5ff;
   background: rgba(185, 28, 28, 0.8); /* bg-red-700/80 */
@@ -15,12 +8,9 @@ a.nav-link[routerLinkActive='active'] {
   box-shadow: 0 4px 10px rgba(185, 28, 28, 0.3);
 }
 
-/* Nota: Si quieres que los enlaces se vean como botones en el sidebar/desktop,
-   tendrás que añadir padding y color aquí o directamente en el HTML.
-   Tu HTML no tiene padding en 'nav-link', así que lo añado aquí. */
 .nav-link {
   @apply block transition-all duration-300 relative;
-  /* Usando CSS puro para las propiedades del nav-link del original */
+
   padding: .75rem 1rem;
   color: #e7f5ff;
   font-weight: 500;
@@ -31,10 +21,8 @@ a.nav-link[routerLinkActive='active'] {
   @apply transition-colors duration-300 block;
 }
 
-/* ========= USUARIO (Solo estilos de gradiente/shadow/hover) ========= */
-
 .user-initials, .user-initials-desktop {
-  /* NOTA: w-12, h-12, flex, etc. están en el HTML. */
+
   background: linear-gradient(135deg, #007cf0, #00bdfa);
   box-shadow: 0 0 15px #00aaff;
   @apply transition-all duration-300;
@@ -45,12 +33,6 @@ a.nav-link[routerLinkActive='active'] {
   box-shadow: 0 0 22px #33cfff;
 }
 
-/* ================================================
-   ESTILOS DE FONDO Y ANIMACIONES (SE MANTIENEN)
-   ================================================
-*/
-
-/* ========= AURORA PRINCIPAL CON ESTRELLAS ========= */
 .aurora-bg {
   background:
     radial-gradient(circle at 20% 20%, rgba(0, 102, 255, 0.4), transparent 70%),
@@ -91,7 +73,6 @@ a.nav-link[routerLinkActive='active'] {
   opacity: 0.6;
 }
 
-/* ========= ANIMACIONES ========= */
 @keyframes aurora-move {
   0% { transform: translate(0%, 0%) rotate(0deg) scale(1); }
   25% { transform: translate(5%, 10%) rotate(90deg) scale(1.1); }
@@ -164,7 +145,6 @@ a.nav-link[routerLinkActive='active'] {
   background: rgba(185, 28, 28, 0.8);
 }
 
-/* CHIP DE USUARIO */
 .user-chip {
   padding: 0.6rem 0.9rem;
   border-radius: 0.75rem;
@@ -180,7 +160,6 @@ a.nav-link[routerLinkActive='active'] {
   box-shadow: 0 0 18px rgba(0,180,255,0.9);
 }
 
-/* BOTÓN LOGOUT */
 .logout-btn {
   padding: 0.55rem 1.2rem;
   border-radius: 1rem;

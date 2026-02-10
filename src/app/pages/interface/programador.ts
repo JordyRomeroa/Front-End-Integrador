@@ -1,5 +1,5 @@
 export interface ProgramadorData {
-  uid?: string; //uid
+  uid?: string; 
   id?: number;
   nombre: string;
   especialidad: string;

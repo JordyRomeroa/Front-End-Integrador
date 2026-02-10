@@ -9,5 +9,4 @@ export interface AsesoriaConId extends Asesoria {
   titulo: string;
   descripcion: string;
   estado: string;
-  
 }

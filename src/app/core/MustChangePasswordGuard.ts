@@ -11,7 +11,7 @@ export class MustChangePasswordGuard implements CanActivate {
     const mustChange = this.authService.mustChangePassword();
     
     if (!mustChange) {
-      // Si no necesita cambiar, redirige a home
+
       this.router.navigate(['/home']);
       return false;
     }

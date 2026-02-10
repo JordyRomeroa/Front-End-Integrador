@@ -1,5 +1,4 @@
 import { AsesoriaConId } from "./asesoria";
-
 export interface DiaCalendario {
   dia: number;
   asesorias: AsesoriaConId[];
